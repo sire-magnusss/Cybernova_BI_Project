@@ -1,0 +1,122 @@
+project:
+  name: "CyberNova Analytics Ltd"
+  random_seed: 333
+
+date_range:
+  start_date: "2026-01-01"
+  end_date: "2026-05-15"
+
+traffic:
+  base_daily_requests: 500
+  daily_random_variation: 0.35
+  weekday_factor: 1.00
+  weekend_factor: 0.45
+  monthly_growth_rate: 0.08
+  mean_requests_per_session: 4.0
+  bot_ratio_min: 0.08
+  bot_ratio_max: 0.12
+
+countries:
+  Botswana: 0.32
+  South Africa: 0.20
+  Zambia: 0.12
+  Namibia: 0.09
+  Zimbabwe: 0.08
+  Lesotho: 0.04
+  Eswatini: 0.04
+  Mozambique: 0.04
+  Malawi: 0.04
+  Tanzania: 0.03
+
+services:
+  AI Cyber Assistant:
+    uri: "/ai-assistant.php"
+    category: "AI Advisory"
+    weight: 0.28
+    demo_probability: 0.10
+
+  Cybersecurity Monitoring:
+    uri: "/cybersecurity-monitoring.php"
+    category: "Cybersecurity"
+    weight: 0.22
+    demo_probability: 0.08
+
+  Automated Risk Assessment:
+    uri: "/risk-assessment.php"
+    category: "Cybersecurity"
+    weight: 0.16
+    demo_probability: 0.07
+
+  Digital Transformation:
+    uri: "/digital-transformation.php"
+    category: "Digital Transformation"
+    weight: 0.13
+    demo_probability: 0.05
+
+  Predictive Maintenance:
+    uri: "/predictive-maintenance.php"
+    category: "Infrastructure"
+    weight: 0.10
+    demo_probability: 0.05
+
+  Rapid Prototyping:
+    uri: "/prototype.php"
+    category: "Prototyping"
+    weight: 0.07
+    demo_probability: 0.06
+
+  Events and Promotions:
+    uri: "/events.php"
+    category: "Marketing"
+    weight: 0.04
+    event_probability: 0.15
+
+campaigns:
+  - name: "SME Cyber Risk Week"
+    start_date: "2026-02-12"
+    end_date: "2026-02-16"
+    boosted_services:
+      - "Automated Risk Assessment"
+      - "Cybersecurity Monitoring"
+    traffic_multiplier: 1.6
+
+  - name: "AI Cyber Assistant Launch Push"
+    start_date: "2026-03-18"
+    end_date: "2026-03-24"
+    boosted_services:
+      - "AI Cyber Assistant"
+    traffic_multiplier: 2.0
+
+  - name: "Government Digital Transformation Expo"
+    start_date: "2026-04-22"
+    end_date: "2026-04-26"
+    boosted_services:
+      - "Digital Transformation"
+      - "Events and Promotions"
+    traffic_multiplier: 1.7
+
+anomalies:
+  - name: "Suspicious Prototype Bot Spike"
+    type: "suspicious_bot_spike"
+    date: "2026-03-29"
+    uri: "/prototype.php"
+    multiplier: 4.0
+
+  - name: "Broken AI Campaign Link"
+    type: "broken_campaign_link"
+    date: "2026-04-03"
+    uri: "/ai-cyber-assistant.php"
+    status_code: 404
+    multiplier: 3.0
+
+  - name: "Viral AI Assistant Spike"
+    type: "viral_ai_assistant_spike"
+    date: "2026-05-06"
+    uri: "/ai-assistant.php"
+    multiplier: 3.5
+
+output:
+  raw_iis_csv: "data/output/cybernova_iis_raw_logs.csv"
+  enriched_csv: "data/output/cybernova_enriched_logs.csv"
+  excel_file: "data/output/cybernova_web_logs.xlsx"
+  summary_csv: "data/output/generation_summary.csv"
