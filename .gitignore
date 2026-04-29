@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Generated output files
+data/output/
+
+# Logs
+*.log
+debug.log
+
+# Streamlit cache
+.streamlit/
+
+# Temp files
+*.tmp
+*.yaml.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
