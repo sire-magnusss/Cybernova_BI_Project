@@ -20,8 +20,11 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import (
-    HRFlowable, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle,
+    HRFlowable, Image as RLImage, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle,
 )
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 # ─────────────────────────────────────────────────────────────────
 # PAGE CONFIG
@@ -225,18 +228,25 @@ section[data-testid="stSidebar"] .stRadio > div[role="radiogroup"] > label:has(i
 ═══════════════════════════════════════════════════════════════ */
 .stButton > button{
   border-radius:14px;border:0;font-weight:800;padding:.68rem 1.15rem;
-  background:#2563FF;color:white;
+  background:#2563FF !important;color:white !important;
   box-shadow:0 10px 24px rgba(37,99,255,.28);transition:.18s ease;
 }
-.stButton > button:hover{transform:translateY(-2px);color:white;
-  box-shadow:0 14px 32px rgba(37,99,255,.36);}
+.stButton > button:hover{
+  transform:translateY(-2px);
+  background:#1d4ed8 !important;color:white !important;
+  box-shadow:0 14px 32px rgba(37,99,255,.36);
+}
+.stButton > button:focus,
+.stButton > button:active{
+  background:#1e40af !important;color:white !important;outline:none;
+}
 div[data-testid="stDownloadButton"] > button{
-  border-radius:14px;border:1.5px solid #D9E2EC;background:white;
-  color:#102A43;font-weight:800;padding:.62rem 1.05rem;
+  border-radius:14px;border:1.5px solid #D9E2EC;background:white !important;
+  color:#102A43 !important;font-weight:800;padding:.62rem 1.05rem;
   box-shadow:0 4px 12px rgba(11,31,58,.07);transition:.18s ease;
 }
 div[data-testid="stDownloadButton"] > button:hover{
-  border-color:#2563FF;color:#2563FF;
+  border-color:#2563FF;color:#2563FF !important;background:white !important;
   box-shadow:0 6px 18px rgba(37,99,255,.18);
 }
 
@@ -1459,81 +1469,227 @@ def render_live_section(fdf: pd.DataFrame, role: str, dashboard: str) -> None:
 # ─────────────────────────────────────────────────────────────────
 # PDF REPORT BUILDER
 # ─────────────────────────────────────────────────────────────────
+def _make_chart_image(fig, width_cm: float = 15, height_cm: float = 7) -> RLImage:
+    buf = BytesIO()
+    fig.savefig(buf, format="png", dpi=130, bbox_inches="tight",
+                facecolor="white", edgecolor="none")
+    buf.seek(0)
+    plt.close(fig)
+    return RLImage(buf, width=width_cm*cm, height=height_cm*cm)
+
+
+def _chart_requests_by_service(df: pd.DataFrame):
+    counts = (df["service_name"].value_counts().head(6)
+              if "service_name" in df.columns else pd.Series(dtype=int))
+    fig, ax = plt.subplots(figsize=(7, 3.2))
+    if counts.empty:
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
+    else:
+        colors = ["#2563FF","#16B8C7","#10B981","#F59E0B","#8B5CF6","#EF4444"][:len(counts)]
+        bars = ax.barh(counts.index[::-1], counts.values[::-1], color=colors[::-1],
+                       height=0.6, edgecolor="none")
+        ax.bar_label(bars, fmt="%d", padding=4, fontsize=8, color="#0B1F3A", fontweight="bold")
+        ax.set_xlabel("Requests", fontsize=9, color="#52606D")
+        ax.tick_params(axis="y", labelsize=8, colors="#0B1F3A")
+        ax.tick_params(axis="x", labelsize=8, colors="#52606D")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_color("#D9E2EC")
+        ax.spines["bottom"].set_color("#D9E2EC")
+        ax.set_facecolor("white")
+    fig.patch.set_facecolor("white")
+    ax.set_title("Requests by Service", fontsize=11, fontweight="bold", color="#0B1F3A", pad=8)
+    fig.tight_layout()
+    return fig
+
+
+def _chart_daily_requests(df: pd.DataFrame):
+    fig, ax = plt.subplots(figsize=(7, 3.0))
+    if "date" not in df.columns or df.empty:
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
+    else:
+        daily = df.groupby(pd.to_datetime(df["date"]).dt.date).size()
+        ax.plot(range(len(daily)), daily.values, color="#2563FF", linewidth=2,
+                marker="o", markersize=3.5, markerfacecolor="#16B8C7")
+        ax.fill_between(range(len(daily)), daily.values, alpha=0.12, color="#2563FF")
+        ax.set_xticks(range(0, len(daily), max(1, len(daily)//6)))
+        ax.set_xticklabels([str(d) for d in list(daily.index)[::max(1, len(daily)//6)]],
+                           fontsize=7, rotation=30, ha="right", color="#52606D")
+        ax.tick_params(axis="y", labelsize=8, colors="#52606D")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_color("#D9E2EC")
+        ax.spines["bottom"].set_color("#D9E2EC")
+        ax.set_facecolor("white")
+        ax.set_ylabel("Requests", fontsize=9, color="#52606D")
+    fig.patch.set_facecolor("white")
+    ax.set_title("Daily Request Volume", fontsize=11, fontweight="bold", color="#0B1F3A", pad=8)
+    fig.tight_layout()
+    return fig
+
+
+def _chart_top_countries(df: pd.DataFrame):
+    counts = (df["country"].value_counts().head(6)
+              if "country" in df.columns else pd.Series(dtype=int))
+    fig, ax = plt.subplots(figsize=(7, 3.2))
+    if counts.empty:
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
+    else:
+        colors = ["#16B8C7","#2563FF","#10B981","#F59E0B","#8B5CF6","#EF4444"][:len(counts)]
+        bars = ax.barh(counts.index[::-1], counts.values[::-1], color=colors[::-1],
+                       height=0.6, edgecolor="none")
+        ax.bar_label(bars, fmt="%d", padding=4, fontsize=8, color="#0B1F3A", fontweight="bold")
+        ax.set_xlabel("Requests", fontsize=9, color="#52606D")
+        ax.tick_params(axis="y", labelsize=8, colors="#0B1F3A")
+        ax.tick_params(axis="x", labelsize=8, colors="#52606D")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_color("#D9E2EC")
+        ax.spines["bottom"].set_color("#D9E2EC")
+        ax.set_facecolor("white")
+    fig.patch.set_facecolor("white")
+    ax.set_title("Top Countries by Traffic", fontsize=11, fontweight="bold", color="#0B1F3A", pad=8)
+    fig.tight_layout()
+    return fig
+
+
 def build_pdf_report(
     dashboard: str, role: str, period: str,
     filters: dict, kpis: list[dict],
     bullets: list[str], evidence_df: pd.DataFrame,
+    chart_df: pd.DataFrame | None = None,
 ) -> bytes:
-    buf  = BytesIO()
-    doc  = SimpleDocTemplate(buf, pagesize=A4,
-                             leftMargin=2*cm, rightMargin=2*cm,
-                             topMargin=2*cm, bottomMargin=2*cm)
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4,
+                            leftMargin=2*cm, rightMargin=2*cm,
+                            topMargin=2.2*cm, bottomMargin=2*cm)
     sty  = getSampleStyleSheet()
-    navy = rlc.HexColor("#0B1F3A"); blue = rlc.HexColor("#2563FF"); grey = rlc.HexColor("#52606D")
-    h1   = ParagraphStyle("h1", parent=sty["Heading1"], textColor=navy, fontSize=22, spaceAfter=4)
-    h2   = ParagraphStyle("h2", parent=sty["Heading2"], textColor=blue, fontSize=14, spaceAfter=4)
-    bdy  = ParagraphStyle("bd", parent=sty["Normal"],   textColor=navy, fontSize=10, spaceAfter=3)
-    cap  = ParagraphStyle("cp", parent=sty["Normal"],   textColor=grey, fontSize=8,  spaceAfter=2)
+    navy = rlc.HexColor("#0B1F3A")
+    blue = rlc.HexColor("#2563FF")
+    cyan = rlc.HexColor("#16B8C7")
+    grey = rlc.HexColor("#52606D")
+    light = rlc.HexColor("#F3F4F6")
+
+    h1  = ParagraphStyle("h1", parent=sty["Heading1"], textColor=navy,
+                         fontSize=22, spaceAfter=2, spaceBefore=0, leading=26)
+    h2  = ParagraphStyle("h2", parent=sty["Heading2"], textColor=blue,
+                         fontSize=13, spaceAfter=4, spaceBefore=12, leading=18)
+    bdy = ParagraphStyle("bd", parent=sty["Normal"],   textColor=navy,
+                         fontSize=10, spaceAfter=4, leading=15)
+    sub = ParagraphStyle("su", parent=sty["Normal"],   textColor=grey,
+                         fontSize=9,  spaceAfter=3, leading=14)
+    cap = ParagraphStyle("cp", parent=sty["Normal"],   textColor=grey,
+                         fontSize=7.5, spaceAfter=2, leading=11)
+
     els: list = []
+
+    # ── Cover header ──────────────────────────────────────────────
     els += [
         Paragraph("CyberNova Analytics Ltd", h1),
         Paragraph(f"{dashboard} — {period} Report", h2),
-        Paragraph(f"Role: {role}   |   Generated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}", cap),
-        HRFlowable(width="100%", thickness=1, color=rlc.HexColor("#D9E2EC"), spaceAfter=10),
-        Paragraph("Filter Context", h2),
+        Paragraph(
+            f"<b>Role:</b> {role}&nbsp;&nbsp;&nbsp;"
+            f"<b>Period:</b> {filters.get('start','')} to {filters.get('end','')}&nbsp;&nbsp;&nbsp;"
+            f"<b>Generated:</b> {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}",
+            sub,
+        ),
+        HRFlowable(width="100%", thickness=1.5, color=blue, spaceAfter=10),
     ]
+
+    # ── Filter context table ──────────────────────────────────────
+    els.append(Paragraph("Filter Context", h2))
     frows = [
-        ["Period",    f"{filters.get('start','')} to {filters.get('end','')}"],
-        ["Countries", ", ".join(filters.get("countries",[])) or "All"],
-        ["Services",  ", ".join(filters.get("services",[])) or "All"],
-        ["Status",    ", ".join(filters.get("status_classes",[])) or "All"],
-        ["Bots",      "Included" if filters.get("include_bots") else "Excluded"],
+        ["Period",    f"{filters.get('start','')} → {filters.get('end','')}"],
+        ["Countries", ", ".join(filters.get("countries",[])) or "All countries"],
+        ["Services",  ", ".join(filters.get("services",[])) or "All services"],
+        ["HTTP Status", ", ".join(filters.get("status_classes",[])) or "All"],
+        ["Bot Traffic", "Included" if filters.get("include_bots") else "Excluded"],
     ]
-    ft = Table([["Filter","Value"]]+frows, colWidths=[4*cm,13*cm])
+    ft = Table([["Filter", "Value"]] + frows, colWidths=[4.5*cm, 12.5*cm])
     ft.setStyle(TableStyle([
-        ("BACKGROUND",(0,0),(-1,0),rlc.HexColor("#0B1F3A")),
-        ("TEXTCOLOR", (0,0),(-1,0),rlc.white),
-        ("FONTSIZE",  (0,0),(-1,-1),9),
-        ("ROWBACKGROUNDS",(0,1),(-1,-1),[rlc.HexColor("#F3F4F6"),rlc.white]),
-        ("GRID",(0,0),(-1,-1),.4,rlc.HexColor("#D9E2EC")),
-        ("PADDING",(0,0),(-1,-1),5),
+        ("BACKGROUND",    (0,0), (-1,0), navy),
+        ("TEXTCOLOR",     (0,0), (-1,0), rlc.white),
+        ("FONTSIZE",      (0,0), (-1,-1), 9),
+        ("FONTNAME",      (0,0), (-1,0), "Helvetica-Bold"),
+        ("ROWBACKGROUNDS",(0,1), (-1,-1), [light, rlc.white]),
+        ("GRID",          (0,0), (-1,-1), 0.3, rlc.HexColor("#D9E2EC")),
+        ("PADDING",       (0,0), (-1,-1), 6),
+        ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
     ]))
-    els += [ft, Spacer(1,12)]
+    els += [ft, Spacer(1, 14)]
+
+    # ── KPIs ──────────────────────────────────────────────────────
     if kpis:
         els.append(Paragraph("Key Performance Indicators", h2))
-        kr = [[k.get("label",""),k.get("value",""),k.get("note","")] for k in kpis]
-        kt = Table([["Metric","Value","Note"]]+kr, colWidths=[7*cm,4*cm,6*cm])
+        kr = [[k.get("label",""), k.get("value",""), k.get("note","")] for k in kpis]
+        kt = Table([["Metric", "Value", "Note"]] + kr, colWidths=[7*cm, 4*cm, 6*cm])
         kt.setStyle(TableStyle([
-            ("BACKGROUND",(0,0),(-1,0),rlc.HexColor("#2563FF")),
-            ("TEXTCOLOR", (0,0),(-1,0),rlc.white),
-            ("FONTSIZE",  (0,0),(-1,-1),9),
-            ("ROWBACKGROUNDS",(0,1),(-1,-1),[rlc.HexColor("#DBEAFE"),rlc.white]),
-            ("GRID",(0,0),(-1,-1),.4,rlc.HexColor("#D9E2EC")),
-            ("PADDING",(0,0),(-1,-1),5),
+            ("BACKGROUND",    (0,0), (-1,0), rlc.HexColor("#2563FF")),
+            ("TEXTCOLOR",     (0,0), (-1,0), rlc.white),
+            ("FONTNAME",      (0,0), (-1,0), "Helvetica-Bold"),
+            ("FONTSIZE",      (0,0), (-1,-1), 9),
+            ("ROWBACKGROUNDS",(0,1), (-1,-1), [rlc.HexColor("#DBEAFE"), rlc.white]),
+            ("GRID",          (0,0), (-1,-1), 0.3, rlc.HexColor("#D9E2EC")),
+            ("PADDING",       (0,0), (-1,-1), 7),
+            ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
         ]))
-        els += [kt, Spacer(1,12)]
+        els += [kt, Spacer(1, 14)]
+
+    # ── Insights ──────────────────────────────────────────────────
     if bullets:
         els.append(Paragraph("Insights", h2))
         for b in bullets:
-            clean = b.replace("<strong>","").replace("</strong>","")
-            els.append(Paragraph(f"• {clean}", bdy))
+            clean = b.replace("<strong>", "").replace("</strong>", "")
+            els.append(Paragraph(f"• &nbsp;{clean}", bdy))
+        els.append(Spacer(1, 10))
+
+    # ── 3 Charts ─────────────────────────────────────────────────
+    data_for_charts = chart_df if (chart_df is not None and not chart_df.empty) else evidence_df
+    if not data_for_charts.empty:
+        els.append(Paragraph("Analytics Charts", h2))
+        try:
+            els.append(_make_chart_image(_chart_requests_by_service(data_for_charts), 15, 6.5))
+            els.append(Spacer(1, 8))
+            els.append(_make_chart_image(_chart_daily_requests(data_for_charts), 15, 6))
+            els.append(Spacer(1, 8))
+            els.append(_make_chart_image(_chart_top_countries(data_for_charts), 15, 6.5))
+            els.append(Spacer(1, 12))
+        except Exception:
+            pass
+
+    # ── Evidence table ────────────────────────────────────────────
     if not evidence_df.empty:
-        els += [Spacer(1,12), Paragraph("Evidence (Top 20 rows)", h2)]
-        evd = evidence_df.head(20)
+        els.append(Paragraph("Evidence (Top 25 rows)", h2))
+        show_cols = [c for c in ["timestamp","country","service_name","event_type",
+                                 "segment","status_class","is_warm_lead","response_time_ms"]
+                     if c in evidence_df.columns]
+        evd = evidence_df[show_cols].head(25) if show_cols else evidence_df.head(25)
         er2 = [list(evd.columns)] + evd.astype(str).values.tolist()
         ncols = len(evd.columns)
-        et = Table(er2, colWidths=[17*cm/ncols]*ncols)
+        col_w = 17*cm / ncols
+        et = Table(er2, colWidths=[col_w]*ncols, repeatRows=1)
         et.setStyle(TableStyle([
-            ("BACKGROUND",(0,0),(-1,0),rlc.HexColor("#1F3A5F")),
-            ("TEXTCOLOR", (0,0),(-1,0),rlc.white),
-            ("FONTSIZE",  (0,0),(-1,-1),8),
-            ("ROWBACKGROUNDS",(0,1),(-1,-1),[rlc.HexColor("#F3F4F6"),rlc.white]),
-            ("GRID",(0,0),(-1,-1),.4,rlc.HexColor("#D9E2EC")),
-            ("PADDING",(0,0),(-1,-1),4),
+            ("BACKGROUND",    (0,0), (-1,0), rlc.HexColor("#1F3A5F")),
+            ("TEXTCOLOR",     (0,0), (-1,0), rlc.white),
+            ("FONTNAME",      (0,0), (-1,0), "Helvetica-Bold"),
+            ("FONTSIZE",      (0,0), (-1,-1), 7.5),
+            ("ROWBACKGROUNDS",(0,1), (-1,-1), [rlc.HexColor("#F0F7FF"), rlc.white]),
+            ("GRID",          (0,0), (-1,-1), 0.3, rlc.HexColor("#D9E2EC")),
+            ("PADDING",       (0,0), (-1,-1), 5),
+            ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
         ]))
         els.append(et)
-    els += [Spacer(1,16),
-            Paragraph("Generated from CyberNova synthetic IIS web-log dataset for CET333 Product Development prototype.", cap)]
+
+    # ── Footer ────────────────────────────────────────────────────
+    els += [
+        Spacer(1, 18),
+        HRFlowable(width="100%", thickness=0.5, color=rlc.HexColor("#D9E2EC"), spaceAfter=6),
+        Paragraph(
+            "Generated from CyberNova synthetic IIS web-log dataset · "
+            "CET333 Product Development prototype · Rule-based insights only.",
+            cap,
+        ),
+    ]
     doc.build(els)
     return buf.getvalue()
 
@@ -1584,10 +1740,32 @@ def render_report_section(
     </div>
   </div>
 </div>""", unsafe_allow_html=True)
+    # Date-bounded slices for weekly and monthly reports
+    _today       = date.today()
+    _week_start  = _today - timedelta(days=7)
+    _month_ago   = date(_today.year if _today.month > 1 else _today.year - 1,
+                        _today.month - 1 if _today.month > 1 else 12,
+                        _today.day)
+
+    def _slice_df(df: pd.DataFrame, start: date, end: date) -> pd.DataFrame:
+        if df.empty or "date" not in df.columns:
+            return df
+        d = pd.to_datetime(df["date"], errors="coerce").dt.date
+        return df[(d >= start) & (d <= end)].reset_index(drop=True)
+
+    _weekly_filters  = {**filters, "start": str(_week_start),  "end": str(_today)}
+    _monthly_filters = {**filters, "start": str(_month_ago),   "end": str(_today)}
+    _weekly_evd  = _slice_df(evidence_df, _week_start, _today)
+    _monthly_evd = _slice_df(evidence_df, _month_ago,  _today)
+    _weekly_fdf  = _slice_df(fdf,         _week_start, _today)
+    _monthly_fdf = _slice_df(fdf,         _month_ago,  _today)
+
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         try:
-            pdf_w = build_pdf_report(dashboard, role, "Weekly", filters, kpis, bullets, evidence_df)
+            pdf_w = build_pdf_report(dashboard, role, "Weekly",
+                                     _weekly_filters, kpis, bullets,
+                                     _weekly_evd, chart_df=_weekly_fdf)
             st.download_button("Weekly PDF Report", data=pdf_w,
                                file_name=f"{dashboard.lower().replace(' ','_')}_weekly.pdf",
                                mime="application/pdf", use_container_width=True,
@@ -1596,7 +1774,9 @@ def render_report_section(
             st.error(f"PDF error: {e}")
     with c2:
         try:
-            pdf_m = build_pdf_report(dashboard, role, "Monthly", filters, kpis, bullets, evidence_df)
+            pdf_m = build_pdf_report(dashboard, role, "Monthly",
+                                     _monthly_filters, kpis, bullets,
+                                     _monthly_evd, chart_df=_monthly_fdf)
             st.download_button("Monthly PDF Report", data=pdf_m,
                                file_name=f"{dashboard.lower().replace(' ','_')}_monthly.pdf",
                                mime="application/pdf", use_container_width=True,
@@ -3426,6 +3606,18 @@ def main() -> None:
     )
     role = st.session_state.get("role","")
     nav  = st.session_state.get("nav", DASHBOARDS[0])
+
+    # Scroll to top whenever the user switches dashboard
+    if st.session_state.get("_prev_nav") != nav:
+        st.session_state["_prev_nav"] = nav
+        st.components.v1.html(
+            "<script>"
+            "const el = window.parent.document.querySelector("
+            "  '[data-testid=\"stAppViewContainer\"] > section.main');"
+            "if(el) el.scrollTo({top:0,behavior:'instant'});"
+            "</script>",
+            height=0,
+        )
 
     has_access = lambda dash: dash in ROLES.get(role,{}).get("access",[])
 
