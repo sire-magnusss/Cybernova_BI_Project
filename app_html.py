@@ -167,11 +167,11 @@ html,body,[class*="css"]{
    SECTION HEADING SYSTEM
 ═══════════════════════════════════════════════════════════════ */
 .cn-section-eyebrow{
-  font-size:10.5px;text-transform:uppercase;letter-spacing:.16em;
+  font-size:13px;text-transform:uppercase;letter-spacing:.16em;
   color:#7B8794;font-weight:900;line-height:1;
 }
 .cn-section-heading{
-  font-size:22px;font-weight:900;color:#0B1F3A;
+  font-size:26px;font-weight:900;color:#0B1F3A;
   letter-spacing:-.04em;line-height:1.2;margin:6px 0 0;
 }
 .cn-section-divider{
@@ -369,16 +369,14 @@ hr{border:none;border-top:1px solid #D9E2EC;margin:1.6rem 0;}
   border-color:#334155 !important;
 }
 
-/* Text: make all dark-navy / dark-grey text light.
-   Accent colors (blue, cyan, green, amber, red, white) are preserved. */
-[data-testid="stMarkdownContainer"] *:not([style*="color:#2563FF"])
-  :not([style*="color:#16B8C7"]):not([style*="color:#10B981"])
-  :not([style*="color:#F59E0B"]):not([style*="color:white"])
-  :not([style*="color:#047857"]):not([style*="color:#0E7490"])
-  :not([style*="color:#EF4444"]):not([style*="color:#92400E"])
-  :not([style*="color:#1E40AF"]) {
-  color:#CBD5E1 !important;
+/* All text white in dark mode */
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] *,
+[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stMarkdownContainer"] * {
+  color:white !important;
 }
+.stMarkdown, .stMarkdown *, .stText, .stCaption,
+[data-testid="stCaptionContainer"] { color:white !important; }
 
 /* Expanders */
 [data-testid="stExpander"]{
@@ -727,9 +725,9 @@ def render_hero(title: str, badge: str, subtitle: str) -> None:
       {badge}
     </div>
   </div>
-  <h1 style="margin:0;font-size:38px;letter-spacing:-.055em;line-height:1.05;
+  <h1 style="margin:0;font-size:46px;letter-spacing:-.055em;line-height:1.05;
     position:relative;z-index:1;">{title}</h1>
-  <p style="max-width:920px;margin:14px 0 0;color:#E6EEF8;font-size:16px;
+  <p style="max-width:920px;margin:14px 0 0;color:#E6EEF8;font-size:19px;
     line-height:1.65;position:relative;z-index:1;">{subtitle}</p>
 </div>""", unsafe_allow_html=True)
 
@@ -749,14 +747,14 @@ def render_section_label(text: str) -> None:
     else:
         eyebrow, heading = text, ""
     heading_html = (
-        f'<div style="font-size:23px;font-weight:900;color:{NAVY};'
+        f'<div style="font-size:26px;font-weight:900;color:{NAVY};'
         f'letter-spacing:-.04em;line-height:1.2;margin:7px 0 0;">{heading}</div>'
         if heading else ""
     )
     st.markdown(
         f'<div style="margin:52px 0 22px;">'
         f'<div style="display:flex;align-items:center;gap:14px;">'
-        f'<span style="font-size:10.5px;text-transform:uppercase;letter-spacing:.16em;'
+        f'<span style="font-size:13px;text-transform:uppercase;letter-spacing:.16em;'
         f'color:{MUTED};font-weight:900;white-space:nowrap;">{eyebrow}</span>'
         f'<span style="height:1.5px;background:linear-gradient(90deg,{BORDER},transparent);'
         f'flex:1;display:block;border-radius:2px;"></span>'
@@ -798,8 +796,8 @@ def render_context_chips(filters: dict, role: str, row_count: int) -> None:
 def _kpi_font_size(value: str) -> str:
     import re
     if re.match(r'^[+\-]?[\d,]+(\.\d+)?[%KMk~]?$', value.strip()):
-        return "31px"
-    return "17px"
+        return "35px"
+    return "21px"
 
 def render_kpi_card(label: str, value: str, delta: str,
                     delta_good: bool = True, accent: str = BLUE) -> None:
@@ -812,14 +810,14 @@ def render_kpi_card(label: str, value: str, delta: str,
   display:flex;flex-direction:column;justify-content:space-between;
   transition:box-shadow .2s;">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-    <div style="font-size:11px;color:{SECONDARY};font-weight:900;
+    <div style="font-size:13px;color:{SECONDARY};font-weight:900;
       text-transform:uppercase;letter-spacing:.08em;line-height:1.3;">{label}</div>
     <div style="width:8px;height:8px;border-radius:50%;background:{dot};
       flex-shrink:0;margin-top:3px;box-shadow:0 0 0 3px {'rgba(16,185,129,.18)' if delta_good else 'rgba(245,158,11,.18)'};"></div>
   </div>
   <div style="font-size:{_kpi_font_size(value)};font-weight:950;color:{NAVY};letter-spacing:-.05em;
     line-height:1.1;margin:10px 0 8px;word-break:break-word;">{value}</div>
-  <div style="font-size:12.5px;font-weight:700;color:{dc};">{delta}</div>
+  <div style="font-size:14px;font-weight:700;color:{dc};">{delta}</div>
 </div>""", unsafe_allow_html=True)
 
 def render_live_card(title: str, subtitle: str, value: str, caption: str,
@@ -829,11 +827,11 @@ def render_live_card(title: str, subtitle: str, value: str, caption: str,
   box-shadow:{SHADOW_S};padding:18px;min-height:168px;position:relative;overflow:hidden;">
   <div style="position:absolute;right:-45px;top:-45px;width:120px;height:120px;
     border-radius:999px;background:rgba(37,99,255,.06);"></div>
-  <div style="font-size:13px;font-weight:900;color:{NAVY};position:relative;z-index:1;">{title}</div>
-  <div style="font-size:12px;color:{MUTED};margin-top:3px;position:relative;z-index:1;">{subtitle}</div>
-  <div style="font-size:30px;font-weight:950;letter-spacing:-.05em;color:{accent};
+  <div style="font-size:15px;font-weight:900;color:{NAVY};position:relative;z-index:1;">{title}</div>
+  <div style="font-size:14px;color:{MUTED};margin-top:3px;position:relative;z-index:1;">{subtitle}</div>
+  <div style="font-size:34px;font-weight:950;letter-spacing:-.05em;color:{accent};
     margin:12px 0 4px;position:relative;z-index:1;">{value}</div>
-  <div style="font-size:12px;font-weight:800;color:{SECONDARY};position:relative;z-index:1;">{caption}</div>
+  <div style="font-size:14px;font-weight:800;color:{SECONDARY};position:relative;z-index:1;">{caption}</div>
 </div>""", unsafe_allow_html=True)
 
 def render_story_card(title: str, subtitle: str, bullets: list[str],
@@ -845,23 +843,23 @@ def render_story_card(title: str, subtitle: str, bullets: list[str],
   box-shadow:{SHADOW_S};padding:22px;margin-bottom:18px;
   display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:start;">
   <div>
-    <h2 style="margin:0 0 6px;color:{NAVY};font-size:23px;letter-spacing:-.035em;">{title}</h2>
-    <p style="margin:0 0 14px;color:{SECONDARY};font-size:14px;">{subtitle}</p>
+    <h2 style="margin:0 0 6px;color:{NAVY};font-size:26px;letter-spacing:-.035em;">{title}</h2>
+    <p style="margin:0 0 14px;color:{SECONDARY};font-size:16px;">{subtitle}</p>
     <ul style="margin:0;padding-left:20px;">{items}</ul>
   </div>
   <div style="border-radius:18px;padding:18px;
     background:linear-gradient(180deg,{accent_soft},#FFFFFF);
     border:1px solid rgba(37,99,255,.18);">
-    <strong style="display:block;color:{accent};margin-bottom:6px;font-size:13px;
+    <strong style="display:block;color:{accent};margin-bottom:6px;font-size:14px;
       text-transform:uppercase;letter-spacing:.08em;">Recommended Action</strong>
-    <span style="color:{TEXT};font-weight:800;font-size:15px;">{action}</span>
+    <span style="color:{TEXT};font-weight:800;font-size:17px;">{action}</span>
   </div>
 </div>""", unsafe_allow_html=True)
 
 def render_insight_note(text: str, accent_soft: str = BLUE_SOFT, accent: str = "#1E40AF") -> None:
     st.markdown(
         f'<div style="margin-top:14px;margin-bottom:8px;padding:12px 18px;border-radius:12px;'
-        f'background:{accent_soft};color:{accent};font-size:12.5px;font-weight:700;'
+        f'background:{accent_soft};color:{accent};font-size:14px;font-weight:700;'
         f'display:flex;align-items:flex-start;gap:8px;line-height:1.55;width:100%;'
         f'box-sizing:border-box;">'
         f'<span style="width:7px;height:7px;border-radius:50%;background:{accent};'
@@ -874,15 +872,15 @@ def render_empty_state(msg: str = "No data for current filters") -> None:
     st.markdown(f"""
 <div style="background:white;border:1px dashed {BORDER};border-radius:18px;
   padding:3rem 2rem;text-align:center;margin-top:1rem;">
-  <div style="font-size:1.3rem;font-weight:800;color:{NAVY};margin-bottom:.5rem;">{msg}</div>
-  <div style="color:{MUTED};font-size:.9rem;">
+  <div style="font-size:1.5rem;font-weight:800;color:{NAVY};margin-bottom:.5rem;">{msg}</div>
+  <div style="color:{MUTED};font-size:1.05rem;">
     Try adjusting the date range, removing filters, or resetting to defaults.
   </div>
 </div>""", unsafe_allow_html=True)
 
 def render_card_header(title: str, subtitle: str = "", eyebrow: str = "") -> None:
     eyebrow_html = (
-        f'<div style="font-size:10px;text-transform:uppercase;letter-spacing:.14em;'
+        f'<div style="font-size:12px;text-transform:uppercase;letter-spacing:.14em;'
         f'color:{MUTED};font-weight:900;margin-bottom:6px;">{eyebrow}</div>'
         if eyebrow else ""
     )
@@ -891,9 +889,9 @@ def render_card_header(title: str, subtitle: str = "", eyebrow: str = "") -> Non
     st.markdown(
         f'<div style="margin-bottom:4px;">'
         + eyebrow_html
-        + f'<h3 style="margin:0;font-size:17px;font-weight:900;color:{NAVY};'
+        + f'<h3 style="margin:0;font-size:20px;font-weight:900;color:{NAVY};'
         f'letter-spacing:-.03em;line-height:1.25;">{title}</h3>'
-        + (f'<p style="margin:4px 0 0;color:{MUTED};font-size:12.5px;font-weight:500;'
+        + (f'<p style="margin:4px 0 0;color:{MUTED};font-size:15px;font-weight:500;'
            f'line-height:1.45;">{subtitle}</p>' if subtitle else "")
         + rule
         + "</div>", unsafe_allow_html=True,
@@ -1108,9 +1106,9 @@ def render_live_section(fdf: pd.DataFrame, role: str, dashboard: str) -> None:
   <div style="font-size:2.15rem;font-weight:900;line-height:1;
     font-variant-numeric:tabular-nums;letter-spacing:-.02em;
     animation:live-tick .45s ease-out;">{val_html}</div>
-  <div style="font-size:11px;font-weight:800;text-transform:uppercase;
+  <div style="font-size:13px;font-weight:800;text-transform:uppercase;
     letter-spacing:.09em;color:{ac};margin-top:7px;">{label}</div>
-  <div style="font-size:11px;color:{MUTED};margin-top:3px;">{sublabel}</div>
+  <div style="font-size:13px;color:{MUTED};margin-top:3px;">{sublabel}</div>
   {bar_html}
 </div>"""
         return f'<div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid {BORDER};">{cells}</div>'
