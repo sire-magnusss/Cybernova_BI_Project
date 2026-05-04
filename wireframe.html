@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberNova BI Dashboard — Final Wireframe</title>
+
+  <style>
+    :root {
+      --bg: #F3F4F6;
+      --card: #FFFFFF;
+      --text: #102A43;
+      --secondary: #52606D;
+      --muted: #7B8794;
+      --border: #D9E2EC;
+
+      --sidebar-dark: #0B1E3D;
+      --sidebar-panel: #102A43;
+      --header: #1F3A5F;
+      --navy: #0B1F3A;
+
+      --blue: #2563FF;
+      --blue-soft: #DBEAFE;
+      --cyan: #16B8C7;
+      --cyan-soft: #CFFAFE;
+      --green: #10B981;
+      --green-soft: #D1FAE5;
+      --amber: #F59E0B;
+      --amber-soft: #FEF3C7;
+      --slate-soft: #E5EAF0;
+
+      --shadow: 0 18px 45px rgba(11,31,58,.08);
+      --shadow-soft: 0 8px 24px rgba(11,31,58,.08);
+      --radius-xl: 26px;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(37,99,255,.09), transparent 30%),
+        radial-gradient(circle at 90% 10%, rgba(22,184,199,.12), transparent 30%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select {
+      font-family: inherit;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+    }
+
+    /* =========================
+       SIDEBAR
+    ========================== */
+
+    .sidebar {
+      background: linear-gradient(180deg, #0B1E3D 0%, #102A43 100%);
+      color: white;
+      padding: 28px 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid rgba(255,255,255,.08);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      color: white;
+      font-weight: 950;
+      letter-spacing: -.05em;
+      box-shadow: 0 16px 32px rgba(37,99,255,.28);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 20px;
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      display: block;
+      font-size: 13px;
+      color: #B8C7D9;
+      margin-top: 2px;
+    }
+
+    .role-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(37,99,255,.20);
+      border: 1px solid rgba(37,99,255,.48);
+      color: white;
+      font-size: 13px;
+      font-weight: 850;
+      margin-bottom: 22px;
+    }
+
+    .side-card {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 17px;
+      background: rgba(255,255,255,.045);
+      padding: 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    .side-card h4,
+    .side-section h4 {
+      margin: 0 0 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .11em;
+      color: #9FB2C7;
+    }
+
+    .cred-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      margin: 9px 0;
+      color: #EFF6FF;
+    }
+
+    .cred-row code {
+      background: rgba(37,99,255,.30);
+      border: 1px solid rgba(37,99,255,.55);
+      padding: 4px 8px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 850;
+    }
+
+    .side-section {
+      padding-top: 22px;
+      margin-top: 22px;
+      border-top: 1px solid rgba(255,255,255,.07);
+    }
+
+    .nav {
+      display: grid;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.055);
+      color: white;
+      padding: 15px 16px;
+      border-radius: 15px;
+      text-align: left;
+      font-weight: 850;
+      cursor: pointer;
+      transition: .18s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-btn span {
+      display: block;
+      color: #B8C7D9;
+      font-size: 11px;
+      margin-top: 3px;
+      font-weight: 650;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255,255,255,.10);
+      transform: translateX(2px);
+    }
+
+    .nav-btn.active {
+      border-color: var(--blue);
+      background: linear-gradient(135deg, rgba(37,99,255,.76), rgba(22,184,199,.22));
+      box-shadow: inset 4px 0 0 var(--cyan);
+    }
+
+    .filter-card {
+      background: rgba(255,255,255,.96);
+      color: var(--text);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .control {
+      margin-bottom: 14px;
+    }
+
+    .control label {
+      display: block;
+      font-size: 12px;
+      color: var(--secondary);
+      font-weight: 850;
+      margin-bottom: 7px;
+    }
+
+    .control select,
+    .control input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      background: white;
+    }
+
+    .preset-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .preset {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--secondary);
+      padding: 9px 8px;
+      border-radius: 11px;
+      font-size: 12px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .preset.active {
+      background: var(--blue);
+      color: white;
+      border-color: var(--blue);
+    }
+
+    .side-note {
+      color: #9FB2C7;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 18px;
+    }
+
+    /* =========================
+       MAIN
+    ========================== */
+
+    .main {
+      padding: 28px;
+      min-width: 0;
+    }
+
+    .dashboard {
+      display: none;
+    }
+
+    .dashboard.active {
+      display: block;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      padding: 36px 40px;
+      background: linear-gradient(135deg, #0B1E3D 0%, #1F3A5F 52%, #2563FF 132%);
+      color: white;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -100px;
+      width: 310px;
+      height: 310px;
+      border-radius: 999px;
+      background: rgba(22,184,199,.20);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.10);
+      font-size: 12px;
+      font-weight: 850;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 38px;
+      letter-spacing: -.055em;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      max-width: 920px;
+      margin: 14px 0 0;
+      color: #E6EEF8;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .story-strip {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 18px 0;
+    }
+
+    .story-step {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 850;
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--secondary);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .story-step.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: white;
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin: 18px 0;
+      flex-wrap: wrap;
+    }
+
+    .search {
+      min-width: 300px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 12px 16px;
+      color: var(--muted);
+      box-shadow: var(--shadow-soft);
+      font-size: 14px;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 13px;
+      padding: 12px 15px;
+      font-size: 13px;
+      font-weight: 850;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: .18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+      box-shadow: 0 14px 28px rgba(37,99,255,.22);
+    }
+
+    .btn-secondary {
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .btn-outline {
+      background: white;
+      color: var(--header);
+      border: 1px solid var(--border);
+    }
+
+    .context-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: rgba(255,255,255,.88);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 13px;
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 22px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 850;
+      background: var(--slate-soft);
+      color: var(--secondary);
+    }
+
+    .chip.blue {
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .chip.cyan {
+      background: var(--cyan-soft);
+      color: #0E7490;
+    }
+
+    .chip.green {
+      background: var(--green-soft);
+      color: #047857;
+    }
+
+    .chip.amber {
+      background: var(--amber-soft);
+      color: #92400E;
+    }
+
+    .section-label {
+      margin: 24px 0 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+      font-weight: 950;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .section-label::after {
+      content: "";
+      height: 1px;
+      background: var(--border);
+      flex: 1;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .kpi {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+      padding: 18px;
+      min-height: 168px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .kpi label {
+      display: block;
+      font-size: 12px;
+      color: var(--secondary);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .kpi .value {
+      font-size: 31px;
+      font-weight: 950;
+      color: var(--navy);
+      line-height: 1;
+      letter-spacing: -.05em;
+      margin: 14px 0 7px;
+      word-break: break-word;
+    }
+
+    .kpi .delta {
+      font-size: 13px;
+      font-weight: 850;
+      color: var(--secondary);
+    }
+
+    .delta.good {
+      color: #047857;
+    }
+
+    .delta.warn {
+      color: #92400E;
+    }
+
+    .mini-spark {
+      width: 100%;
+      height: 34px;
+      margin-top: 12px;
+    }
+
+    .story-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow-soft);
+      padding: 22px;
+      margin-bottom: 18px;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .story-card h2 {
+      margin: 0 0 6px;
+      color: var(--navy);
+      font-size: 23px;
+      letter-spacing: -.035em;
+    }
+
+    .story-card p {
+      margin: 0 0 14px;
+      color: var(--secondary);
+    }
+
+    .story-card ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--secondary);
+    }
+
+    .story-card li {
+      margin: 8px 0;
+    }
+
+    .recommend {
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, var(--blue-soft), #FFFFFF);
+      border: 1px solid rgba(37,99,255,.18);
+    }
+
+    .recommend.cyan {
+      background: linear-gradient(180deg, var(--cyan-soft), #FFFFFF);
+      border-color: rgba(22,184,199,.22);
+    }
+
+    .recommend.green {
+      background: linear-gradient(180deg, var(--green-soft), #FFFFFF);
+      border-color: rgba(16,185,129,.22);
+    }
+
+    .recommend strong {
+      display: block;
+      color: var(--blue);
+      margin-bottom: 6px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .recommend.cyan strong {
+      color: #0E7490;
+    }
+
+    .recommend.green strong {
+      color: #047857;
+    }
+
+    .recommend span {
+      color: var(--text);
+      font-weight: 850;
+      font-size: 15px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+      padding: 20px;
+      min-height: 344px;
+    }
+
+    .card.full {
+      grid-column: 1 / -1;
+    }
+
+    .card.compact {
+      min-height: 260px;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 19px;
+      color: var(--navy);
+      letter-spacing: -.03em;
+    }
+
+    .card p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .canvas {
+      min-height: 230px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background:
+        linear-gradient(90deg, rgba(217,226,236,.55) 1px, transparent 1px),
+        linear-gradient(rgba(217,226,236,.55) 1px, transparent 1px),
+        linear-gradient(180deg, #FFFFFF, #F8FAFC);
+      background-size: 52px 52px, 52px 52px, auto;
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 132px 1fr 52px;
+      gap: 12px;
+      align-items: center;
+      margin: 14px 0;
+      color: var(--secondary);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .bar-track {
+      height: 13px;
+      background: var(--slate-soft);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+    }
+
+    .bar-fill.green {
+      background: linear-gradient(90deg, var(--green), var(--cyan));
+    }
+
+    .bar-fill.amber {
+      background: linear-gradient(90deg, var(--amber), var(--cyan));
+    }
+
+    .insight-note {
+      margin-top: 13px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--blue-soft);
+      color: var(--header);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .insight-note.cyan {
+      background: var(--cyan-soft);
+      color: #0E7490;
+    }
+
+    .insight-note.green {
+      background: var(--green-soft);
+      color: #047857;
+    }
+
+    .feed-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .feed-item {
+      display: grid;
+      grid-template-columns: 14px 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #F8FAFC;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      margin-top: 6px;
+      background: var(--blue);
+      box-shadow: 0 0 0 4px var(--blue-soft);
+    }
+
+    .dot.green {
+      background: var(--green);
+      box-shadow: 0 0 0 4px var(--green-soft);
+    }
+
+    .dot.amber {
+      background: var(--amber);
+      box-shadow: 0 0 0 4px var(--amber-soft);
+    }
+
+    .feed-title {
+      font-weight: 900;
+      color: var(--navy);
+      font-size: 14px;
+    }
+
+    .feed-meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: white;
+      font-size: 13px;
+    }
+
+    .table th,
+    .table td {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .table th {
+      background: #F8FAFC;
+      color: var(--secondary);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    .table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .priority-high {
+      color: #047857;
+      font-weight: 900;
+    }
+
+    .priority-medium {
+      color: #92400E;
+      font-weight: 900;
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .download-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .report-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .report-mini {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .report-mini strong {
+      display: block;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .report-mini span {
+      color: var(--secondary);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1180px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+      }
+
+      .kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .chart-grid,
+      .story-card,
+      .report-grid,
+      .report-mini-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .main {
+        padding: 16px;
+      }
+
+      .kpi-row {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 30px;
+      }
+
+      .top-actions {
+        align-items: stretch;
+      }
+
+      .search {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">CN</div>
+        <div>
+          <strong>CyberNova</strong>
+          <span>BI Intelligence Portal</span>
+        </div>
+      </div>
+
+      <div class="role-pill">Admin / Lecturer View</div>
+
+      <div class="side-card">
+        <h4>Demo Credentials</h4>
+        <div class="cred-row"><span>Sales Team Lead</span><code>sales123</code></div>
+        <div class="cred-row"><span>Marketing Lead</span><code>marketing123</code></div>
+        <div class="cred-row"><span>Executive Management</span><code>exec123</code></div>
+        <div class="cred-row"><span>Admin / Lecturer</span><code>admin123</code></div>
+      </div>
+
+      <div class="side-section">
+        <h4>Navigation</h4>
+        <div class="nav">
+          <button class="nav-btn active" onclick="showDash('sales', this)">
+            <div>CyberNova Pulse <span>Sales Command Center</span></div>
+            <div>◆</div>
+          </button>
+          <button class="nav-btn" onclick="showDash('marketing', this)">
+            <div>CyberNova Reach <span>Marketing Intelligence Hub</span></div>
+            <div>◇</div>
+          </button>
+          <button class="nav-btn" onclick="showDash('management', this)">
+            <div>CyberNova Horizon <span>Executive Insights Dashboard</span></div>
+            <div>◇</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="side-section">
+        <h4>Global Filters</h4>
+        <div class="filter-card">
+          <div class="control">
+            <label>Date Range</label>
+            <div class="preset-row">
+              <button class="preset">7d</button>
+              <button class="preset active">30d</button>
+              <button class="preset">90d</button>
+              <button class="preset">Custom</button>
+            </div>
+          </div>
+
+          <div class="control">
+            <label>Country</label>
+            <select>
+              <option>All countries</option>
+              <option>Botswana</option>
+              <option>South Africa</option>
+              <option>Zambia</option>
+              <option>Namibia</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>Service</label>
+            <select>
+              <option>All services</option>
+              <option>AI Cyber Assistant</option>
+              <option>Cybersecurity Monitoring</option>
+              <option>Risk Assessment</option>
+              <option>Rapid Prototyping</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>Status Class</label>
+            <select>
+              <option>2xx</option>
+              <option>3xx</option>
+              <option>4xx</option>
+              <option>5xx</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>Segment</label>
+            <select>
+              <option>All segments</option>
+              <option>High-intent</option>
+              <option>Product-curious</option>
+              <option>General browser</option>
+              <option>Bot</option>
+            </select>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%; justify-content:center;">Apply Filters</button>
+          <button class="btn btn-outline" style="width:100%; justify-content:center; margin-top:8px;">Reset Filters</button>
+        </div>
+
+        <p class="side-note">
+          Prototype access layer only. Production deployment would require authentication, password hashing, audit logging, and full role-based access control.
+        </p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- SALES DASHBOARD -->
+      <section id="sales" class="dashboard active">
+        <div class="hero">
+          <div class="hero-badge">Dashboards / Sales / CyberNova Pulse</div>
+          <h1>Sales Command Center</h1>
+          <p>Monitor live lead activity, diagnose conversion movement, and package weekly or monthly sales intelligence for follow-up planning.</p>
+        </div>
+
+        <div class="story-strip">
+          <span class="story-step active">Live Pulse</span>
+          <span class="story-step">Strategic Analytics</span>
+          <span class="story-step">Evidence</span>
+          <span class="story-step">Reports & Exports</span>
+        </div>
+
+        <div class="top-actions">
+          <div class="search">Search leads, services, sessions</div>
+          <div class="action-row">
+            <button class="btn btn-outline">Download Dashboard</button>
+            <button class="btn btn-outline">Export CSV</button>
+            <button class="btn btn-secondary">Refresh Data</button>
+            <button class="btn btn-primary">Generate Report</button>
+          </div>
+        </div>
+
+        <div class="context-row">
+          <span class="chip blue">Role: Sales Team Lead</span>
+          <span class="chip cyan">Date: 30d</span>
+          <span class="chip">Country: All</span>
+          <span class="chip">Service: All</span>
+          <span class="chip">Status: 2xx</span>
+          <span class="chip amber">Bots: Excluded</span>
+          <span class="chip green">Last refresh: Today 09:42</span>
+        </div>
+
+        <div class="section-label">Live Pulse</div>
+        <div class="kpi-row">
+          <div class="kpi">
+            <label>New Warm Leads (24h)</label>
+            <div class="value">21</div>
+            <div class="delta good">+3 since yesterday</div>
+            <svg class="mini-spark" viewBox="0 0 160 36">
+              <path d="M4 30 C24 26 34 16 54 20 S92 30 118 12 S142 8 156 7" fill="none" stroke="#10B981" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="kpi">
+            <label>Weekly Warm Leads</label>
+            <div class="value">103</div>
+            <div class="delta good">Last 7 days</div>
+            <svg class="mini-spark" viewBox="0 0 160 36">
+              <path d="M4 29 L32 26 L58 23 L84 20 L116 15 L156 10" fill="none" stroke="#2563FF" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="kpi"><label>AI → Demo Conversion</label><div class="value">9.4%</div><div class="delta good">AI Assistant sessions</div></div>
+          <div class="kpi"><label>Current Top Country</label><div class="value">Botswana</div><div class="delta">By warm lead events</div></div>
+          <div class="kpi"><label>Current Hot Service</label><div class="value">AI Assistant</div><div class="delta warn">Most lead interest</div></div>
+        </div>
+
+        <div class="section-label">Insight</div>
+        <div class="story-card">
+          <div>
+            <h2>Sales Insight</h2>
+            <p>What the current web activity suggests Sales should prioritise.</p>
+            <ul>
+              <li>Botswana is currently producing the strongest warm-lead activity.</li>
+              <li>AI Assistant has the strongest product-led interest and should lead the sales conversation.</li>
+              <li>Demo requests are concentrated during business hours, supporting fast follow-up windows.</li>
+              <li>The main sales opportunity is reducing drop-off between service interest and demo request.</li>
+            </ul>
+          </div>
+          <div class="recommend">
+            <strong>Recommended Sales Action</strong>
+            <span>Prioritise Botswana warm leads showing AI Assistant interest.</span>
+          </div>
+        </div>
+
+        <div class="section-label">Strategic Analytics</div>
+        <div class="chart-grid">
+          <article class="card">
+            <div class="card-head"><div><h3>Where did warm leads come from?</h3><p>Ranked lead origins by country.</p></div><span class="chip blue">Geo Lead Mix</span></div>
+            <div class="canvas">
+              <div class="bar-row"><span>Botswana</span><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><span>42%</span></div>
+              <div class="bar-row"><span>South Africa</span><div class="bar-track"><div class="bar-fill green" style="width:64%"></div></div><span>31%</span></div>
+              <div class="bar-row"><span>Zambia</span><div class="bar-track"><div class="bar-fill" style="width:48%"></div></div><span>23%</span></div>
+              <div class="bar-row"><span>Namibia</span><div class="bar-track"><div class="bar-fill amber" style="width:36%"></div></div><span>17%</span></div>
+            </div>
+            <div class="insight-note">This identifies where Sales should focus regional follow-up first.</div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>What service should Sales lead with?</h3><p>Warm lead activity by CyberNova service.</p></div><span class="chip cyan">Priority</span></div>
+            <div class="canvas">
+              <div class="bar-row"><span>AI Assistant</span><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><span>91</span></div>
+              <div class="bar-row"><span>Cybersecurity</span><div class="bar-track"><div class="bar-fill green" style="width:67%"></div></div><span>68</span></div>
+              <div class="bar-row"><span>Risk Assessment</span><div class="bar-track"><div class="bar-fill" style="width:52%"></div></div><span>49</span></div>
+              <div class="bar-row"><span>Prototype</span><div class="bar-track"><div class="bar-fill amber" style="width:41%"></div></div><span>39</span></div>
+            </div>
+            <div class="insight-note">This shows which product should lead the commercial conversation.</div>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Where in the funnel are we losing leads?</h3><p>Index → Service Page → Demo Page → Demo Submission.</p></div><span class="chip blue">Funnel</span></div>
+            <div class="canvas">
+              <div class="bar-row"><span>Index Page</span><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span>4,823</span></div>
+              <div class="bar-row"><span>Service Page</span><div class="bar-track"><div class="bar-fill green" style="width:71%"></div></div><span>2,614</span></div>
+              <div class="bar-row"><span>Demo Page</span><div class="bar-track"><div class="bar-fill amber" style="width:45%"></div></div><span>694</span></div>
+              <div class="bar-row"><span>Submission</span><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span>287</span></div>
+            </div>
+            <div class="insight-note">This shows where prospects drop before becoming warm leads.</div>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Live Activity Feed</h3><p>Latest lead and service-intent events requiring possible follow-up.</p></div><span class="chip green">Operational Pulse</span></div>
+            <div class="feed-list">
+              <div class="feed-item"><div class="dot green"></div><div><div class="feed-title">Botswana — AI Assistant — demo_request</div><div class="feed-meta">2026-02-04 14:21 · High-intent · 2xx</div></div><span class="chip green">Follow up</span></div>
+              <div class="feed-item"><div class="dot"></div><div><div class="feed-title">South Africa — Cybersecurity Monitoring — page_request</div><div class="feed-meta">2026-02-04 14:18 · Product-curious · 2xx</div></div><span class="chip blue">Monitor</span></div>
+              <div class="feed-item"><div class="dot amber"></div><div><div class="feed-title">Zambia — Prototype — bot_request</div><div class="feed-meta">2026-02-04 14:11 · Bot · 4xx</div></div><span class="chip amber">Review</span></div>
+            </div>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Sales Action Queue</h3><p>Evidence records supporting follow-up decisions.</p></div><button class="btn btn-outline">Download Warm Leads CSV</button></div>
+            <table class="table">
+              <thead><tr><th>Priority</th><th>Timestamp</th><th>Country</th><th>Service</th><th>Event</th><th>Recommended Action</th></tr></thead>
+              <tbody>
+                <tr><td class="priority-high">High</td><td>2026-02-04 14:21</td><td>Botswana</td><td>AI Assistant</td><td>demo_request</td><td>Contact within 24 hours</td></tr>
+                <tr><td class="priority-high">High</td><td>2026-02-04 13:52</td><td>South Africa</td><td>Cybersecurity</td><td>contact_request</td><td>Assign to sales representative</td></tr>
+                <tr><td class="priority-medium">Medium</td><td>2026-02-04 12:40</td><td>Zambia</td><td>Risk Assessment</td><td>page_request</td><td>Send product brief</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Reports & Exports</h3><p>Share weekly and monthly sales intelligence with stakeholders.</p></div><span class="chip blue">Report Ready</span></div>
+            <div class="report-grid">
+              <div>
+                <p><strong>Included in reports:</strong> KPI summary, warm lead origin, hot services, funnel movement, action queue, and follow-up recommendations.</p>
+                <div class="report-mini-grid">
+                  <div class="report-mini"><strong>Weekly Sales Brief</strong><span>Recent warm leads, hot services, follow-up queue.</span></div>
+                  <div class="report-mini"><strong>Monthly Sales Report</strong><span>Conversion trend, funnel drop-off, regional opportunity.</span></div>
+                  <div class="report-mini"><strong>Filtered Evidence Pack</strong><span>CSV extract for audit and report appendix.</span></div>
+                </div>
+              </div>
+              <div class="download-stack">
+                <button class="btn btn-primary">Download Weekly Sales PDF</button>
+                <button class="btn btn-secondary">Download Monthly Sales PDF</button>
+                <button class="btn btn-outline">Download Filtered Data CSV</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- MARKETING DASHBOARD -->
+      <section id="marketing" class="dashboard">
+        <div class="hero">
+          <div class="hero-badge">Dashboards / Marketing / CyberNova Reach</div>
+          <h1>Marketing Intelligence Hub</h1>
+          <p>Monitor audience behaviour, diagnose campaign opportunities, and package weekly or monthly marketing performance reports.</p>
+        </div>
+
+        <div class="story-strip">
+          <span class="story-step active">Live Pulse</span>
+          <span class="story-step">Strategic Analytics</span>
+          <span class="story-step">Campaign Evidence</span>
+          <span class="story-step">Reports & Exports</span>
+        </div>
+
+        <div class="top-actions">
+          <div class="search">Search pages, campaigns, countries</div>
+          <div class="action-row">
+            <button class="btn btn-outline">Download Dashboard</button>
+            <button class="btn btn-outline">Export CSV</button>
+            <button class="btn btn-secondary">Refresh Data</button>
+            <button class="btn btn-primary">Generate Marketing Summary</button>
+          </div>
+        </div>
+
+        <div class="context-row">
+          <span class="chip cyan">Role: Marketing Lead</span>
+          <span class="chip cyan">Date: 30d</span>
+          <span class="chip">Country: All</span>
+          <span class="chip">Service: All</span>
+          <span class="chip amber">Bots: Reviewed</span>
+          <span class="chip green">Last refresh: Today 09:42</span>
+        </div>
+
+        <div class="section-label">Live Pulse</div>
+        <div class="kpi-row">
+          <div class="kpi"><label>Unique Visitors</label><div class="value">4,823</div><div class="delta good">+752 this month</div></div>
+          <div class="kpi"><label>Engaged Session Rate</label><div class="value">41.2%</div><div class="delta good">+3.1%</div></div>
+          <div class="kpi"><label>Top Entry Page</label><div class="value" style="font-size:23px">/ai-assistant</div><div class="delta">Highest depth</div></div>
+          <div class="kpi"><label>Geographic Reach</label><div class="value">10</div><div class="delta good">SADC markets</div></div>
+          <div class="kpi"><label>Bot Ratio</label><div class="value">9.9%</div><div class="delta">Controlled</div></div>
+        </div>
+
+        <div class="section-label">Insight</div>
+        <div class="story-card">
+          <div>
+            <h2>Marketing Insight</h2>
+            <p>What the current audience behaviour suggests Marketing should optimise.</p>
+            <ul>
+              <li>Botswana has the largest audience volume and strongest campaign base.</li>
+              <li>AI Assistant pages are producing strong onward engagement.</li>
+              <li>Product-curious visitors show clear movement toward sales-readiness.</li>
+              <li>Bot activity is controlled and unlikely to dominate interpretation.</li>
+            </ul>
+          </div>
+          <div class="recommend cyan">
+            <strong>Recommended Marketing Action</strong>
+            <span>Focus campaign testing on Botswana and AI Assistant landing pages.</span>
+          </div>
+        </div>
+
+        <div class="section-label">Strategic Analytics</div>
+        <div class="chart-grid">
+          <article class="card">
+            <div class="card-head"><div><h3>Where should we direct ad spend?</h3><p>Audience volume, engagement, and warm-lead signals.</p></div><span class="chip cyan">Campaign Planning</span></div>
+            <div class="canvas">
+              <svg viewBox="0 0 520 230">
+                <rect x="40" y="30" width="190" height="80" fill="#DBEAFE" opacity=".7"/>
+                <rect x="230" y="30" width="240" height="80" fill="#D1FAE5" opacity=".7"/>
+                <rect x="40" y="110" width="190" height="80" fill="#E5EAF0" opacity=".7"/>
+                <rect x="230" y="110" width="240" height="80" fill="#CFFAFE" opacity=".7"/>
+                <line x1="40" y1="190" x2="470" y2="190" stroke="#D9E2EC"/>
+                <line x1="40" y1="30" x2="40" y2="190" stroke="#D9E2EC"/>
+                <circle cx="360" cy="72" r="30" fill="#2563FF" opacity=".88"/>
+                <circle cx="270" cy="104" r="21" fill="#10B981" opacity=".9"/>
+                <circle cx="160" cy="142" r="18" fill="#16B8C7" opacity=".88"/>
+                <circle cx="220" cy="82" r="13" fill="#F59E0B" opacity=".9"/>
+              </svg>
+            </div>
+            <div class="insight-note cyan">High-volume, high-engagement countries are strongest campaign candidates.</div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Which entry pages create deeper engagement?</h3><p>Average page depth by entry path.</p></div><span class="chip cyan">Entry Paths</span></div>
+            <div class="canvas">
+              <div class="bar-row"><span>/ai-assistant</span><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><span>4.8</span></div>
+              <div class="bar-row"><span>/services</span><div class="bar-track"><div class="bar-fill green" style="width:73%"></div></div><span>3.9</span></div>
+              <div class="bar-row"><span>/prototype</span><div class="bar-track"><div class="bar-fill amber" style="width:61%"></div></div><span>3.2</span></div>
+            </div>
+            <div class="insight-note cyan">This shows which landing pages deserve campaign focus.</div>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Campaign Opportunity Matrix</h3><p>Evidence table for marketing prioritisation.</p></div><button class="btn btn-outline">Download Segment CSV</button></div>
+            <table class="table">
+              <thead><tr><th>Country</th><th>Visitors</th><th>Engaged Sessions</th><th>Warm Leads</th><th>Opportunity Score</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td>Botswana</td><td>1,642</td><td>802</td><td>122</td><td class="priority-high">High</td><td>Prioritise campaign test</td></tr>
+                <tr><td>South Africa</td><td>1,104</td><td>422</td><td>76</td><td class="priority-high">High</td><td>Retarget and nurture</td></tr>
+                <tr><td>Zambia</td><td>624</td><td>278</td><td>41</td><td class="priority-medium">Medium</td><td>Test content campaign</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Live Activity Feed</h3><p>Latest audience, campaign, segment, and page activity.</p></div><span class="chip green">Operational Pulse</span></div>
+            <div class="feed-list">
+              <div class="feed-item"><div class="dot"></div><div><div class="feed-title">Botswana — AI Assistant — page_request</div><div class="feed-meta">2026-02-04 14:21 · Product-curious · 2xx</div></div><span class="chip blue">Audience signal</span></div>
+              <div class="feed-item"><div class="dot green"></div><div><div class="feed-title">South Africa — Contact — contact_request</div><div class="feed-meta">2026-02-04 14:18 · High-intent · 2xx</div></div><span class="chip green">Sales-ready</span></div>
+              <div class="feed-item"><div class="dot amber"></div><div><div class="feed-title">Namibia — General Website — bot_request</div><div class="feed-meta">2026-02-04 14:11 · Bot · 4xx</div></div><span class="chip amber">Quality check</span></div>
+            </div>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Reports & Exports</h3><p>Package marketing intelligence for weekly campaign reviews and monthly performance reporting.</p></div><span class="chip cyan">Campaign Ready</span></div>
+            <div class="report-grid">
+              <div>
+                <p><strong>Included in reports:</strong> audience growth, engagement quality, top pages, segment mix, bot-quality review, and country opportunity score.</p>
+                <div class="report-mini-grid">
+                  <div class="report-mini"><strong>Weekly Marketing Pulse</strong><span>Audience signals, top pages, campaign candidates.</span></div>
+                  <div class="report-mini"><strong>Monthly Marketing Report</strong><span>Segment shifts, geographic growth, bot review.</span></div>
+                  <div class="report-mini"><strong>Campaign Evidence Pack</strong><span>CSV extract for analysis and client review.</span></div>
+                </div>
+              </div>
+              <div class="download-stack">
+                <button class="btn btn-primary">Download Weekly Marketing PDF</button>
+                <button class="btn btn-secondary">Download Monthly Marketing PDF</button>
+                <button class="btn btn-outline">Download Segment CSV</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- MANAGEMENT DASHBOARD -->
+      <section id="management" class="dashboard">
+        <div class="hero">
+          <div class="hero-badge">Dashboards / Executive / CyberNova Horizon</div>
+          <h1>Executive Insights Dashboard</h1>
+          <p>A concise executive view of growth, regional expansion, AI traction, forecasted demand, reporting quality, and anomaly signals.</p>
+        </div>
+
+        <div class="story-strip">
+          <span class="story-step active">Executive Pulse</span>
+          <span class="story-step">Strategic Analytics</span>
+          <span class="story-step">Decision Brief</span>
+          <span class="story-step">Board Reports</span>
+        </div>
+
+        <div class="top-actions">
+          <div class="search">Search strategic signals, markets, anomalies</div>
+          <div class="action-row">
+            <button class="btn btn-outline">Download Dashboard</button>
+            <button class="btn btn-outline">Export CSV</button>
+            <button class="btn btn-secondary">Refresh Data</button>
+            <button class="btn btn-primary">Generate Executive Report</button>
+          </div>
+        </div>
+
+        <div class="context-row">
+          <span class="chip green">Role: Executive Management</span>
+          <span class="chip cyan">Date: 30d</span>
+          <span class="chip">SADC: All</span>
+          <span class="chip">Service: Portfolio</span>
+          <span class="chip amber">Anomalies: Included</span>
+          <span class="chip green">Last refresh: Today 09:42</span>
+        </div>
+
+        <div class="section-label">Executive Pulse</div>
+        <div class="kpi-row">
+          <div class="kpi"><label>MoM Visitor Growth</label><div class="value">+12.6%</div><div class="delta good">Improving</div></div>
+          <div class="kpi"><label>AI Assistant Traction</label><div class="value">28%</div><div class="delta good">Service activity share</div></div>
+          <div class="kpi"><label>SADC Penetration</label><div class="value">10/10</div><div class="delta good">Active markets</div></div>
+          <div class="kpi"><label>30-Day Forecast</label><div class="value">612</div><div class="delta">Warm leads</div></div>
+          <div class="kpi"><label>Anomalies Flagged</label><div class="value">3</div><div class="delta warn">Review required</div></div>
+        </div>
+
+        <div class="section-label">Executive Story</div>
+        <div class="story-card">
+          <div>
+            <h2>This Month at a Glance</h2>
+            <p>Board-level summary generated from the selected dataset.</p>
+            <ul>
+              <li>CyberNova is showing positive visitor and warm-lead movement across SADC markets.</li>
+              <li>AI Assistant continues to support the company’s unique product positioning.</li>
+              <li>Botswana remains the strongest regional market, with South Africa and Zambia showing expansion potential.</li>
+              <li>Anomaly events should be reviewed to protect reporting quality.</li>
+            </ul>
+          </div>
+          <div class="recommend green">
+            <strong>Executive Recommendation</strong>
+            <span>Scale AI Assistant positioning while reviewing anomaly signals.</span>
+          </div>
+        </div>
+
+        <div class="section-label">Strategic Analytics</div>
+        <div class="chart-grid">
+          <article class="card full">
+            <div class="card-head"><div><h3>Are we on track for strategic growth?</h3><p>Weekly visitors, warm leads, and AI Assistant interest.</p></div><span class="chip green">Growth Direction</span></div>
+            <div class="canvas">
+              <svg viewBox="0 0 1060 240">
+                <rect x="60" y="50" width="920" height="45" rx="20" fill="#D1FAE5" opacity=".8"/>
+                <path d="M60 174 C170 162 210 122 310 138 S470 170 560 105 S720 78 820 90 S920 70 1000 48" fill="none" stroke="#2563FF" stroke-width="6" stroke-linecap="round"/>
+                <path d="M60 190 C170 180 280 158 390 166 S560 142 700 126 S860 118 1000 82" fill="none" stroke="#10B981" stroke-width="4" stroke-linecap="round"/>
+                <path d="M60 202 C180 196 320 180 460 174 S660 150 780 136 S900 120 1000 100" fill="none" stroke="#16B8C7" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="insight-note green">This shows whether awareness, demand, and AI Assistant interest are moving together.</div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Where is regional expansion concentrating?</h3><p>Strategic market demand by country.</p></div><span class="chip blue">Regional Expansion</span></div>
+            <div class="canvas">
+              <div class="bar-row"><span>Botswana</span><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><span>High</span></div>
+              <div class="bar-row"><span>South Africa</span><div class="bar-track"><div class="bar-fill green" style="width:68%"></div></div><span>Med</span></div>
+              <div class="bar-row"><span>Zambia</span><div class="bar-track"><div class="bar-fill" style="width:54%"></div></div><span>Med</span></div>
+              <div class="bar-row"><span>Namibia</span><div class="bar-track"><div class="bar-fill amber" style="width:36%"></div></div><span>Watch</span></div>
+            </div>
+            <div class="insight-note green">This shows which SADC markets are becoming commercially meaningful.</div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Is the AI Cyber Assistant gaining traction?</h3><p>AI Assistant demand and service share.</p></div><span class="chip cyan">AI Traction</span></div>
+            <div class="canvas">
+              <div class="bar-row"><span>Jan</span><div class="bar-track"><div class="bar-fill" style="width:41%"></div></div><span>18%</span></div>
+              <div class="bar-row"><span>Feb</span><div class="bar-track"><div class="bar-fill green" style="width:55%"></div></div><span>22%</span></div>
+              <div class="bar-row"><span>Mar</span><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><span>28%</span></div>
+              <div class="bar-row"><span>Apr</span><div class="bar-track"><div class="bar-fill green" style="width:82%"></div></div><span>31%</span></div>
+            </div>
+            <div class="insight-note green">This tests whether CyberNova’s unique selling point is gaining market attention.</div>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Executive Decision Brief</h3><p>Actionable leadership summary from the dashboard evidence.</p></div><button class="btn btn-outline">Download Executive Summary</button></div>
+            <table class="table">
+              <thead><tr><th>Strategic Signal</th><th>Evidence</th><th>Recommended Leadership Action</th><th>Risk / Dependency</th></tr></thead>
+              <tbody>
+                <tr><td>Growth improving</td><td>Visitor and warm-lead trend is positive.</td><td>Maintain regional demand-generation activity.</td><td>Campaign consistency</td></tr>
+                <tr><td>AI traction rising</td><td>AI Assistant service share is increasing.</td><td>Scale AI Assistant positioning.</td><td>Product readiness</td></tr>
+                <tr><td>Regional reach broadening</td><td>All SADC focus countries show activity.</td><td>Prioritise top three expansion markets.</td><td>Sales capacity</td></tr>
+                <tr><td>Operational review required</td><td>Three anomalies flagged.</td><td>Review anomaly context and bot influence.</td><td>Data quality</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Live Activity Feed</h3><p>Latest strategic activity signals, anomalies, and high-level demand events.</p></div><span class="chip green">Operational Pulse</span></div>
+            <div class="feed-list">
+              <div class="feed-item"><div class="dot green"></div><div><div class="feed-title">Botswana — AI Assistant — demo_request</div><div class="feed-meta">2026-02-04 14:21 · High-intent · 2xx</div></div><span class="chip green">Strategic demand</span></div>
+              <div class="feed-item"><div class="dot amber"></div><div><div class="feed-title">Prototype — suspicious bot spike</div><div class="feed-meta">2026-02-04 14:18 · Bot · 4xx</div></div><span class="chip amber">Anomaly</span></div>
+              <div class="feed-item"><div class="dot"></div><div><div class="feed-title">South Africa — Cybersecurity Monitoring — page_request</div><div class="feed-meta">2026-02-04 14:11 · Product-curious · 2xx</div></div><span class="chip blue">Market signal</span></div>
+            </div>
+          </article>
+
+          <article class="card full">
+            <div class="card-head"><div><h3>Reports & Exports</h3><p>Package executive intelligence for weekly leadership updates and monthly board review.</p></div><span class="chip green">Board Ready</span></div>
+            <div class="report-grid">
+              <div>
+                <p><strong>Included in reports:</strong> executive KPIs, AI traction, SADC penetration, anomaly review, warm-lead forecast, and decision brief.</p>
+                <div class="report-mini-grid">
+                  <div class="report-mini"><strong>Weekly Executive Pulse</strong><span>Leadership snapshot, anomalies, top markets.</span></div>
+                  <div class="report-mini"><strong>Monthly Board Report</strong><span>Growth, AI traction, regional expansion, forecast.</span></div>
+                  <div class="report-mini"><strong>Strategic Evidence Pack</strong><span>CSV extract for board appendix and validation.</span></div>
+                </div>
+              </div>
+              <div class="download-stack">
+                <button class="btn btn-primary">Download Weekly Executive PDF</button>
+                <button class="btn btn-secondary">Download Monthly Board PDF</button>
+                <button class="btn btn-outline">Download Executive Data CSV</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function showDash(id, btn) {
+      document.querySelectorAll('.dashboard').forEach(d => d.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('active');
+        const marker = b.querySelector('div:last-child');
+        if (marker) marker.textContent = '◇';
+      });
+
+      btn.classList.add('active');
+      const activeMarker = btn.querySelector('div:last-child');
+      if (activeMarker) activeMarker.textContent = '◆';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

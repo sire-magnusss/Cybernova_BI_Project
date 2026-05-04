@@ -1,0 +1,380 @@
+FINAL LUXURY UI POLISH PROMPT — CYBERNOVA BI PORTAL
+
+Refine app_html.py only.
+
+Do NOT rewrite the whole project.
+Do NOT change the synthetic data generator.
+Do NOT modify:
+- generate_logs.py
+- synthetic_log_studio.py
+- validate_dataset.py
+- config.yaml
+- data/output/*
+
+Goal:
+Take the existing CyberNova BI Portal and give it a final luxury-grade polish so it looks premium, consistent, boardroom-ready, and submission-ready.
+
+Preserve all existing working logic:
+- role-based access
+- filters
+- KPIs
+- charts
+- geographic maps
+- live pulse
+- forecasting
+- reports/exports
+- insight assistant
+- evidence tables
+
+Do not remove working features.
+Refine and enhance.
+
+====================================================
+SECTION 1 — MAKE SECTION HEADINGS MORE PROMINENT
+====================================================
+
+Make section headings visually stronger and more premium, similar to a polished enterprise dashboard.
+
+Use a clear section-header pattern like this:
+- small uppercase eyebrow label in muted slate/grey-blue
+- large bold business-question heading beneath it
+- thin divider line or rule extending to the right
+- optional small section icon or subtle anchor icon if clean
+- more vertical breathing room above and below
+
+Examples:
+- “FLAGSHIP PRODUCT — AI CYBER ASSISTANT INTELLIGENCE”
+- “LEAD DIAGNOSTICS”
+- “LIVE PULSE — SIMULATED LOG STREAM”
+- “STRATEGIC ANALYTICS”
+- “REPORTS & EXPORTS”
+- “STATISTICAL EVIDENCE”
+- “GEOGRAPHIC HOTZONES”
+- “FORECASTING OUTLOOK”
+
+For all major sections:
+- add consistent top margin
+- add consistent bottom spacing
+- ensure the section heading is clearly separated from the previous section
+- use hierarchy so headings feel intentional and premium
+
+====================================================
+SECTION 2 — PUT ALL GRAPHS INSIDE WHITE CARDS
+====================================================
+
+Every chart, graph, funnel, map, and table must sit inside a proper visual card.
+
+Card design:
+- white background
+- subtle border
+- soft shadow
+- 18–22px rounded corners
+- consistent internal padding
+- clean top title area
+- chart inside with enough spacing
+- small interpretation note at bottom of the card
+
+Card structure:
+1. eyebrow label (optional)
+2. chart title (business-question style)
+3. short subtitle
+4. chart itself
+5. interpretation note / insight banner
+
+Do NOT let charts float directly on the page background.
+
+Apply this to:
+- line charts
+- funnels
+- maps
+- donuts
+- scatter plots
+- heatmaps
+- forecast charts
+- live graphs
+- statistical tables
+- action/evidence tables
+
+====================================================
+SECTION 3 — CONSISTENT SPACING, HEIGHTS, AND GRID SYSTEM
+====================================================
+
+Fix spacing and visual consistency across the whole app.
+
+Requirements:
+- equal card padding
+- equal row gaps
+- equal column gaps
+- consistent section spacing
+- consistent chart card heights when cards sit side-by-side
+- consistent heading spacing
+- remove awkward empty whitespace
+- avoid cramped charts
+- ensure the layout breathes
+
+Use a clean responsive grid:
+- 2-column layout for most analytics cards
+- full-width cards for hero summaries, report previews, board summary, large maps, and wide tables
+- use consistent min-heights for side-by-side cards
+
+Suggested standard card heights:
+- KPI cards: compact and equal
+- standard chart cards: 420–500px
+- mini live cards: 220–280px
+- large full-width strategic cards: 520–620px
+- evidence tables: enough height to show meaningful rows without feeling cramped
+
+Make all white cards aligned visually.
+
+====================================================
+SECTION 4 — USE WHITE CARD SURFACES CONSISTENTLY
+====================================================
+
+The page background can remain light grey, but all important content surfaces should be white cards.
+
+Use:
+- light grey page background
+- white cards for all content
+- subtle borders
+- soft shadows
+- strong navy headings
+- muted grey subtitles
+- blue/cyan/green/amber accents only as highlights, not background overload
+
+Avoid large content sections directly on the light-grey page without card containers.
+
+====================================================
+SECTION 5 — LUXURY ADD-ONS TO EXCEED EXPECTATIONS
+====================================================
+
+Add these luxury features if safe and not disruptive.
+
+1. Executive / Role Summary Banner
+Add a premium summary card near the top of each dashboard:
+
+Sales:
+“Today’s Sales Focus”
+- top hotzone
+- top service
+- highest-intent action
+- recommended follow-up
+
+Marketing:
+“Today’s Marketing Focus”
+- top engaged market
+- strongest page/service
+- audience quality note
+- recommended campaign action
+
+Executive:
+“Board Summary”
+- growth direction
+- strongest market
+- AI Assistant traction
+- top risk
+- leadership recommendation
+
+Make this card visually rich and premium.
+
+2. Highlight Insight Banners
+Under important charts, use pill-like or rounded insight banners:
+- soft blue background for informational highlights
+- soft green for positive momentum
+- soft amber for warnings/risk
+Keep text concise and bold enough to stand out.
+
+3. Data Quality Badge
+Add a small context badge:
+“Data Quality: Good” or “Data Quality: Review Needed”
+
+4. Report Preview Panel
+Before the export buttons, add a card previewing:
+- Weekly report contents
+- Monthly report contents
+- filter context
+- row count
+- generated timestamp
+
+5. Evidence Pack Download
+Add a visible premium export card for:
+- Weekly PDF
+- Monthly PDF
+- Evidence Pack CSV
+- Filtered Data CSV
+
+6. Methodology Note Expander
+Add a clean expander:
+“Methodology Note”
+Include:
+- synthetic IIS logs
+- simulated live layer
+- simple forecasting model
+- no real personal data
+- prototype role-based access disclaimer
+
+7. Premium Empty States
+If a chart has no data, show a polished empty-state card, not a broken chart.
+
+8. Role Accent Identity
+Each dashboard can have a subtle accent identity:
+- Sales → blue/cyan
+- Marketing → cyan/green
+- Executive → navy/amber
+Keep this subtle and elegant.
+
+9. Map Side Ranking Panel
+Beside or beneath the map, add:
+“Top Hotzones”
+with ranked countries and metric values.
+
+10. KPI Chips / Context Bar
+Make the selected filters and active time range look premium:
+- rounded chips
+- clear labels
+- visible active analysis window
+- refresh timestamp
+- data quality badge
+
+====================================================
+SECTION 6 — IMPROVE VISUAL STORYTELLING
+====================================================
+
+Each dashboard should flow like this:
+
+1. Hero / Header
+2. Context Chips / Active Analysis Window
+3. KPI Row
+4. Role Summary Banner
+5. Live Pulse
+6. Insight Assistant
+7. Strategic Analytics
+8. Geographic Hotzones
+9. Statistical Evidence
+10. Forecasting Outlook
+11. Evidence / Action Tables
+12. Reports & Exports
+13. Methodology Note
+
+Each chart card must have:
+- a business-question title
+- a short subtitle
+- a chart
+- a one-line interpretation or insight banner
+
+====================================================
+SECTION 7 — SPECIFIC UI POLISH REQUESTS
+====================================================
+
+Apply these refinements carefully:
+
+1. Section headings
+Make them more prominent and elegant, like the reference style:
+- eyebrow label
+- large bold heading
+- right-side divider line
+
+2. White cards
+Put all analytics visuals and tables into white cards.
+
+3. Consistent card styling
+All chart cards must use:
+- same radius
+- same shadow family
+- same internal padding
+- same title/subtitle spacing
+
+4. Interpretation notes
+Move interpretation text into nicely styled footers or banners inside cards.
+
+5. Improve graphs inside cards
+Make charts feel embedded and polished, not pasted.
+Leave enough internal margin above and below.
+
+6. Uniform chart area
+Ensure the plot area has enough room and does not touch card edges.
+
+7. CTA / export buttons
+Make export/report buttons feel intentional and premium, grouped inside report cards.
+
+8. Typography polish
+- strong navy headings
+- muted subtitles
+- consistent font sizes
+- no awkward wrapping
+- no inconsistent capitalisation
+
+====================================================
+SECTION 8 — COLOUR AND STYLE RULES
+====================================================
+
+Use the CyberNova design system consistently:
+
+Background:
+- Light grey page background
+
+Cards:
+- White card surfaces
+
+Text:
+- Deep navy main headings
+- Muted grey secondary text
+
+Accents:
+- Electric blue
+- Cyan
+- Electric green
+- Amber
+Use accents only for:
+- highlights
+- chart series
+- badges
+- insight banners
+- selected states
+
+Do NOT make cards overly colourful.
+Keep them mostly white and elegant.
+
+====================================================
+SECTION 9 — DO NOT BREAK FUNCTIONALITY
+====================================================
+
+Important:
+Do not remove or break:
+- live graphs
+- maps
+- forecast charts
+- filters
+- login
+- exports
+- insight assistant
+- evidence tables
+- role access
+
+This is a UI/UX and premium polish refinement pass, not a rewrite.
+
+====================================================
+SECTION 10 — FINAL CHECK
+====================================================
+
+After refinement:
+1. Run:
+python -m py_compile app_html.py
+
+2. Run:
+streamlit run app_html.py --server.port 8505
+
+3. Verify:
+- all charts are inside white cards
+- section headings are more prominent
+- spacing is consistent
+- cards align cleanly
+- no awkward wrapping
+- report/export cards look premium
+- role summary banners appear
+- insight banners appear
+- no broken charts
+- no broken layout
+- all logic still works
+
+Do not leave TODO placeholders.
+Implement directly.

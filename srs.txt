@@ -1,0 +1,63 @@
+CET333 Product Development
+Requirements Specification Document
+
+Name:	Seipone Talama Sebina
+Programme:	BSc (Hons) Business Intelligence and Data Analytics 
+
+Overview
+CyberNova Analytics Ltd is a Gaborone-based AI cybersecurity start-up serving SMEs, financial institutions, and government agencies across Southern Africa through intelligent threat monitoring, predictive maintenance, and digital transformation services. Its flagship product an AI-powered Cyber Assistant is central to both its technical offering and commercial identity.
+As the assigned sales analytics consultant, I am developing a Product Sales Data Analysis System to evaluate the online effectiveness of CyberNova's software solutions through IIS web server log analysis. My approach applies CRISP-DM as the primary framework, with CRISP-DM 2.0 layered on top to accommodate the iterative relationship between synthetic data generation, EDA, and analytical refinement. The system delivers role-specific business intelligence to three stakeholders Sales, Marketing, and Management through a structured, repeatable BI pipeline.
+
+Product to be delivered to the client
+A Business Intelligence Dashboard System comprising: a synthetic IIS W3C Extended Log Format dataset simulating realistic Southern African web traffic; a modular Python pipeline performing ETL, IP resolution, EDA, and behavioural segmentation; and a live-refreshing three-tab Streamlit dashboard tailored to Sales, Marketing, and Management audiences with dynamic filtering, statistical summaries, and five chart types designed for repeatable monthly execution.
+
+Client Requirements
+Functional Requirements
+ID	Requirement	Category
+FR1	Generate ≥1,000-row synthetic IIS W3C log dataset (CSV/Excel): timestamps, Southern African IPs, service URIs, HTTP methods, status codes, bytes, user agents. Must reflect realistic patterns peak-hour clustering, repeat visits, crawlers, 404 errors.	Data generation
+FR2	Ingest and preprocess the log file: parse all fields, resolve IPs to countries, handle malformed records, load a clean DataFrame. Report records processed, cleaned, and dropped.	ETL pipeline
+FR3	Perform EDA: univariate distributions, bivariate country × service analysis, hourly/daily time series decomposition, and anomaly detection. All outputs include interpretive commentary.	Exploratory analysis
+FR4	Segment traffic into four behavioural tiers: high-intent (demo/event pages), product-curious (AI/prototype pages), general browsers (index/about), bots/crawlers (user-agent or pattern detection). Report volumes per country.	Segmentation
+FR5	Simulate a real-time log feed via file-watch or polling mechanism that detects new entries and refreshes all dashboard metrics without manual reload.	Real-time BI
+FR6	Geographic demand analysis: ranked bar chart and choropleth of total and high-intent requests by country. Identify top 5 markets; flag underperforming regions against expansion targets.	Geographic BI
+FR7	Service demand ranking across all URIs. Isolate AI Cyber Assistant traffic as a standalone flagship KPI with a growth trend indicator.	Product analytics
+FR8	Three-tab Streamlit dashboard — Sales: trends, warm leads, conversion, reach. Marketing: heatmap, service gaps, segmentation. Management: KPIs, AI traction, executive summary.	BI dashboard
+FR9	Sidebar filtering across all tabs: date range, country, service type, HTTP status. All visuals and statistics update reactively.	UX / interactivity
+FR10	Warm lead tracking: quantify /scheduledemo.php and /event.php entries separately as highest-intent funnel interactions. Report count, country split, time trend, and rate as % of total traffic.	Sales analytics
+FR11	Minimum five chart types: bar, line/area, pie/donut, scatter, geographic. All charts include titles, axis labels, legends, and annotations.	Visual reporting
+FR12	Descriptive statistics per country, service, and time period: mean, median, standard deviation, totals. Correlation analysis of time-of-day vs service type to identify peak engagement windows.	Statistical analysis
+Non Functional Requirements 
+ID	Requirement	Category
+NFR1	Dashboard loads within 3 seconds; filter interactions respond within 1 second.	Performance
+NFR2	Log data strictly conforms to IIS W3C format. Country distribution reflects realistic Southern African proportions; ≥30% of entries from Botswana.	Data Quality
+NFR3	Fixed random seed ensures full dataset reproducibility across runs.	Reproducibility
+NFR4	Consistent UI: colour scheme, ≥11pt font, appropriate information density per audience concise for Management, detailed for Sales/Marketing.	Usability
+NFR5	Modular codebase: separate modules for generation, ETL, analysis, and UI. Inline documentation throughout. Built for monthly re-execution.	Maintainability
+NFR6	Pipeline handles up to 50,000 log entries without restructuring.	Scalability
+NFR7	Deployable locally or via Streamlit Community Cloud from a standard requirements.txt. No proprietary BI platforms.	Portability
+NFR8	All data entirely synthetic. No real personal data used. Documented to professional standards.	Ethics
+
+
+Constraints
+1.	(No access to real CyberNova server logs exists; all data must be synthetically generated to simulate realistic IIS web traffic.
+2.	IP-to-country resolution relies on a static lookup or mapping library rather than a live geolocation API, as no external API budget or access is allocated.
+3.	The requirements specification is limited to two pages as stipulated in the CET333 assessment brief, constraining the depth of formal documentation at this stage..
+4.	Development is restricted to a single analyst with no team support, meaning all phases generation, analysis, development, testing, and documentation are carried out by one person within the same timeframe.
+
+Resources
+1.	Myself (sole analyst): The only human resource on this project. Responsible for all CRISP-DM phases from business understanding through to deployment and evaluation.
+2.	Client (module tutor / appointee): Available at three scheduled client meetings for requirements discussion, progress review, and final prototype sign-off.
+3.	Personal development machine: Python 3.x environment with open-source libraries Streamlit, Pandas, Plotly, Seaborn, and Faker for synthetic data generation.
+4.	CRISP-DM reference guide (Chapman et al., 2000): The foundational methodology document, freely available as a PDF, used to structure and justify each phase of the development lifecycle.
+5.	Time: Approximately 12 weeks, self-managed across all project phases as detailed in the Planning Documentation.
+
+Evaluation
+The system will be evaluated across three dimensions. 
+1.	First, against functional requirements (FR1–FR12): each requirement will be tested individually  verifying log format compliance, pipeline accuracy, EDA output validity, segmentation correctness, real-time feed behaviour, chart rendering, and filter reactivity. 
+2.	Second, against business goals: outputs will be assessed for traceability to CyberNova's eight documented business goals, with the system considered successful when at least six goals are demonstrably addressed by the analytical outputs. 
+3.	Third, against analytical success criteria: where predictive modelling is implemented (FR13), I will evaluate and compare candidate approaches specifically simple linear regression and moving average smoothing selecting the most appropriate based on forecast accuracy and interpretability given the dataset characteristics. 
+Segmentation quality will be assessed by verifying that the four behavioural tiers produce meaningfully distinct traffic profiles. Client evaluation occurs at Meeting 3, where I will demonstrate the working prototype against all agreed requirements and obtain formal sign-off confirming the system meets CyberNova's stated needs.
+Client Sign-off
+Signature:	
+Date:	
+

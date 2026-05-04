@@ -1,0 +1,614 @@
+CYBERNOVA FINAL DASHBOARD EXECUTION GUIDE
+
+PROJECT CONTEXT
+This project is for CET333 Product Development. CyberNova Analytics Ltd is a fictitious technology start-up based in Gaborone. The company provides AI-driven cybersecurity monitoring, automated risk assessments, predictive system maintenance, AI-powered advisory chat services, digital transformation support, and rapid infrastructure prototyping.
+
+The synthetic log generation work is already complete. Do not modify it.
+
+DO NOT MODIFY:
+- generate_logs.py
+- synthetic_log_studio.py
+- validate_dataset.py
+- config.yaml
+- data/output/*
+- cybernova_iis_raw_logs.csv
+- cybernova_enriched_logs.csv
+- generation_summary.csv
+- cybernova_web_logs.xlsx
+
+MAIN TASK
+Create one final Streamlit dashboard file called:
+
+app_html.py
+
+Use this dataset:
+
+data/output/cybernova_enriched_logs.csv
+
+Use the static HTML wireframe as the visual reference:
+
+cybernova_final_dashboard_wireframe.html
+
+The final app must look extremely close to the HTML wireframe:
+- same sidebar structure
+- same dark navy sidebar
+- same light grey background
+- same white rounded cards
+- same KPI cards
+- same Live Pulse section
+- same Strategic Analytics section
+- same Evidence tables
+- same Reports & Exports section
+- same colours, spacing, shadows, border radius, and typography style
+
+TECH STACK
+Use:
+- Python
+- Streamlit
+- Pandas
+- Plotly
+- ReportLab
+
+The final dashboard must be a hybrid:
+- Streamlit/Python handles data loading, filtering, role access, KPI calculations, charts, and exports.
+- HTML/CSS inside st.markdown(..., unsafe_allow_html=True) handles the visual shell, cards, chips, layout, and styling.
+- Plotly handles actual charts where dynamic visuals are needed.
+
+DO NOT:
+- create a separate cybernova_bi folder
+- create pages/
+- create lib/
+- create components/
+- create tests/
+- move files around
+- create a separate live feed page
+- use emojis
+- show raw SVG text
+- require external live_feed.py
+- require an external JSON stream
+- leave TODO placeholders
+
+ROLE-BASED ACCESS
+Add a login screen.
+
+Roles:
+1. Sales Team Lead
+   password: sales123
+   access: CyberNova Pulse only
+
+2. Marketing Lead
+   password: marketing123
+   access: CyberNova Reach only
+
+3. Executive Management
+   password: exec123
+   access: CyberNova Horizon only
+
+4. Admin / Lecturer View
+   password: admin123
+   access: all dashboards
+
+The Admin / Lecturer View should be easy for marking and should allow access to all dashboards.
+
+Add note:
+“Prototype access layer only. Production deployment would require authentication, password hashing, audit logging, and full role-based access control.”
+
+SIDEBAR REQUIREMENTS
+Sidebar must contain:
+- CN logo mark
+- CyberNova
+- BI Intelligence Portal
+- logged-in role pill
+- navigation buttons:
+  1. CyberNova Pulse
+  2. CyberNova Reach
+  3. CyberNova Horizon
+- global filters:
+  - date range
+  - country multiselect
+  - service multiselect
+  - status class multiselect
+  - segment multiselect
+  - include bot traffic toggle
+  - reset filters button
+- footer note about prototype access layer
+
+The sidebar must NOT include Live Feed as a page. Live Feed must be embedded inside each dashboard.
+
+GLOBAL FILTERS
+Filters must apply to every dashboard:
+- Date range
+- Country
+- Service
+- Status Class
+- Segment
+- Include bot traffic
+
+If filters return no rows, show a beautiful empty-state card instead of crashing.
+
+DATA LOADING
+Load:
+data/output/cybernova_enriched_logs.csv
+
+Use @st.cache_data.
+
+Parse dates safely:
+- timestamp
+- date
+- first_request_ts
+- last_request_ts
+
+Use:
+pd.to_datetime(..., errors="coerce")
+
+Do not crash if some date columns are missing or contain invalid values.
+
+Expected columns include:
+- timestamp
+- date
+- time
+- hour
+- day_of_week
+- country
+- is_sadc
+- method
+- uri
+- service_name
+- service_category
+- request_type
+- status_code
+- status_class
+- user_agent
+- device_type
+- browser
+- is_bot
+- session_id
+- first_request_ts
+- last_request_ts
+- duration_seconds
+- request_count_session
+- distinct_pages_session
+- entry_page
+- exit_page
+- segment
+- is_warm_lead
+- event_type
+- converted_to_lead
+- campaign_name
+- is_campaign_period
+- is_anomaly
+- anomaly_name
+- response_time_ms
+- bytes_transferred
+
+If columns are missing, show a clear warning listing missing columns but do not crash where possible.
+
+VISUAL DESIGN TOKENS
+Use these exactly:
+
+--bg: #F3F4F6
+--card: #FFFFFF
+--text: #102A43
+--secondary: #52606D
+--muted: #7B8794
+--border: #D9E2EC
+--sidebar-dark: #0B1E3D
+--sidebar-panel: #102A43
+--header: #1F3A5F
+--navy: #0B1F3A
+--blue: #2563FF
+--blue-soft: #DBEAFE
+--cyan: #16B8C7
+--cyan-soft: #CFFAFE
+--green: #10B981
+--green-soft: #D1FAE5
+--amber: #F59E0B
+--amber-soft: #FEF3C7
+--slate-soft: #E5EAF0
+--shadow: 0 18px 45px rgba(11,31,58,.08)
+--shadow-soft: 0 8px 24px rgba(11,31,58,.08)
+
+Use:
+- white rounded cards
+- subtle borders
+- soft shadows
+- 18px card radius
+- strong spacing
+- consistent card heights
+- no random colours
+- no emojis
+- clean enterprise BI style
+
+APP STRUCTURE
+Each dashboard must follow this exact story flow:
+
+1. Hero/Header
+2. Story Strip
+3. Top Actions
+4. Filter Context Chips
+5. Live Pulse
+6. Insight Narrative
+7. Strategic Analytics
+8. Evidence Tables
+9. Reports & Exports
+
+DASHBOARD 1: CYBERNOVA PULSE — SALES COMMAND CENTER
+
+Dashboard question:
+“What should Sales prioritise today?”
+
+Purpose:
+Help Sales identify:
+- which warm leads to follow up
+- which country is hottest
+- which service should lead the sales conversation
+- whether AI Assistant interest is converting
+- where prospects drop in the funnel
+
+Live Pulse cards:
+1. New Warm Leads
+   Latest 24-hour warm lead activity.
+2. Demo Requests by Hour
+   Current-day demo intent.
+3. Live Lead Source Mix
+   Country/service intent split.
+4. Current Hot Service
+   Most active lead signal.
+
+Sales Insight:
+Generate rule-based bullets from filtered data:
+- top warm-lead country
+- top warm-lead service
+- AI Assistant to demo conversion
+- funnel drop-off action
+- best follow-up period/hour if available
+
+Recommended Sales Action:
+“Prioritise warm leads from [top country] showing [top service] interest.”
+
+Strategic Analytics cards:
+- Where did warm leads come from?
+  Warm leads by country.
+- What service should Sales lead with?
+  Warm lead/demo demand by service.
+- When are people most likely to request a demo?
+  Demo request heatmap by hour and day.
+- Are repeat visitors more likely to convert?
+  Conversion rate by session cohort.
+- Is the warm-lead pipeline accelerating or slowing?
+  Weekly warm-lead trend.
+- Where in the funnel are we losing leads?
+  Index page → service page → demo page → demo submission.
+
+Live Activity Feed:
+Embedded inside Sales dashboard.
+Use latest filtered rows, prioritising:
+- is_warm_lead True
+- demo_request
+- contact_request
+- event_signup
+- AI Assistant interest
+
+Show:
+- timestamp
+- country
+- service_name
+- event_type
+- segment
+- status_class
+
+Evidence:
+Sales Action Queue table:
+- priority
+- timestamp
+- country
+- service_name
+- event_type
+- segment
+- recommended_action
+
+Priority rules:
+- High if is_warm_lead True
+- Medium if segment is Product-curious
+- Low otherwise
+
+Recommended action rules:
+- demo_request → Contact within 24 hours
+- contact_request → Assign to sales representative
+- event_signup → Invite to product demo follow-up
+- AI Assistant interest → Send AI Assistant solution brief
+- otherwise → Monitor session activity
+
+Reports & Exports:
+- Weekly Sales PDF
+- Monthly Sales PDF
+- Warm Leads CSV
+- Filtered Data CSV
+
+DASHBOARD 2: CYBERNOVA REACH — MARKETING INTELLIGENCE HUB
+
+Dashboard question:
+“Where should Marketing focus attention and campaign spend?”
+
+Purpose:
+Help Marketing identify:
+- which countries and audiences are engaging
+- which pages/services attract interest
+- which campaigns deserve attention
+- whether bot traffic is distorting analytics
+- which segments are becoming sales-ready
+
+Live Pulse cards:
+1. Live Visitor Flow
+2. Human vs Bot Traffic
+3. Live Segment Mix
+4. Top Entry Pages
+
+Marketing Insight:
+Generate rule-based bullets:
+- top country by unique visitors
+- engaged session rate
+- top entry page/service
+- dominant human segment
+- bot quality warning
+
+Recommended Marketing Action:
+“Focus campaign testing on [top country] and [top page/service].”
+
+Strategic Analytics cards:
+- Where should we direct ad spend?
+  Engagement-volume matrix by country.
+- Which content is under-promoted relative to conversion potential?
+  Promotion gap by service.
+- How is our audience mix shifting over time?
+  Segment composition over time.
+- How is our reach growing in target SADC markets?
+  Geographic reach by country.
+- When are humans most active on the site?
+  Human activity heatmap.
+- Is bot traffic distorting our analytics?
+  Bot trend.
+- Which entry pages create deeper engagement?
+  Entry page depth.
+
+Live Activity Feed:
+Embedded inside Marketing dashboard.
+Prioritise:
+- non-bot human sessions
+- entry_page activity
+- service activity
+- campaign rows
+
+Evidence:
+Campaign Opportunity Matrix:
+- country
+- unique_visitors
+- engaged_sessions
+- warm_leads
+- bot_ratio
+- opportunity_score
+- recommended_action
+
+Opportunity score:
+Use simple ranked logic combining:
+- unique visitors
+- engaged session rate
+- warm leads
+- bot ratio penalty
+
+Recommended actions:
+- High → Prioritise campaign test
+- Medium → Retarget and nurture
+- Low → Monitor before spending
+
+Also include Visitor Segment Detail table.
+
+Reports & Exports:
+- Weekly Marketing PDF
+- Monthly Marketing PDF
+- Segment CSV
+- Filtered Data CSV
+
+DASHBOARD 3: CYBERNOVA HORIZON — EXECUTIVE INSIGHTS DASHBOARD
+
+Dashboard question:
+“Is CyberNova growing in the right direction?”
+
+Purpose:
+Help executives understand:
+- growth direction
+- AI Assistant traction
+- SADC market penetration
+- forecasted demand
+- anomalies and reporting quality
+- leadership priorities
+
+Executive Pulse cards:
+1. Live AI Activity
+2. Anomaly Signal Trend
+3. Strategic Signal Mix
+4. 30-Day Demand Outlook
+
+Executive Story:
+Title:
+This Month at a Glance
+
+Generate rule-based bullets:
+- total warm leads
+- AI Assistant share
+- strongest regional market
+- anomaly count
+- next 30-day forecast
+
+Recommended Executive Action:
+If anomalies exist:
+“Review anomalies and protect reporting quality.”
+Else if AI Assistant share is strong:
+“Scale AI Assistant positioning across high-performing SADC markets.”
+Else:
+“Strengthen campaign activity around high-intent services.”
+
+Strategic Analytics cards:
+- Are we on track for strategic growth?
+  Weekly visitors, warm leads, and AI Assistant interest.
+- Where is regional expansion concentrating?
+  Country demand and SADC market growth.
+- Is the AI Cyber Assistant gaining traction?
+  AI Assistant demand and service share over time.
+- What does the next 30 days look like?
+  Warm lead forecast and anomaly markers.
+- Is data quality under control?
+  Bot/anomaly/status quality card.
+- Which markets deserve leadership attention?
+  Regional priority table.
+
+Live Activity Feed:
+Embedded inside Executive dashboard.
+Prioritise:
+- anomalies
+- warm leads
+- AI Assistant activity
+- SADC market activity
+
+Evidence:
+Executive Decision Brief:
+- strategic_signal
+- evidence
+- recommended_leadership_action
+- risk_or_dependency
+
+Rows:
+1. Growth
+2. AI Assistant traction
+3. Regional expansion
+4. Anomaly/risk
+
+Reports & Exports:
+- Weekly Executive PDF
+- Monthly Board PDF
+- Executive Summary CSV
+- Filtered Data CSV
+
+LIVE VS STATIC DESIGN
+The dashboard should clearly separate:
+1. Live Pulse
+   - latest operational movement
+   - latest 24h/current period
+   - live activity feed
+   - live mini visuals
+
+2. Strategic Analytics
+   - 30-day, monthly, full-period diagnostics
+   - trends, heatmaps, funnel, segmentation, forecast
+
+3. Reports & Exports
+   - weekly PDFs
+   - monthly PDFs
+   - filtered CSVs
+   - role-specific evidence packs
+
+SIMULATED LIVE FEED
+The CSV is static. Do not pretend to connect to real streaming infrastructure.
+
+Simulate live feed by:
+- sorting filtered dataframe by timestamp descending
+- taking latest 8–12 rows
+- displaying those as feed items
+- using latest rows for live pulse cards
+- optional manual Refresh button
+- optional st.fragment(run_every="10s") only if safe
+
+Do not use:
+- Kafka
+- WebSockets
+- Redis
+- background workers
+- external JSON files
+- live_feed.py dependency
+
+PDF REPORTS
+Use ReportLab.
+
+Each role must have:
+- weekly PDF report
+- monthly PDF report
+
+PDF content:
+- CyberNova Analytics Ltd
+- dashboard name
+- role
+- date/time generated
+- selected filter context
+- KPI summary
+- narrative bullets
+- top evidence table
+- footer:
+  “Generated from CyberNova synthetic IIS web-log dataset for CET333 Product Development prototype.”
+
+CSV EXPORTS
+Use st.download_button for:
+- filtered data
+- role-specific evidence data
+- warm leads / segment data / executive summary
+
+CHARTING
+Use Plotly for dynamic charts.
+
+All Plotly charts must:
+- use CyberNova colour palette only
+- have transparent paper background
+- have white or transparent plot background
+- use grid colour #E8EAED
+- remove Plotly logo
+- use consistent height
+- sit inside visual card sections
+
+ROBUSTNESS
+The app must not crash if:
+- filters return no rows
+- date columns contain NaT
+- optional columns are missing
+- there are no warm leads
+- there are no anomalies
+- there is no AI Assistant traffic
+
+Use safe fallback values:
+- “No data”
+- 0
+- “Not available”
+- empty-state cards
+
+QUALITY
+Use helper functions:
+- inject_css()
+- load_data()
+- apply_filters()
+- render_login()
+- render_sidebar()
+- render_hero()
+- render_context_chips()
+- render_live_card()
+- render_story_card()
+- render_chart_card()
+- render_live_feed()
+- render_report_section()
+- build_pdf_report()
+- generate_sales_story()
+- generate_marketing_story()
+- generate_executive_story()
+- calculate_sales_metrics()
+- calculate_marketing_metrics()
+- calculate_executive_metrics()
+
+Use comments.
+Use clean code.
+Do not leave TODO placeholders.
+
+FINAL TESTS
+After creating app_html.py, run:
+
+python -m py_compile app_html.py
+
+Then the app must run with:
+
+streamlit run app_html.py --server.port 8505

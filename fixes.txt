@@ -1,0 +1,881 @@
+FINAL REFINEMENT PROMPT — CYBERNOVA BI PORTAL
+
+You are working inside my existing Cybernova_BI_Project.
+
+The dashboard is already mostly complete. Do NOT rewrite the whole project. Do NOT change the synthetic data generator unless absolutely necessary.
+
+Main file to refine:
+app_html.py
+
+Do NOT modify:
+- generate_logs.py
+- synthetic_log_studio.py
+- validate_dataset.py
+- config.yaml
+- data/output/*
+- existing CSV/Excel files
+
+Goal:
+Refine app_html.py into the final submission-ready CyberNova BI Portal by fixing all remaining SRS gaps, improving dashboard polish, and adding selected luxury features that make the product feel professional and client-ready.
+
+Use the existing style:
+- deep navy sidebar
+- light grey background
+- white rounded cards
+- electric blue, cyan, green, amber accents
+- soft shadows
+- consistent spacing
+- business-question chart titles
+- one-line interpretation under every chart
+- no emojis
+- no raw SVG text
+- no fake production claims
+
+Keep the wording honest:
+“Simulated live view from timestamped synthetic IIS logs.”
+
+====================================================
+SECTION 1 — FIX CRITICAL SRS GAPS FIRST
+====================================================
+
+1. FIX FR12 — DESCRIPTIVE STATISTICS + CORRELATION
+
+Add a new section called:
+
+“Statistical Evidence”
+
+Place it near the bottom of the relevant dashboards, before Reports & Exports.
+
+Add at least two descriptive statistics tables:
+
+A. Sales dashboard:
+Title:
+“Service-Level Sales Statistics”
+
+Use grouped data by service_name.
+
+Metrics:
+- total requests
+- warm leads
+- demo requests
+- contact requests
+- mean response time
+- median response time
+- standard deviation response time
+- warm lead rate %
+
+B. Marketing dashboard:
+Title:
+“Country-Level Engagement Statistics”
+
+Use grouped data by country.
+
+Metrics:
+- total requests
+- unique visitors
+- engaged sessions
+- mean pages/session
+- median pages/session
+- standard deviation pages/session
+- bot ratio %
+- warm leads
+
+Use pandas groupby, mean, median, std, sum/count.
+Round values cleanly.
+Show a polished table inside a white card.
+
+Also add a time-of-day × service correlation/heatmap:
+
+Title:
+“When is each service most requested?”
+
+Use:
+- x-axis = hour
+- y-axis = service_name
+- value = request count or human request count
+
+Use Plotly heatmap.
+Add an insight note below:
+- identify the top hour/service combination
+- include a simple correlation/association statement, for example:
+  “Service demand is concentrated around 10:00–14:00, suggesting time-of-day affects service interest patterns.”
+
+If possible, calculate a simple correlation/association:
+- Create service-coded categories or use pivot intensity.
+- Keep it simple and interpretable.
+- Do not overcomplicate with advanced statistics.
+
+2. FIX FR10 — DEMO VS EVENT SEPARATE QUANTIFICATION
+
+In the Sales dashboard, add a clear card or mini KPI row called:
+
+“High-Intent Funnel Breakdown”
+
+It must show separately:
+- /scheduledemo.php requests
+- /event.php or event_signup requests
+- contact_request count
+- AI Assistant inquiry count
+- warm leads as % of total traffic
+
+Do not merge all of these only into is_warm_lead.
+Keep is_warm_lead but also show the separate event/action counts.
+
+Add a donut or horizontal bar chart:
+Title:
+“What type of high-intent action are visitors taking?”
+
+Slices/bars:
+- Schedule Demo
+- Event Signup
+- Contact Request
+- AI Assistant Inquiry
+
+Add one-line interpretation:
+“Demo and contact activity indicate stronger immediate sales intent than general browsing.”
+
+3. FIX FR6 — UNDERPERFORMING REGIONS FLAG
+
+In the geographic section or Executive/Marketing dashboard, add a clear underperformance flag.
+
+Create a table/card titled:
+
+“Regional Expansion Target Check”
+
+For each SADC country, show:
+- country
+- total requests
+- warm leads
+- share of total traffic %
+- target status
+
+Target logic:
+- If country share >= 10%: “Above target”
+- If country share between 5% and 10%: “On watch”
+- If country share < 5%: “Below expansion target”
+
+Use green/cyan/amber status styling:
+- Above target = green
+- On watch = cyan or amber-soft
+- Below expansion target = amber
+
+Add an interpretation note:
+“Underperforming markets indicate where CyberNova may need more campaign activity or regional outreach.”
+
+4. FIX FR2 — ETL PROCESSED / CLEANED / DROPPED REPORT
+
+Add a small collapsible expander or subtle info card after the data loads, visible somewhere in the dashboard, titled:
+
+“Data Load Quality Summary”
+
+Report:
+- raw rows loaded
+- usable rows after timestamp parsing
+- rows dropped or excluded due to malformed/missing critical fields
+- duplicate rows if detected
+- filtered rows currently displayed
+
+If exact dropped rows are not tracked, compute:
+- raw_rows = len(original dataframe)
+- invalid_timestamp_rows = count where timestamp is NaT after parsing
+- missing_ip_rows = count where ip_address/source_ip is null if column exists
+- usable_rows = rows after cleaning
+- filtered_rows = len(filtered dataframe)
+
+Use honest wording:
+“Dropped/invalid records are estimated from parsing checks.”
+
+====================================================
+SECTION 2 — FIX EXISTING LOGIC AND CONSISTENCY ERRORS
+====================================================
+
+1. Fix KPI text wrapping
+Text values like “Botswana”, “Contact”, “AI Assistant”, “South Africa” must not break awkwardly across lines.
+
+Apply responsive styles:
+- numeric KPI values can stay large
+- text KPI values use smaller font size
+- no forced word breaking
+- allow ellipsis or two clean lines if needed
+
+2. Fix country contradictions
+The top country must be consistent across:
+- KPI card
+- Sales Insight bullet
+- map
+- warm-lead-by-country chart
+- chart interpretation
+
+Use one shared calculation:
+filtered dataframe where is_warm_lead == True grouped by country.
+
+3. Separate service from lead action
+Do not treat “Contact” as the Hot Service.
+
+Use:
+- Hot Service = top actual product/service from service_name/service_category excluding generic lead-action pages like Contact, Schedule Demo, Event Signup.
+- Top Lead Action = Contact, Schedule Demo, Event Signup, AI Assistant Inquiry.
+
+Update labels accordingly.
+
+4. Rename “Streaming from Excel”
+Replace any wording like:
+“Streaming from Excel”
+
+With:
+“Simulated Log Stream”
+
+Subtitle:
+“Simulated live feed generated from timestamped synthetic IIS web-log records.”
+
+5. Add a small explanation for live counters
+Somewhere in the Live Pulse section add:
+“The live layer replays timestamped synthetic IIS records to simulate operational monitoring.”
+
+6. Fix chart spacing and card consistency
+- All chart cards in the same row must have consistent height.
+- Increase cramped Plotly charts to 360–420px where needed.
+- Reduce excess whitespace at the bottom of long pages.
+- Ensure chart toolbars do not visually overlap headings if possible.
+- Keep card padding consistent.
+
+7. Improve funnel chart
+Add:
+- Largest drop-off callout
+- recommended action based on largest drop-off
+
+Example:
+“Largest drop-off: Service Pages → Demo Page. Recommendation: strengthen demo CTA on service pages.”
+
+====================================================
+SECTION 3 — ADD BEST REAL-TIME GRAPHS
+====================================================
+
+Keep existing live stream logic.
+Do not create external APIs.
+Do not require live_feed.py.
+Do not use Kafka/WebSockets.
+
+Use latest streamed records or latest filtered records.
+
+Add role-specific live graphs:
+
+Sales / CyberNova Pulse:
+1. Live Warm Lead & Demo Activity
+   - rolling line/area chart
+   - x-axis = time
+   - y-axis = count
+   - series 1 = warm leads
+   - series 2 = demo requests
+
+2. Live Service Demand Ticker
+   - live horizontal bar chart
+   - shows currently active CyberNova services
+   - exclude generic actions from service ranking if possible
+
+3. Live Conversion Funnel Movement
+   - Index → Service → Demo → Submitted
+   - show movement using latest streamed/current window records
+
+Marketing / CyberNova Reach:
+1. Live Human Traffic Trend
+   - rolling line/area chart
+   - human requests over time
+
+2. Live Human vs Bot Traffic Split
+   - stacked bar/area or donut
+   - human vs bot
+
+3. Live Country Hotzone Ranking
+   - ranked bar chart of countries from latest/current window
+
+Executive / CyberNova Horizon:
+1. Live Strategic Demand Trend
+   - rolling line/area chart
+   - qualified demand or warm leads
+
+2. Live HTTP Health Monitor
+   - status split: 2xx, 3xx, 4xx, 5xx
+   - use green/cyan/amber warning colours
+
+3. Live Anomaly Pulse
+   - anomaly events over time
+   - show anomaly markers or warning bars
+
+Each live graph must have:
+- business-question title
+- short subtitle
+- one-line interpretation
+- consistent card styling
+- simulation disclaimer
+
+====================================================
+SECTION 4 — FORECASTING
+====================================================
+
+Add simple, defensible forecasting.
+
+Use one of:
+- Holt’s linear trend / exponential smoothing if available
+- otherwise simple linear regression/polyfit with clear label
+
+Do not use advanced models like ARIMA, Prophet, LSTM.
+
+Add one forecast chart per dashboard:
+
+Sales:
+Title:
+“What do the next 30 days of warm-lead demand look like?”
+
+Metric:
+daily warm leads
+
+Marketing:
+Title:
+“What does audience engagement look like over the next 30 days?”
+
+Metric:
+daily engaged human sessions or qualified human traffic
+
+Executive:
+Title:
+“What does strategic demand look like over the next 30 days?”
+
+Metric:
+daily strategic demand or daily warm leads with anomaly markers
+
+Chart style:
+- historical = blue solid line
+- forecast = amber dashed line
+- anomaly markers where relevant
+- clear forecast horizon
+- one-line interpretation below
+
+Add forecast summary text:
+- forecast direction: increasing / stable / declining
+- projected total
+- confidence note: “simple trend estimate for planning, not production forecasting”
+
+====================================================
+SECTION 5 — GEOGRAPHIC MAP AND HOTZONES
+====================================================
+
+Keep the geographic map already added, but refine it.
+
+Use an Africa/SADC-focused geographic map.
+
+Make it a decision map, not decorative.
+
+Add:
+- metric selector or tabs: Requests, Warm Leads, Demo Requests, AI Assistant Demand, Bot Ratio
+- map mode selector: Latest 24h, Selected Period, This Month, All Data
+- clear legend
+- hover tooltip with:
+  country
+  total requests
+  warm leads
+  demo requests
+  AI Assistant activity
+  bot ratio
+  top service
+- hotzone bubbles sized by warm leads or requests
+- colour intensity based on selected metric
+- side ranking panel:
+  Top Hotzones
+  1. country
+  2. country
+  3. country
+- interpretation note under the map
+
+Map titles by dashboard:
+Sales:
+“Where are our warm leads coming from?”
+
+Marketing:
+“Where is CyberNova attracting attention?”
+
+Executive:
+“Where is regional opportunity concentrating?”
+
+====================================================
+SECTION 6 — INSIGHT ASSISTANT
+====================================================
+
+Add a lightweight, rule-based “CyberNova Insight Assistant” card to each dashboard.
+
+Do NOT build a full chatbot.
+Do NOT call external APIs.
+Do NOT use LLMs.
+
+The assistant must be rule-based and generated from the filtered dataframe.
+
+Sales Insight Assistant:
+- top hotzone
+- top product/service
+- top lead action
+- recommended next step
+
+Marketing Insight Assistant:
+- top country
+- strongest page/service
+- audience quality note
+- bot ratio warning if elevated
+- recommended campaign action
+
+Executive Insight Assistant:
+- strongest market
+- AI Assistant traction note
+- forecast direction
+- anomaly/risk note
+- leadership recommendation
+
+Make it look premium:
+- compact card
+- four insight tiles
+- blue/cyan/green/amber accents
+- one short recommended action
+
+====================================================
+SECTION 7 — LUXURY ITEMS TO EXCEED EXPECTATIONS
+====================================================
+
+Add these only if they can be done safely without breaking the app.
+
+1. Executive “Board Summary” card
+A full-width premium card summarising:
+- growth direction
+- strongest market
+- AI Assistant traction
+- top risk
+- recommended leadership action
+
+2. Data Quality Badge
+At the top context row, add:
+- Data Quality: Good / Review Needed
+Based on:
+- malformed rows
+- bot ratio
+- anomaly count
+- 4xx/5xx rate
+
+3. Report Preview Panel
+Before PDF buttons, show a small preview:
+- what the weekly report includes
+- what the monthly report includes
+- number of rows included
+- generation timestamp
+
+4. Downloadable Evidence Pack
+Add one button per dashboard:
+- Download Evidence Pack CSV
+This should include the key table for that role.
+
+5. “Methodology Note” expander
+Add a collapsible section explaining:
+- synthetic IIS logs
+- CRISP-DM / iterative BI pipeline
+- simulated live stream
+- simple forecasting model
+- ethical note: no real personal data
+
+6. Accessibility polish
+- ensure font sizes are readable
+- preserve contrast
+- use meaningful labels
+- avoid colour-only meaning where possible
+- add clear chart titles and captions
+
+7. Empty states
+Every chart/table must show a beautiful empty-state card if filters return no data:
+“No data for selected filters. Try broadening the date range, countries, services, or including bot traffic.”
+
+8. Print/export polish
+PDF reports should include:
+- CyberNova Analytics Ltd
+- dashboard name
+- role
+- selected filter context
+- KPI summary
+- key insight bullets
+- top evidence rows
+- generated timestamp
+- footer: “Generated from CyberNova synthetic IIS web-log dataset for CET333 Product Development prototype.”
+
+====================================================
+SECTION 8 — FINAL QUALITY CHECK
+====================================================
+
+After all refinements:
+
+1. Run:
+python -m py_compile app_html.py
+
+2. Run the dashboard:
+streamlit run app_html.py --server.port 8505
+
+3. Verify:
+- login works
+- role access works
+- admin can access all dashboards
+- filters work
+- no chart crashes when filters return no data
+- live counters update
+- live graphs render
+- map renders
+- forecasts render
+- PDF buttons work
+- CSV buttons work
+- no raw SVG text appears
+- no awkward KPI wrapping
+- no contradictory insights
+- no “Streaming from Excel” wording remains
+- all charts have titles, labels/legends where needed, and interpretation notes
+
+Do not leave TODO placeholders.
+Do not remove existing working features.
+Fix errors directly.
+
+
+ADDITIONAL FINAL LIVE-GRAPH FIXES AND LUXURY POLISH PROMPT
+
+Read this after the previous final refinement prompt.
+
+The dashboard is strong, but the live visual layer still has specific issues that must be fixed before final submission. Do not rewrite the whole app. Refine app_html.py only.
+
+Do NOT modify:
+- generate_logs.py
+- synthetic_log_studio.py
+- validate_dataset.py
+- config.yaml
+- data/output/*
+
+Keep all existing working features. Fix errors and improve polish.
+
+====================================================
+SECTION 1 — FIX BROKEN / MISLEADING LIVE CHARTS
+====================================================
+
+1. Fix Executive “Platform Health” chart
+
+Current problem:
+The Executive card says:
+“Is platform health holding under live load?”
+“HTTP status code distribution in the live window”
+
+But the chart appears to show Human vs Bot instead of HTTP status codes.
+
+Fix:
+Keep the title as:
+“Is platform health holding under live load?”
+
+Make the chart actually show HTTP status distribution:
+- 2xx
+- 3xx
+- 4xx
+- 5xx
+
+Use either:
+- stacked bar chart, or
+- grouped bar chart, or
+- donut chart
+
+Colour rules:
+- 2xx = green
+- 3xx = cyan/blue
+- 4xx = amber
+- 5xx = darker amber/red-like warning, but avoid harsh red if possible
+
+Add interpretation:
+“Most live requests are successful when 2xx dominates; elevated 4xx/5xx indicates platform or user journey issues.”
+
+Do not show Human vs Bot in this card. Human vs Bot belongs in Marketing.
+
+2. Fix Sales live warm-lead trend negative y-axis
+
+Current problem:
+“Is warm-lead activity growing?” sometimes shows a negative y-axis like -1, -0.5, 0, 0.5. Warm leads cannot be negative.
+
+Fix:
+Force the y-axis to begin at 0:
+fig.update_yaxes(range=[0, max(1, y_max)])
+
+If live records are fewer than 10, show a polished collecting-state card:
+“Collecting enough live records to build a reliable trend…”
+
+Alternative:
+Use a bar chart instead of a line chart until enough records exist.
+
+Also add markers so low-count data still looks visible.
+
+3. Fix Executive live anomaly graph negative y-axis
+
+Current problem:
+“Are anomalies spiking in the live window?” shows a negative y-axis and looks empty.
+
+Fix:
+Use a bar chart for anomaly counts per 5-minute window.
+Force y-axis to start at 0.
+
+Title:
+“Are anomalies spiking in the live window?”
+
+Subtitle:
+“Live anomaly events per 5-minute window.”
+
+If no anomalies exist, do not show an empty broken chart.
+Show a polished empty state:
+“No anomaly events detected in the current live window.”
+
+4. Improve Executive strategic demand trend
+
+Current problem:
+The chart appears too flat or dead when recent warm-lead counts are zero.
+
+Fix:
+Use a live grouped bar or area chart with multiple strategic signals:
+- warm leads
+- demo requests
+- event registrations
+- AI Assistant inquiries
+
+Title:
+“Is strategic demand growing in real time?”
+
+This will make movement visible earlier even when warm leads are low.
+
+If all values are zero, show:
+“No strategic demand events have appeared in the current live window yet.”
+
+5. Improve Sales live conversion funnel
+
+Current problem:
+The live funnel is weak when only a few records have streamed.
+It also does not clearly separate event registrations, even though the SRS requires /scheduledemo.php and /event.php to be quantified separately.
+
+Fix:
+Use this funnel structure:
+1. All Requests
+2. AI Assistant Hits
+3. Warm Leads
+4. Demo Requests
+5. Event Registrations
+6. Contact Requests
+
+Always display zero values as 0, not blank.
+Do not hide funnel stages just because value is zero.
+
+Add interpretation:
+“Demo and event actions are tracked separately to distinguish sales-ready demo demand from event-led engagement.”
+
+6. Improve Marketing live trend early-stream appearance
+
+Current issue:
+Marketing live charts work, but early in the stream they look compressed if there are only a few records.
+
+Fix:
+If live records < 10:
+Show a collecting-state note:
+“Collecting enough live records to build trend…”
+
+If records >= 10:
+Show the live trend chart.
+
+Do not break the current Marketing section because it is mostly clean.
+
+7. Fix all live chart y-axes
+
+For all count-based live charts:
+- y-axis must start at 0
+- no negative ranges
+- no negative tick labels
+- use max(1, y_max) where needed
+
+Apply this globally to live count charts:
+warm leads, demo requests, event registrations, bot counts, human counts, anomalies, HTTP statuses, requests.
+
+====================================================
+SECTION 2 — FIX GEOGRAPHIC MAP VIEW
+====================================================
+
+Current problem:
+The live map appears but is too zoomed out and shows too much of the world.
+
+Fix:
+Focus all maps on Africa / Southern Africa / SADC.
+
+For Plotly geo layout, use something like:
+fig.update_geos(
+    scope="africa",
+    projection_type="natural earth",
+    showcountries=True,
+    showcoastlines=True,
+    fitbounds="locations"
+)
+
+If fitbounds makes the map awkward, manually set projection scale and center around Southern Africa.
+
+The map should clearly show:
+- Botswana
+- South Africa
+- Zambia
+- Namibia
+- Zimbabwe
+- Lesotho
+- Eswatini
+- Mozambique
+- Malawi
+- Tanzania
+
+Add a visible interpretation note:
+“Hotzones highlight where CyberNova is receiving the strongest current regional demand.”
+
+Add a side ranking panel if not already present:
+Top Hotzones:
+1. country + metric
+2. country + metric
+3. country + metric
+
+====================================================
+SECTION 3 — ADD CLEAR LIVE WINDOW CONTEXT
+====================================================
+
+Add a live context chip row in each dashboard’s Live Pulse section:
+
+Example:
+Live Window: latest streamed records
+Records streamed: X of Y
+Refresh: every 3 seconds
+Mode: simulated from synthetic IIS logs
+
+This must help the user understand that the live view is simulated and replayed from timestamped synthetic data.
+
+Do not use the phrase:
+“Streaming from Excel”
+
+Use:
+“Simulated Log Stream”
+
+====================================================
+SECTION 4 — LUXURY POLISH ITEMS TO EXCEED EXPECTATIONS
+====================================================
+
+Add these if safe and not disruptive.
+
+1. Board Summary / Role Summary card
+
+For each dashboard, add a premium summary card near the top after KPIs:
+
+Sales:
+“Today’s Sales Focus”
+- top hotzone
+- top product/service
+- highest-intent action
+- follow-up recommendation
+
+Marketing:
+“Today’s Marketing Focus”
+- top engaged country
+- strongest audience segment
+- top page/service
+- campaign recommendation
+
+Executive:
+“Board Summary”
+- growth direction
+- strongest market
+- AI Assistant traction
+- top risk
+- leadership recommendation
+
+2. Data Quality Badge
+
+Add a small badge in the context chips:
+Data Quality: Good / Review Needed
+
+Rule:
+- Good if invalid rows are low, bot ratio acceptable, 4xx/5xx rate low, anomalies low
+- Review Needed if bot ratio high, 4xx/5xx elevated, anomalies present, or parsing issues found
+
+Use green for Good, amber for Review Needed.
+
+3. Report Preview Panel
+
+Before report buttons, add a small preview card:
+- Weekly report includes: KPI summary, live pulse, top hotzones, evidence table
+- Monthly report includes: trends, forecast, regional analysis, recommendations
+- Rows included: filtered row count
+- Generated timestamp
+
+4. Methodology Note expander
+
+Add an expander called:
+“Methodology Note”
+
+Include concise explanation:
+- dataset is synthetic IIS web-log data
+- live layer is simulated from timestamped records
+- forecasts use a simple trend model for planning, not production prediction
+- no real personal data is used
+- role-based access is prototype-level only
+
+5. Accessibility and readability polish
+
+Ensure:
+- no text wraps awkwardly in KPI cards
+- chart labels are readable
+- card spacing is consistent
+- colour is not the only meaning indicator
+- important warnings have text labels as well as amber colour
+- all chart cards have titles, subtitles, and one-line interpretation notes
+
+6. Empty-state polish
+
+Any chart with insufficient data must show a beautiful empty-state card instead of a broken chart.
+
+Examples:
+- “No anomaly events detected in the current live window.”
+- “No warm leads found for the selected filters.”
+- “Collecting enough live records to build trend…”
+- “No geographic activity available for this filter context.”
+
+7. Export polish
+
+Make report/export cards look richer:
+- Weekly PDF Report
+- Monthly PDF Report
+- Evidence Pack CSV
+- Filtered Data CSV
+
+Each button should have a short description above or beside it.
+
+====================================================
+SECTION 5 — FINAL CHECKS
+====================================================
+
+After editing app_html.py:
+
+1. Run:
+python -m py_compile app_html.py
+
+2. Run:
+streamlit run app_html.py --server.port 8505
+
+3. Verify:
+- no negative y-axes on live count charts
+- Executive platform health chart shows HTTP status, not Human vs Bot
+- Sales warm-lead trend is no longer visually broken
+- Executive anomaly chart has proper zero/empty state
+- Sales funnel shows demo and event registrations separately
+- maps focus on Africa/SADC, not the whole world
+- Marketing live charts still work
+- no “Streaming from Excel” wording remains
+- all live sections say “Simulated Log Stream”
+- all charts have interpretation notes
+- PDF and CSV exports still work
+- role-based access still works
+- filters still work
+- no raw SVG or HTML appears as visible text
+
+Do not leave TODO placeholders.
+Do not remove existing working features.
+Fix directly.

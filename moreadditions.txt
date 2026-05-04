@@ -1,0 +1,76 @@
+Refine app.py by adding the best real-time graph, a lightweight insight assistant, and simple forecasting. Do not rewrite the whole project unnecessarily.
+
+1. Add one real-time graph inside each dashboard
+Use a rolling line / area chart style with the CyberNova colour palette.
+
+Sales dashboard:
+- Add a live chart titled “Live Warm Lead & Demo Activity”
+- x-axis = time
+- y-axis = event count
+- line 1 = warm leads
+- line 2 = demo requests
+- use latest streamed / latest filtered time window
+
+Marketing dashboard:
+- Add a live chart titled “Live Human Traffic Trend”
+- x-axis = time
+- y-axis = request/session count
+- line 1 = human traffic
+- line 2 = bot traffic
+
+Executive dashboard:
+- Add a live chart titled “Live Strategic Demand Trend”
+- x-axis = time
+- y-axis = strategic demand / qualified demand
+- main line for demand
+- anomaly markers shown clearly
+
+2. Add a lightweight Insight Assistant card to each dashboard
+Do not build a chatbot.
+Create a compact rule-based “CyberNova Insight Assistant” card.
+
+Sales Insight Assistant:
+- top hotzone
+- top service
+- highest-intent action
+- recommended next step
+
+Marketing Insight Assistant:
+- top country
+- strongest page/service
+- audience quality note
+- recommended campaign action
+
+Executive Insight Assistant:
+- strongest market
+- AI Assistant traction note
+- forecast direction
+- anomaly/risk note
+
+3. Add simple forecasting
+Use Holt’s linear trend / exponential smoothing.
+Keep it simple and defensible.
+
+Sales:
+- forecast daily warm leads for the next 30 days
+- title: “What do the next 30 days of warm-lead demand look like?”
+
+Marketing:
+- forecast daily engaged human sessions for the next 30 days
+- title: “What does audience engagement look like over the next 30 days?”
+
+Executive:
+- forecast daily strategic demand or daily warm leads with anomaly markers for the next 30 days
+- title: “What does strategic demand look like over the next 30 days?”
+
+Forecast chart style:
+- historical = blue solid line
+- forecast = amber dashed line
+- anomaly markers where relevant
+- one-line interpretation below each chart
+
+4. Keep the CyberNova style
+Use white rounded cards, deep navy, electric blue, cyan, green, amber, light grey, consistent spacing, soft shadows, and premium BI styling.
+
+5. Keep existing calculations
+Do not remove existing logic. Extend and improve it.

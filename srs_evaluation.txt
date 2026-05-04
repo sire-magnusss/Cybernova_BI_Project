@@ -1,0 +1,630 @@
+================================================================================
+CyberNova Analytics BI Portal — SRS Evaluation
+CET333 Product Development | Seipone Talama Sebina
+Evaluated against: srs.txt (Requirements Specification Document)
+Evaluation date: 2026-05-03
+Files reviewed: app_html.py (2683 lines), generate_logs.py, synthetic_log_studio.py,
+                config.yaml, cybernova_logo_transparent.svg
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 1 — FUNCTIONAL REQUIREMENTS (FR1–FR12)
+────────────────────────────────────────────────────────────────────────────────
+
+FR1 — Generate ≥1,000-row synthetic IIS W3C log dataset
+Status: FULLY MET
+
+Evidence:
+- generate_logs.py produces raw IIS-style logs and an enriched CSV.
+- config.yaml drives date range (2026-01-01 to 2026-05-15), base 500 daily
+  requests with weekday/weekend variation, monthly growth at 8%, and a 35%
+  random fluctuation — this produces a dataset well above 1,000 rows.
+- All required fields are present: timestamps (date + time), Southern African IPs
+  (country-specific prefixes like 102.128.x.x for Botswana), service URIs,
+  HTTP methods, status codes, bytes, user agents.
+- Realistic patterns are implemented: peak-hour clustering via
+  random_time_for_human_session() (42% morning, 38% afternoon), bot traffic
+  with off-peak weighting via random_time_for_bot_session(), and 404 errors
+  via the anomaly system (e.g., "Broken AI Campaign Link" on 2026-04-03).
+- Campaign-driven traffic spikes (multipliers up to 2.0x) add further realism.
+
+No gaps.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR2 — Ingest and preprocess log file: parse all fields, resolve IPs to countries,
+      handle malformed records, load clean DataFrame, report records
+      processed/cleaned/dropped
+Status: MOSTLY MET — one reportable gap
+
+Evidence:
+- load_data() reads the Excel workbook via a temp-file copy (OneDrive lock
+  workaround), joins the enriched CSV on a composite key, parses timestamps,
+  casts boolean columns, and sorts by timestamp.
+- IP-to-country resolution is handled at generation time via the static country
+  prefix mapping in generate_logs.py — this satisfies the "static lookup"
+  constraint stated in the Constraints section.
+- Malformed records are handled via try/except blocks; missing values are filled
+  or coerced rather than crashing.
+
+Gap:
+- The SRS requires reporting "records processed, cleaned, and dropped" to the
+  user. This report does not appear in the dashboard or as a log message.
+  The only count shown is the row count chip in the filter context bar, which
+  reflects the filtered dataset, not the raw-load outcome. A one-line summary
+  after data load (e.g., "Loaded 45,320 rows; 12 malformed records dropped")
+  would close this gap.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR3 — Perform EDA: univariate distributions, bivariate country × service,
+      hourly/daily time series, anomaly detection. All outputs include
+      interpretive commentary.
+Status: FULLY MET
+
+Evidence:
+- Univariate: warm lead counts, service request volumes, bot ratios, and session
+  depth distributions all appear across the three dashboards.
+- Bivariate country × service: the Sales dashboard plots warm leads by country
+  and service demand separately; the Marketing dashboard plots SADC reach by
+  country; the Executive dashboard shows country demand with MoM growth colour.
+- Hourly/daily time series: the human activity heatmap (day_of_week × hour,
+  px.imshow) in Marketing provides hourly decomposition. Weekly trend charts
+  in all dashboards cover the daily/weekly dimension. The 90-day forecast chart
+  in Horizon uses the full daily time series as its base.
+- Anomaly detection: the is_anomaly flag is generated in generate_logs.py and
+  surfaced as (a) an "Anomaly Days" KPI, (b) markers on the forecast chart,
+  (c) the Live Anomaly Pulse chart, and (d) the anomaly log evidence table.
+- Interpretive commentary: render_insight_note() appears consistently under
+  every chart across all three dashboards — this directly fulfils the "all
+  outputs include interpretive commentary" requirement and is one of the
+  strongest parts of the implementation.
+
+No gaps.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR4 — Segment traffic into four behavioural tiers. Report volumes per country.
+Status: FULLY MET
+
+Evidence:
+- generate_logs.py assigns a "segment" column with four tiers:
+  High-intent (demo/event pages), Product-curious (AI/prototype pages),
+  General browser (index/about), Bot/crawler (user-agent or pattern detection).
+- The sidebar "Segments" multiselect filter lets users isolate any tier.
+- The Marketing dashboard renders a "weekly segment composition" stacked bar
+  chart showing how tier mix shifts over time.
+- The Visitor Segment Detail evidence table shows country, segment, session
+  depth, and conversion status — covering the "volumes per country" requirement.
+
+No gaps.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR5 — Simulate a real-time log feed that detects new entries and refreshes all
+      dashboard metrics without manual reload.
+Status: MET IN SPIRIT — mechanism honest and correctly labelled
+
+Evidence:
+- render_live_section() is decorated with @st.fragment(run_every=3), which
+  causes Streamlit to re-execute the fragment every 3 seconds automatically.
+- st.session_state["live_log"] holds a ring buffer capped at 300 records; one
+  row is ingested per cycle by advancing a pointer through the dataset.
+- The stream label throughout reads "STREAMING FROM LOG STREAM", and all live
+  chart subtitles carry the disclaimer "Simulated live view from timestamped
+  synthetic IIS logs" — no false production claims are made.
+
+Note on interpretation:
+- The SRS says "file-watch or polling mechanism that detects new entries". The
+  implemented approach simulates this via dataset cycling rather than watching a
+  file. Given Constraint 1 (no real server logs) this is the only viable
+  approach and is correctly presented as simulation. A tutor reading the spec
+  against the code should accept this as a justified design decision, provided
+  the CRISP-DM documentation explains the reasoning.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR6 — Geographic demand analysis: ranked bar chart and choropleth of total and
+      high-intent requests by country. Identify top 5 markets; flag
+      underperforming regions against expansion targets.
+Status: MOSTLY MET — "underperforming regions" flag missing
+
+Evidence met:
+- Choropleth: a Plotly choropleth map appears in the live pulse section for all
+  three dashboards, colour-coded by request volume.
+- Ranked bar charts: warm leads by country (Sales), SADC reach (Marketing), and
+  regional demand with MoM growth colour coding (Executive) all address this.
+- Top markets: surfaced via "Top Warm Market" KPI, insight assistant cards, and
+  the country ranking table beside the live map.
+
+Gap:
+- The SRS specifically asks to "flag underperforming regions against expansion
+  targets". No explicit underperformance flag exists in the dashboards. The
+  Campaign Opportunity Matrix in Marketing uses a "Monitor before spending"
+  recommendation at the low end of the opportunity score, which is close but
+  not framed as "underperforming against targets". A simple colour-coded note
+  (e.g., amber flag on SADC countries below a defined request threshold) would
+  close this gap and directly match the SRS wording.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR7 — Service demand ranking across all URIs. Isolate AI Cyber Assistant traffic
+      as standalone flagship KPI with growth trend indicator.
+Status: FULLY MET
+
+Evidence:
+- Service demand ranking: the Sales dashboard renders a horizontal bar chart of
+  service demand filtered to warm leads, and the live "Service Demand Ticker"
+  chart shows real-time URI/service counts.
+- AI Cyber Assistant standalone KPI: the "AI Assistant Traction" KPI card in
+  the Executive dashboard reports AI share of service traffic.
+- Growth trend: the "Is the AI Cyber Assistant gaining traction?" dual-axis
+  chart in the Executive dashboard plots monthly AI request volume (bar) against
+  AI share percentage (line on secondary axis) — clearly showing trend direction.
+- In Sales: a dedicated "Is the AI Cyber Assistant creating sales interest?"
+  chart shows weekly AI hits vs AI-linked demo/contact conversions.
+
+No gaps.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR8 — Three-tab Streamlit dashboard: Sales (trends, warm leads, conversion,
+      reach), Marketing (heatmap, service gaps, segmentation), Management
+      (KPIs, AI traction, executive summary).
+Status: FULLY MET
+
+Evidence:
+- CyberNova Pulse (Sales): warm lead trend charts, AI-to-demo conversion KPI,
+  country reach bar chart, live warm lead rolling chart, 30-day forecast,
+  sales action queue.
+- CyberNova Reach (Marketing): human activity heatmap (day × hour), service gap
+  chart (visit share vs conversion share), weekly segment composition stacked
+  bar, audience scatter plot (visitors vs engagement rate sized by warm leads),
+  30-day engaged session forecast, campaign opportunity matrix.
+- CyberNova Horizon (Executive): five KPI cards, AI traction chart, 90-day
+  forecast, regional expansion chart, executive decision brief table, anomaly
+  log.
+
+All three meet or exceed their stated contents. Role-based access control ensures
+each user sees only their assigned dashboard, which goes beyond what was specified.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR9 — Sidebar filtering: date range, country, service type, HTTP status. All
+      visuals and statistics update reactively.
+Status: FULLY MET AND EXCEEDED
+
+Evidence:
+- Sidebar contains: Start date / End date inputs, Countries multiselect,
+  Services multiselect, HTTP Status multiselect, Segments multiselect (beyond
+  spec), and an "Include bot traffic" toggle (beyond spec).
+- apply_filters() is called in main() and the resulting fdf is passed to every
+  dashboard function — all visuals and calculations operate on fdf, so reactive
+  updates are guaranteed.
+- A context chip row at the top of each dashboard confirms the active filter
+  state and row count, giving the user clear feedback.
+
+No gaps. Segments and bot toggle exceed the SRS scope as a bonus.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR10 — Warm lead tracking: quantify /scheduledemo.php and /event.php entries
+       separately as highest-intent funnel interactions. Report count, country
+       split, time trend, and rate as % of total traffic.
+Status: MOSTLY MET — two specific gaps
+
+Evidence met:
+- Count: warm_total in calculate_sales_metrics() and the "New Warm Leads (24h)"
+  and "Weekly Warm Leads" KPI cards.
+- Country split: "Where did warm leads come from?" bar chart in Sales.
+- Time trend: the 30-day forecast chart uses daily warm-lead series as its base,
+  and the strategic growth chart in Executive shows weekly warm leads.
+
+Gaps:
+1. The SRS asks for /scheduledemo.php and /event.php to be quantified SEPARATELY
+   as distinct funnel interactions. Currently both URIs are merged into the
+   is_warm_lead boolean flag. There is no chart or KPI that shows
+   "demo requests: X, event registrations: Y" as separate numbers. The live
+   Conversion Funnel chart shows "Demo Requests" but not "Event Registrations"
+   independently. Adding a two-row comparison (demo vs events) would directly
+   satisfy this requirement.
+
+2. "Rate as % of total traffic" is not displayed as a dedicated KPI. The funnel
+   chart implies it, but no card reads "Warm Leads: X% of all requests". This
+   is a one-line addition to any of the KPI rows.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR11 — Minimum five chart types: bar, line/area, pie/donut, scatter, geographic.
+       All charts include titles, axis labels, legends, and annotations.
+Status: FULLY MET
+
+Evidence:
+- Bar: horizontal bar charts throughout (warm leads by country, service demand,
+  entry depth, HTTP health monitor, country hotzone).
+- Line/area: area fill charts in all live rolling trends; line+markers in all
+  forecast and growth charts.
+- Pie/donut: the live "Human vs Bot Traffic Split" donut chart (hole=0.55) in
+  the Reach live section.
+- Scatter: px.scatter() at app_html.py:1778 — "Audience Quality by Country",
+  plotting unique visitors (x) vs engaged rate (y), sized by warm leads. This
+  is a genuine bubble/scatter chart with two independent numeric axes.
+- Geographic/choropleth: Plotly choropleth map in the live section across all
+  dashboards, coloured by request volume with country hover data.
+- Bonus types: funnel (Conversion Funnel Movement), heatmap (imshow, human
+  activity), stacked bar (segment composition, bot vs human weekly).
+
+Chart quality: all Plotly charts have titles (either via layout title or
+render_card_header), axis labels where relevant, legends where multiple series
+exist, and insight annotations via render_insight_note(). This comfortably
+meets the requirement.
+
+No gaps.
+
+────────────────────────────────────────────────────────────────────────────────
+
+FR12 — Descriptive statistics per country, service, and time period: mean,
+       median, standard deviation, totals. Correlation analysis of time-of-day
+       vs service type to identify peak engagement windows.
+Status: PARTIALLY MET — notable gaps
+
+Evidence met:
+- Totals: warm lead totals, visitor totals, request counts — present throughout.
+- Means: engaged session rate (mean of distinct_pages_session >= 3), average
+  pages per session in the entry depth chart (groupby mean), AI-to-demo
+  conversion rate — all computed and displayed.
+
+Gaps:
+1. Median is not computed or displayed anywhere in the dashboard. The SRS lists
+   it explicitly alongside mean and total.
+
+2. Standard deviation is not computed or displayed. No chart or table shows
+   variance/spread of any metric (e.g., daily request variation, session depth
+   std dev by country).
+
+3. Correlation analysis of time-of-day vs service type is not implemented. The
+   human activity heatmap (day × hour) shows when humans are most active, but
+   it does not break this down by service type — so you cannot read from the
+   dashboard "at 10:00, users primarily visit the AI Assistant; at 15:00, they
+   visit Cybersecurity Monitoring". A pivot of hour vs service_name (similar to
+   the existing heatmap) would satisfy this requirement and is not a large
+   addition.
+
+This is the requirement with the most remaining work. It would require adding a
+descriptive stats table (mean, median, std dev, total) for at least one
+dimension (country or service), and a time-of-day × service heatmap.
+
+────────────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 2 — NON-FUNCTIONAL REQUIREMENTS (NFR1–NFR8)
+────────────────────────────────────────────────────────────────────────────────
+
+NFR1 — Dashboard loads within 3 seconds; filter interactions within 1 second.
+Status: LIKELY MET
+
+@st.cache_data on load_data() means the Excel file is read once and cached in
+memory for subsequent interactions. The OneDrive temp-file copy prevents
+repeated locking delays. Filter interactions operate on the already-loaded
+DataFrame in memory, which should be well under 1 second for datasets up to
+50,000 rows. This cannot be formally verified without timing measurements, but
+the architecture is appropriate.
+
+────────────────────────────────────────────────────────────────────────────────
+
+NFR2 — Log data strictly conforms to IIS W3C format. Country distribution
+       reflects realistic Southern African proportions; ≥30% from Botswana.
+Status: FULLY MET
+
+config.yaml explicitly sets Botswana: 0.32 (32%), which satisfies the ≥30%
+requirement. South Africa follows at 20%, with the remaining 48% spread across
+eight other SADC nations — proportions that broadly reflect realistic regional
+internet traffic patterns.
+
+IIS W3C fields generated: date, time, ip_address, uri, method, http_status,
+bytes_sent, user_agent. All standard IIS Extended Log Format fields are covered.
+
+────────────────────────────────────────────────────────────────────────────────
+
+NFR3 — Fixed random seed ensures full dataset reproducibility.
+Status: FULLY MET
+
+config.yaml sets random_seed: 333 at project level. The seed is loaded by
+generate_logs.py at startup, ensuring identical datasets across runs.
+
+────────────────────────────────────────────────────────────────────────────────
+
+NFR4 — Consistent UI: colour scheme, ≥11pt font, appropriate information
+       density per audience.
+Status: FULLY MET
+
+Design tokens (NAVY, BLUE, CYAN, GREEN, AMBER) are defined at the top of
+app_html.py and applied consistently through all card, chart, and text styling.
+Base font size is 11px or higher throughout (11px–31px range in KPI cards).
+Information density is appropriately calibrated: the Executive dashboard
+presents 5 KPIs and a decision brief; Sales and Marketing show deeper evidence
+tables, action queues, and segment detail. The professional login page and
+branded hero cards add presentation polish above typical academic deliverables.
+
+────────────────────────────────────────────────────────────────────────────────
+
+NFR5 — Modular codebase: separate modules for generation, ETL, analysis, and UI.
+       Inline documentation throughout. Built for monthly re-execution.
+Status: PARTIALLY MET
+
+Separation achieved:
+- generate_logs.py: data generation, well-documented with clear function
+  docstrings throughout.
+- synthetic_log_studio.py: generation UI interface.
+- config.yaml: all parameters externalised — changing dates, country weights,
+  campaigns, or anomalies requires only config edits, not code changes. This
+  directly supports monthly re-execution.
+
+Gap:
+- The SRS requires separate modules for ETL, analysis, and UI. All three are
+  combined in app_html.py (2,683 lines): load_data() (ETL), calculate_*()
+  functions (analysis), and render_*/show_*() functions (UI). By the SRS
+  definition, these should be in separate files (e.g., etl.py, analytics.py,
+  ui.py or similar). At 2,683 lines, the single file is navigable but does not
+  satisfy the modularity requirement as written.
+- Inline documentation is strong in generate_logs.py but sparse in app_html.py
+  — most functions have no docstring and section comments replace formal
+  documentation.
+
+────────────────────────────────────────────────────────────────────────────────
+
+NFR6 — Pipeline handles up to 50,000 log entries without restructuring.
+Status: LIKELY MET
+
+Core data operations use pandas vectorised methods throughout. The ring buffer
+caps at 300 records to avoid unbounded memory growth in the live section. No
+Python loops operate over the full dataset. @st.cache_data prevents redundant
+re-reads. Standard pandas on 50,000 rows should perform within acceptable
+Streamlit response times on a modern machine.
+
+────────────────────────────────────────────────────────────────────────────────
+
+NFR7 — Deployable locally or via Streamlit Community Cloud from requirements.txt.
+       No proprietary BI platforms.
+Status: FULLY MET
+
+requirements.txt is present. The stack (Streamlit, Plotly, Pandas, NumPy,
+ReportLab, openpyxl, PyYAML) is entirely open-source. No Power BI, Tableau,
+or proprietary tools are used. The only deployment blocker for Streamlit Cloud
+is the OneDrive data path — the Excel file path "data/output/cybernova_web_logs.xlsx"
+is relative and would need the data directory committed or regenerated via the
+Synthetic Log Studio before cloud deployment.
+
+────────────────────────────────────────────────────────────────────────────────
+
+NFR8 — All data entirely synthetic. No real personal data. Documented to
+       professional standards.
+Status: FULLY MET
+
+All IP addresses are algorithmically constructed from country-specific prefix
+ranges with no connection to real users. User agents are templates, not scraped.
+Session IDs are MD5 hashes of synthetic inputs. The dashboard, login page, and
+all live chart subtitles carry "Simulated live view from timestamped synthetic
+IIS logs" and "CET333 Product Development prototype" disclaimers. generate_logs.py
+is fully documented with module-level docstring and per-function documentation.
+
+────────────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 3 — EVALUATION CRITERIA FROM THE SRS
+────────────────────────────────────────────────────────────────────────────────
+
+The SRS states the system will be evaluated across three dimensions:
+
+1. Against FR1–FR12 individually
+   See Section 1 above. Summary: 8 fully met, 3 mostly met, 1 partially met.
+   The partial requirement (FR12) is the only one with material analytical
+   work still outstanding (median, std dev, time-of-day × service correlation).
+
+2. Against eight documented business goals (at least six must be addressed)
+   The SRS references "eight documented business goals" without listing them
+   here. Based on the company description (SME/financial/government markets,
+   AI cybersecurity, predictive maintenance, digital transformation), the
+   following are clearly addressed by the dashboard outputs:
+
+   ADDRESSED:
+   a. Evaluate online effectiveness of software solutions via IIS log analysis
+      — the entire system is this.
+   b. Identify high-intent sales leads and prioritise follow-up
+      — Sales Action Queue, warm lead KPIs, insight assistant.
+   c. Assess AI Cyber Assistant commercial traction
+      — dedicated charts in both Sales and Executive dashboards.
+   d. Understand geographic demand across Southern Africa
+      — choropleth, SADC reach chart, regional priority table.
+   e. Identify peak engagement windows for campaign scheduling
+      — human activity heatmap, peak hour KPI in Sales.
+   f. Evaluate campaign effectiveness by period
+      — campaigns visible in traffic spikes; weekly trend charts show
+        before/after campaign periods.
+   g. Monitor platform health and anomalies
+      — anomaly KPI, anomaly log, Live HTTP Health Monitor, Live Anomaly Pulse.
+
+   PARTIALLY ADDRESSED:
+   h. Descriptive analytics per service, country, and time period
+      — totals and means present; median/std dev missing (FR12 gap).
+
+   Verdict: at least 6 of the presumed 8 goals are demonstrably addressed.
+
+3. Against analytical success criteria (forecasting + segmentation quality)
+   - Forecasting: Holt's linear trend / exponential smoothing was specified.
+     The implemented approach is numpy polyfit (linear regression), which is
+     simpler than Holt's method but is the same "simple linear regression"
+     candidate mentioned in the SRS evaluation criteria. It is defensible if
+     compared against a moving average alternative in the CRISP-DM documentation
+     and the reasoning for selection is stated. The forecast horizon was
+     extended from 30 to 90 days for the Executive dashboard, which adds
+     strategic value.
+   - Segmentation: four behavioural tiers produce distinct traffic profiles
+     visible in the segment composition chart and the segment detail table.
+     The Campaign Opportunity Matrix further differentiates countries by
+     engagement quality. Segmentation quality is sound.
+
+────────────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────────────
+SECTION 4 — OVERALL ASSESSMENT
+────────────────────────────────────────────────────────────────────────────────
+
+REQUIREMENT SCORECARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Req    Description                              Status
+──────────────────────────────────────────────────────────────────────────────
+FR1    Synthetic IIS dataset ≥1,000 rows        FULLY MET
+FR2    ETL pipeline with drop report            MOSTLY MET  (missing drop report)
+FR3    EDA + interpretive commentary            FULLY MET
+FR4    Four behavioural segments                FULLY MET
+FR5    Real-time feed auto-refresh              MET IN SPIRIT
+FR6    Geographic analysis + underperform flag  MOSTLY MET  (no underperform flag)
+FR7    Service demand + AI standalone KPI       FULLY MET
+FR8    Three-tab role-specific dashboard        FULLY MET
+FR9    Sidebar filtering + reactive updates     FULLY MET (exceeded)
+FR10   Warm lead tracking (demo vs event split) MOSTLY MET  (no separate demo/event)
+FR11   Five chart types + labels/legends        FULLY MET
+FR12   Descriptive stats + time-day correlation PARTIALLY MET (median/std/corr missing)
+──────────────────────────────────────────────────────────────────────────────
+NFR1   Load / interaction performance           LIKELY MET
+NFR2   IIS format + Botswana ≥30%               FULLY MET  (32% confirmed)
+NFR3   Fixed random seed                        FULLY MET  (seed 333)
+NFR4   Consistent UI + font + density           FULLY MET
+NFR5   Modular codebase + documentation        PARTIALLY MET  (single large file)
+NFR6   Scalable to 50,000 rows                  LIKELY MET
+NFR7   requirements.txt + no proprietary tools  FULLY MET
+NFR8   Synthetic data + ethical documentation   FULLY MET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+WHERE YOU EXCEEDED THE SPECIFICATION
+─────────────────────────────────────
+These are features you delivered that go beyond what was agreed in the SRS.
+Each one strengthens the prototype and demonstrates initiative.
+
+1. Role-based access control with login page
+   A full two-panel login UI with role selection, password authentication,
+   branded hero card, and feature cards was not required. This raises the
+   deliverable from an academic dashboard to a realistic client-facing product.
+
+2. Live streaming simulation with ring buffer and auto-refresh
+   @st.fragment(run_every=3) with a 300-record ring buffer, three role-specific
+   live charts, geographic map with live country table, and live activity feed
+   all go well beyond "file-watch or polling mechanism."
+
+3. Nine live charts across the three dashboards
+   The SRS implied one real-time feed. You delivered three live charts per
+   dashboard (nine total), each with a business question title, subtitle,
+   interpretation note, and the simulation disclaimer.
+
+4. Insight Assistant cards (rule-based)
+   A four-cell insight card per dashboard distilling top hotzone, service,
+   engagement quality, and recommended next step — this was a design addition
+   that directly serves the analyst audience without requiring an LLM.
+
+5. PDF export (weekly and monthly)
+   ReportLab-generated PDF reports with filter context, KPI tables, insight
+   bullets, and evidence tables were not in the SRS. This adds a professionally
+   expected deliverable output for a BI system.
+
+6. 90-day executive forecast
+   The SRS specified 30-day forecasting. The Executive dashboard extends this
+   to 90 days with anomaly markers as vlines on the forecast chart, providing
+   a more strategically useful planning horizon.
+
+7. Campaign Opportunity Matrix
+   A scored, ranked table combining visitor volume, engagement rate, warm leads,
+   and bot penalty into a composite opportunity score with recommended actions
+   is a genuinely analytical addition beyond the segmentation requirement.
+
+8. Synthetic Log Studio (separate Streamlit app)
+   A standalone parametric log generation UI at port 8501 lets a client or tutor
+   generate fresh datasets without touching Python code — this serves NFR7
+   (portability) and NFR8 (reproducibility) in spirit well beyond what was
+   stated.
+
+
+WHERE WORK REMAINS (PRIORITY ORDER)
+─────────────────────────────────────
+The following items are gaps against the SRS that should be addressed before
+client sign-off or submission:
+
+PRIORITY 1 — FR12 (Descriptive Statistics + Correlation)
+This is the only requirement rated "partially met" and represents material
+analytical work missing from the prototype.
+
+Action items:
+a. Add a descriptive statistics summary table to at least one dashboard.
+   Suggested location: Sales (per-service) or Marketing (per-country).
+   Columns: mean, median, standard deviation, total — for either
+   daily warm leads or session depth. This takes one pandas .describe()
+   call and a st.dataframe().
+
+b. Add a time-of-day × service heatmap. This is the same structure as the
+   existing human activity heatmap (px.imshow) but pivoted on service_name
+   instead of day_of_week. Suggested title: "When is each service most
+   requested?" Place in Marketing or Sales diagnostics section.
+
+c. Add the correlation statistic itself (e.g., Pearson r or a written
+   interpretation) as an insight note below the heatmap.
+
+
+PRIORITY 2 — FR10 (Demo vs Event separate quantification)
+Action items:
+a. Add two separate KPI cards or a two-row mini-table in the Sales dashboard:
+   "/scheduledemo.php requests: X" and "/events.php requests: Y".
+b. Add "Warm leads as % of total traffic" as a dedicated KPI card or delta note.
+
+
+PRIORITY 3 — FR6 (Underperforming regions flag)
+Action items:
+a. In the Executive or Marketing geographic section, flag countries with fewer
+   than a defined threshold of requests (e.g., < 5% of total) as
+   "Below expansion target" using an amber indicator. This is a small
+   conditional formatting addition to the Regional Priority Table.
+
+
+PRIORITY 4 — FR2 (ETL drop report)
+Action items:
+a. After load_data() returns, check for rows with null timestamps or null IP
+   addresses and report: "Loaded X rows. Y records dropped as malformed."
+   This can be a st.caption() or a collapsible expander — it does not need
+   to be prominent, but it needs to exist.
+
+
+PRIORITY 5 — NFR5 (Modularity)
+If the CRISP-DM documentation explicitly maps each module to its CRISP-DM phase,
+the examiner may accept the current single-file structure with explanation.
+However, if strict adherence is required, splitting app_html.py into three
+files (etl.py, analytics.py, ui.py) with import statements would satisfy NFR5.
+Given the late stage of development, documentation justification is lower risk
+than a refactor.
+
+
+OVERALL VERDICT
+─────────────────
+This is a strong prototype that substantially exceeds the SRS baseline. The
+visual design, live streaming architecture, role-based access, forecast charts,
+insight cards, and PDF export represent work well above a standard CET333
+submission. The core analytical pipeline (ETL, segmentation, geographic BI,
+AI traction analysis) is solid and well-evidenced throughout.
+
+The two material gaps — missing descriptive statistics (FR12) and missing
+demo/event separate quantification (FR10) — are analytically significant and
+should be addressed before sign-off. FR12 in particular is the kind of gap
+that an academic evaluator will look for when checking whether the system
+performs genuine BI analysis versus only visualisation.
+
+If FR12, FR10, and the FR6 flag are addressed, the system meets all twelve
+functional requirements and all eight non-functional requirements either fully
+or with documented justification. The deliverable would be ready for client
+demonstration and academic evaluation.
+
+================================================================================
+End of evaluation — CyberNova BI Portal vs SRS | 2026-05-03
+================================================================================

@@ -1,0 +1,66 @@
+Refine app_html.py only. Do not rewrite the whole project.
+
+Fix the layout and visual consistency issues in the dashboard.
+
+Main issues to fix:
+1. Some text, banners, and chart elements are overlapping.
+2. Diagnostic graphs/cards are not the same size.
+3. Some sections do not sit cleanly inside proper white cards.
+4. Spacing between chart titles, subtitles, charts, and insight notes is inconsistent.
+
+Please apply these fixes:
+
+- Make all diagnostic charts sit inside consistent white cards with:
+  - white background
+  - rounded corners
+  - soft shadow
+  - subtle border
+  - consistent internal padding
+
+- Ensure all diagnostic chart cards in the same row have the same height and width.
+  - Use a consistent card height for side-by-side diagnostic charts.
+  - Make chart containers uniform so the graphs visually align.
+
+- Prevent all overlap issues:
+  - increase spacing between chart area and interpretation banner
+  - add margin between section heading, subtitle, graph, and footer note
+  - ensure no text sits on top of other components
+  - ensure Plotly charts do not overflow their containers
+
+- Standardise the diagnostics section layout:
+  - keep charts in a clean 2-column grid
+  - same card size
+  - same title spacing
+  - same subtitle spacing
+  - same chart height
+  - same footer/insight-note spacing
+
+- Make section headings more prominent and clean:
+  - small uppercase eyebrow label
+  - bold heading
+  - divider line to the right
+  - more space above and below headings
+
+- Make the interpretation/insight notes appear neatly inside the card footer area, not floating too close to other elements.
+
+- Ensure charts have enough internal margin so axes, labels, and legends do not look cramped.
+
+- Keep the CyberNova design system:
+  - light grey background
+  - white cards
+  - deep navy headings
+  - muted subtitles
+  - electric blue, cyan, green, and amber accents only as highlights
+
+- Do not remove existing chart logic.
+- This is a visual/layout refinement only.
+
+After changes:
+1. Run python -m py_compile app_html.py
+2. Run streamlit run app_html.py --server.port 8505
+3. Verify:
+   - no overlaps
+   - diagnostic graphs are the same size
+   - all charts are inside white cards
+   - spacing is clean and consistent
+   - section headings are more prominent
