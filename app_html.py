@@ -3453,5 +3453,4 @@ def main() -> None:
         else:
             st.error(f"{role} does not have access to {nav}.")
 
-if __name__ == "__main__":
-    main()
+main()
