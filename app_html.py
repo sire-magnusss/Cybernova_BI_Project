@@ -335,27 +335,36 @@ hr{border:none;border-top:1px solid #D9E2EC;margin:1.6rem 0;}
 /* ═══════════════════════════════════════════════════════════════
    DARK MODE OVERRIDES
 ═══════════════════════════════════════════════════════════════ */
-.stApp{background:#0F172A !important;}
-[data-testid="stAppViewContainer"] > section.main{background:#0F172A !important;}
+.stApp{background:#070E1C !important;}
+[data-testid="stAppViewContainer"] > section.main{background:#070E1C !important;}
 .block-container{background:transparent !important;}
 
-/* Card wrappers */
+/* ── Dark-blue card system ── */
 [data-testid="stVerticalBlockBorderWrapper"]{
-  background:#1E293B !important;
-  border-color:#334155 !important;
-  box-shadow:0 4px 20px rgba(0,0,0,.5) !important;
+  background:#0F2040 !important;
+  border:1px solid rgba(37,99,255,.22) !important;
+  box-shadow:0 4px 24px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.04) inset !important;
+  padding:0 !important;
 }
+/* Consistent inner padding */
+[data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"]{
+  padding:26px 28px 36px !important;
+  gap:1.1rem !important;
+}
+/* Hover: lift + blue border glow */
 [data-testid="stVerticalBlockBorderWrapper"]:hover{
-  box-shadow:0 6px 28px rgba(0,0,0,.6) !important;
+  background:#122548 !important;
+  border-color:rgba(37,99,255,.55) !important;
+  box-shadow:0 8px 36px rgba(0,0,0,.65), 0 0 0 1px rgba(37,99,255,.4) !important;
 }
 
-/* Inline white/light HTML card backgrounds */
+/* Inline white/light HTML card backgrounds → dark blue variants */
 [data-testid="stMarkdownContainer"] div[style*="background:white"],
 [data-testid="stMarkdownContainer"] div[style*="background: white"],
 [data-testid="stMarkdownContainer"] div[style*="background:#FFFFFF"],
 [data-testid="stMarkdownContainer"] div[style*="background: #FFFFFF"]{
-  background:#1E293B !important;
-  border-color:#334155 !important;
+  background:#0F2040 !important;
+  border-color:rgba(37,99,255,.22) !important;
 }
 [data-testid="stMarkdownContainer"] div[style*="background:#F3F4F6"],
 [data-testid="stMarkdownContainer"] div[style*="background:#F8FAFC"],
@@ -365,8 +374,8 @@ hr{border:none;border-top:1px solid #D9E2EC;margin:1.6rem 0;}
 [data-testid="stMarkdownContainer"] div[style*="background:#D1FAE5"],
 [data-testid="stMarkdownContainer"] div[style*="background:#CFFAFE"],
 [data-testid="stMarkdownContainer"] div[style*="background:#FEF3C7"]{
-  background:#253047 !important;
-  border-color:#334155 !important;
+  background:#0A1A35 !important;
+  border-color:rgba(37,99,255,.18) !important;
 }
 
 /* All text white in dark mode */
@@ -380,50 +389,51 @@ hr{border:none;border-top:1px solid #D9E2EC;margin:1.6rem 0;}
 
 /* Expanders */
 [data-testid="stExpander"]{
-  background:#1E293B !important;
-  border-color:#334155 !important;
+  background:#0F2040 !important;
+  border-color:rgba(37,99,255,.22) !important;
 }
 [data-testid="stExpander"] summary{color:#E2E8F0 !important;}
 [data-testid="stExpander"] summary:hover{color:white !important;}
 
 /* Native inputs */
 input, textarea, .stTextInput input, .stDateInput input{
-  background:#1E293B !important;
+  background:#0F2040 !important;
   color:#E2E8F0 !important;
-  border-color:#334155 !important;
+  border-color:rgba(37,99,255,.3) !important;
 }
 [data-baseweb="select"] > div{
-  background:#1E293B !important;
-  border-color:#334155 !important;
+  background:#0F2040 !important;
+  border-color:rgba(37,99,255,.3) !important;
   color:#E2E8F0 !important;
 }
-[data-baseweb="menu"]{background:#1E293B !important;}
-[data-baseweb="option"]{background:#1E293B !important;color:#CBD5E1 !important;}
-[data-baseweb="option"]:hover{background:#253047 !important;}
+[data-baseweb="menu"]{background:#0F2040 !important;}
+[data-baseweb="option"]{background:#0F2040 !important;color:#CBD5E1 !important;}
+[data-baseweb="option"]:hover{background:#122548 !important;}
 
 /* DataFrames */
 .stDataFrame, [data-testid="stDataFrame"]{
-  background:#1E293B !important;
-  border-color:#334155 !important;
+  background:#0F2040 !important;
+  border-color:rgba(37,99,255,.22) !important;
 }
 
 /* HR dividers */
-hr{border-color:#334155 !important;}
+hr{border-color:rgba(37,99,255,.2) !important;}
 
-/* Plotly chart backgrounds */
-.js-plotly-plot .plotly,.plotly-graph-div{background:#1E293B !important;}
+/* Plotly chart backgrounds — match card */
+.js-plotly-plot .plotly,.plotly-graph-div{background:#0F2040 !important;}
 .modebar{background:transparent !important;}
 
 /* Download buttons in dark mode */
 div[data-testid="stDownloadButton"] > button{
-  background:#1E293B !important;
-  color:#CBD5E1 !important;
-  border-color:#334155 !important;
+  background:#0F2040 !important;
+  color:#93C5FD !important;
+  border-color:rgba(37,99,255,.35) !important;
 }
 div[data-testid="stDownloadButton"] > button:hover{
-  background:#253047 !important;
+  background:#122548 !important;
   border-color:#2563FF !important;
-  color:#93C5FD !important;
+  color:#BFDBFE !important;
+  box-shadow:0 4px 16px rgba(37,99,255,.3) !important;
 }
 </style>
 """, unsafe_allow_html=True)
