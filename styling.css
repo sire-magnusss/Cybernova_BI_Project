@@ -1,0 +1,275 @@
+:root {
+  --bg-main: #03070C;
+  --bg-panel: #08111A;
+  --bg-panel-2: #0D1922;
+  --border-soft: rgba(134, 255, 229, 0.13);
+  --border-strong: rgba(0, 255, 209, 0.32);
+  --text-main: #F5F7FA;
+  --text-muted: #9AA7B0;
+  --text-dim: #66727D;
+  --neon-green: #7CFF2A;
+  --neon-cyan: #00E5FF;
+  --neon-teal: #00FFD1;
+  --neon-yellow: #FFC928;
+  --neon-amber: #FFB000;
+  --danger: #FF4D6D;
+}
+
+html,
+body,
+[data-testid="stAppViewContainer"],
+[data-testid="stApp"] {
+  background:
+    radial-gradient(circle at 22% 14%, rgba(0, 229, 255, 0.10), transparent 32%),
+    radial-gradient(circle at 84% 8%, rgba(124, 255, 42, 0.08), transparent 28%),
+    radial-gradient(circle at 78% 90%, rgba(0, 255, 209, 0.08), transparent 28%),
+    linear-gradient(135deg, #03070C 0%, #050B12 48%, #071018 100%) !important;
+  color: var(--text-main) !important;
+}
+
+div.block-container {
+  width: min(1440px, calc(100vw - 32px)) !important;
+  max-width: 1440px !important;
+  margin: 0 auto !important;
+  padding: 16px 16px 22px !important;
+}
+
+div[data-testid="stVerticalBlock"],
+div[data-testid="stHorizontalBlock"],
+div[data-testid="column"],
+.cn-card,
+.kpi-card {
+  min-width: 0 !important;
+}
+
+div[data-testid="stHorizontalBlock"] {
+  gap: 12px !important;
+}
+
+p,
+span,
+div,
+td,
+th {
+  overflow-wrap: anywhere;
+}
+
+.cn-card,
+.kpi-card,
+.pulse-wrap,
+.status-bar {
+  background: linear-gradient(180deg, rgba(13, 25, 34, 0.92), rgba(8, 17, 24, 0.95)) !important;
+  border: 1px solid var(--border-soft) !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 12px 35px rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+
+.cn-card:hover,
+.kpi-card:hover {
+  border-color: var(--border-strong) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.025) inset,
+    0 14px 38px rgba(0, 0, 0, 0.42),
+    0 0 24px rgba(0, 229, 255, 0.08) !important;
+}
+
+.sec-label {
+  color: var(--neon-teal) !important;
+  border-bottom: 1px solid rgba(0, 255, 209, 0.14) !important;
+  min-height: 30px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 8px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+}
+
+.kpi-label,
+.pl {
+  color: var(--text-muted) !important;
+}
+
+.kpi-value,
+.kpi-value-sm,
+.pv,
+.live-count {
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0 !important;
+}
+
+.pv,
+.live-count {
+  min-width: 4ch;
+  text-align: right;
+  transition: color 180ms ease;
+}
+
+.live-dot,
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--neon-green);
+  box-shadow: 0 0 8px rgba(124, 255, 42, 0.45);
+  margin-right: 7px;
+  animation: none !important;
+}
+
+.pulse-wrap {
+  min-height: 62px;
+  padding: 10px 16px !important;
+}
+
+.pulse-item {
+  min-width: 132px;
+  flex: 1 1 132px;
+}
+
+.pulse-wrap {
+  flex-wrap: wrap;
+}
+
+.chip {
+  background: rgba(0, 229, 255, 0.06) !important;
+  border-color: rgba(0, 255, 209, 0.16) !important;
+  color: var(--neon-cyan) !important;
+}
+
+.regional-live-card {
+  height: 420px;
+  overflow: hidden !important;
+  padding: 14px 16px !important;
+}
+
+.regional-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.regional-table th:first-child,
+.regional-table td:first-child {
+  width: 44%;
+}
+
+.regional-table th:nth-child(2),
+.regional-table td:nth-child(2) {
+  width: 24%;
+}
+
+.regional-table th:nth-child(3),
+.regional-table td:nth-child(3) {
+  width: 22%;
+}
+
+.regional-table th:nth-child(4),
+.regional-table td:nth-child(4) {
+  width: 10%;
+}
+
+.regional-table th {
+  padding: 7px 6px;
+  color: rgba(245, 247, 250, 0.46);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(0, 255, 209, 0.20);
+}
+
+.regional-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  font-size: 12px;
+}
+
+.regional-market {
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.regional-value {
+  color: var(--neon-teal);
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.regional-muted {
+  color: rgba(245, 247, 250, 0.58);
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.regional-trend {
+  text-align: center;
+  font-weight: 800;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+  background: rgba(10, 18, 25, 0.90) !important;
+  border: 1px solid rgba(120, 255, 220, 0.14) !important;
+  border-radius: 10px !important;
+}
+
+.stTabs [aria-selected="true"] {
+  border-bottom: 3px solid var(--neon-green) !important;
+  color: #FFFFFF !important;
+}
+
+div[data-testid="stDownloadButton"] > button,
+.stDownloadButton > button {
+  background: linear-gradient(180deg, #202A33 0%, #151C24 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(154, 167, 176, 0.24) !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.025) inset,
+    0 8px 20px rgba(0, 0, 0, 0.28) !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  min-height: 42px !important;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease, transform 160ms ease !important;
+}
+
+div[data-testid="stDownloadButton"] > button:hover,
+.stDownloadButton > button:hover {
+  background: linear-gradient(180deg, #26323D 0%, #18232C 100%) !important;
+  color: #FFFFFF !important;
+  border-color: var(--neon-teal) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 209, 0.28) inset,
+    0 0 18px rgba(0, 255, 209, 0.18),
+    0 10px 24px rgba(0, 0, 0, 0.34) !important;
+  transform: translateY(-1px);
+}
+
+div[data-testid="stDownloadButton"] > button:active,
+.stDownloadButton > button:active {
+  transform: translateY(0);
+  border-color: var(--neon-green) !important;
+}
+
+@media (max-width: 1200px) {
+  div.block-container {
+    width: min(100%, calc(100vw - 20px)) !important;
+    padding: 10px !important;
+  }
+
+  .pulse-item {
+    min-width: 148px;
+  }
+}

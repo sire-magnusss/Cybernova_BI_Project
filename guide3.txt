@@ -1,0 +1,1131 @@
+Follow the standing CyberNova Streamlit UI direction.
+
+We are now implementing the Marketing and Executive dashboards properly, including all four tabs, functional exports, functional weekly reports, and correct default date logic.
+
+Do NOT rebuild the app.
+Do NOT change the login page unless needed.
+Do NOT change the Sales dashboard unless shared components need small fixes.
+Keep Streamlit as the main app.
+Do NOT use Next.js.
+Do NOT use Java.
+Use JavaScript only for small Streamlit component polish if needed.
+
+====================================================
+0. CRITICAL DATE RANGE RULE
+====================================================
+
+Default date range must be the LAST 7 DAYS, not January to June.
+
+Implement this properly:
+
+If the dataset has a timestamp/date column:
+- default_end_date = max date available in dataset
+- default_start_date = default_end_date - 6 days
+- This gives an inclusive 7-day window.
+
+If using live/current generated data:
+- default_end_date = today
+- default_start_date = today - 6 days
+
+The UI should show:
+Last 7 Days
+or
+Period: <start date> to <end date>
+
+Do not hardcode Jan 1 to Jun 30.
+Do not hardcode Jan 1 to Apr 30.
+All KPI cards, charts, maps, tables, live pulse, and exports must respect the selected date range.
+
+Use st.session_state:
+- date_start
+- date_end
+- active_dashboard
+- active_tab
+- selected_market
+- selected_role
+
+When the user clicks Reset Filters:
+- reset date range to the last 7 days
+- reset country/market to All
+- reset service to All
+- reset segment to All
+- reset visit outcome to All
+
+====================================================
+1. FUNCTIONAL EXPORTS AND REPORTS
+====================================================
+
+The Data & Export tabs must not be fake.
+
+Implement functional exports using st.download_button.
+
+Required export helpers:
+- generate_csv_download(df)
+- generate_excel_download(df)
+- generate_weekly_pdf_report(dashboard_name, filtered_df, kpi_summary, charts_summary, filters)
+- generate_monthly_pdf_report(dashboard_name, filtered_df, kpi_summary, charts_summary, filters)
+- generate_methodology_pdf(dashboard_name)
+
+Use BytesIO for downloadable files.
+
+Add dependencies if needed:
+- reportlab
+- openpyxl
+
+If reportlab is not installed, add it to requirements.txt.
+
+Weekly report logic:
+- Weekly report must use the currently selected dashboard.
+- Weekly report must use the current filter context.
+- Weekly report period must be last 7 days by default.
+- If the user changes filters/date range, the weekly report should reflect those filters.
+- The file name should include dashboard and date range.
+
+Example:
+CyberNova_Marketing_Weekly_Report_2026-05-01_to_2026-05-07.pdf
+
+Weekly PDF must include:
+1. CyberNova BI Portal title
+2. Dashboard name
+3. Report type: Weekly Report
+4. Date range
+5. Selected filters
+6. KPI summary
+7. Key insights / narrative bullets
+8. Top countries / markets table
+9. Evidence table preview
+10. Methodology note
+11. Prototype disclaimer
+
+Monthly report logic:
+- Use the selected date range if user selected one.
+- If no custom selection, use last 30 days from dataset max date/today.
+- Same structure as weekly report but titled Monthly Report.
+
+CSV exports:
+- Must export filtered data, not full unfiltered data unless specifically labelled.
+- Add file names with dashboard and date range.
+
+Excel exports:
+- If possible, create XLSX with multiple sheets:
+  Sheet 1: KPI Summary
+  Sheet 2: Filtered Data
+  Sheet 3: Country Summary
+  Sheet 4: Methodology
+
+If Excel export is too much, at minimum implement CSV + PDF downloads.
+
+Every Data & Export tab must have working download buttons:
+- Weekly PDF Report
+- Monthly PDF Report
+- Filtered Data CSV
+- Evidence Pack CSV
+- Methodology PDF
+
+====================================================
+2. SHARED DESIGN REQUIREMENTS
+====================================================
+
+Use the same CyberNova visual language as Sales:
+- near-black background
+- glassmorphism cards
+- glowing cyan/green borders
+- large readable KPI cards
+- no default Streamlit-looking cards
+- no emojis
+- use SVG icons where possible
+- full country names
+- flags in country tables and leaderboards
+- no overlapping content
+- no cramped chart labels
+- no random colours
+
+Colour rules:
+cyan/teal = live intelligence, AI, strategic hubs
+green = success/on track
+yellow = emerging/monitor
+orange = caution/proposal
+red = risk/alerts
+purple = target/aim
+gray = previous month/baseline
+
+Every dashboard must have exactly four tabs:
+Overview | Analytics | Forecasting | Data & Export
+
+No extra main tabs.
+
+====================================================
+3. MARKETING DASHBOARD — CYBERNOVA REACH
+====================================================
+
+Title:
+CyberNova Reach
+
+Subtitle:
+Marketing Intelligence Hub • Campaign Opportunity Intelligence
+
+Main question:
+Where should Marketing spend campaign effort, which audience is engaging, and which service should be promoted?
+
+Default date range:
+Last 7 days.
+
+----------------------------------------------------
+MARKETING OVERVIEW TAB
+----------------------------------------------------
+
+Purpose:
+Show what is happening now and where Marketing should focus.
+
+Overview must include:
+
+A. KPI cards
+
+1. Engaged Visitors
+Meaning:
+Number of human, meaningful visitors in the selected period.
+Why important:
+Shows audience quality, not just raw traffic.
+
+2. Engagement Rate
+Meaning:
+Percentage of visitors who performed meaningful actions.
+Why important:
+Prevents Marketing from relying on vanity traffic.
+
+3. Best Campaign Market
+Meaning:
+Country/market with strongest campaign opportunity score.
+Why important:
+Shows where campaign effort should go first.
+
+4. Best Landing Page
+Meaning:
+Landing page producing the strongest downstream action.
+Why important:
+Shows which page is working best.
+
+5. Under-Promoted Service
+Meaning:
+Service where conversion share is higher than visit share.
+Why important:
+Shows which service deserves more visibility.
+
+B. Live Marketing Pulse
+
+Refresh every 1 second.
+
+Metrics:
+- Active Human Audience
+- Campaign Visits Today
+- Top Active Market
+- Top Content / Service
+- Audience Quality
+
+This must be a horizontal strip with live values and a sync timestamp.
+
+C. Market Opportunity Matrix
+
+Chart:
+Bubble/scatter chart.
+
+X-axis:
+Visitors
+
+Y-axis:
+Engagement Rate
+
+Bubble size:
+Potential Customers
+
+Bubble colour:
+Campaign Opportunity Score
+
+Tooltip:
+Country
+Visitors
+Engagement Rate
+Potential Customers
+Campaign Opportunity Score
+Recommended Campaign Action
+
+Why important:
+Helps Marketing decide where to spend effort, using both volume and quality.
+
+D. Campaign Hotzones Map
+
+Map:
+SADC/Southern Africa map.
+
+Countries:
+South Africa, Botswana, Zambia, Namibia, Mozambique, Zimbabwe, Angola, Malawi, Democratic Republic of the Congo.
+
+Tooltip:
+Country
+Campaign Visits
+Engagement Rate
+Potential Customers
+Opportunity Score
+Top Service
+Recommended Spend Action
+
+Why important:
+Shows regional campaign opportunity visually.
+
+E. Service Promotion Gap
+
+Chart:
+Grouped bar chart.
+
+Compare:
+- Visit Share
+- Conversion Share
+
+Services:
+- AI Cyber Assistant
+- Cybersecurity
+- Cloud & Data
+- Advisory & Training
+- Managed Security
+
+Rule:
+If Conversion Share > Visit Share, label the service as Under-Promoted.
+
+Why important:
+Shows which services are converting well but not getting enough traffic.
+
+F. Content Journey Funnel
+
+Funnel:
+Landing Page → Service Page → AI/Contact Interest → Demo/Event Action
+
+Show:
+Counts and conversion rates at each stage.
+
+Why important:
+Shows whether content moves users toward action.
+
+G. Human Activity Timing Heatmap
+
+Heatmap:
+Days Monday–Sunday
+Hours 00–23
+
+Metric:
+Human engaged activity.
+
+Why important:
+Shows when campaigns should be scheduled.
+
+H. Right drawer / insight panel
+
+Cards:
+1. Best Campaign Market
+2. Campaign Signals
+3. Audience Quality Outlook
+4. Recommended Campaign Action
+
+Recommended action example:
+Increase AI Assistant campaign exposure in Botswana and Namibia during weekday late-morning engagement windows.
+
+----------------------------------------------------
+MARKETING ANALYTICS TAB
+----------------------------------------------------
+
+Purpose:
+Explain why Marketing performance is changing.
+
+Include these fully styled cards:
+
+1. Audience Segments Over Time
+
+Chart:
+Stacked area or stacked bar.
+
+Segments:
+- High-Intent Audience
+- Product-Curious Visitors
+- General Browsers
+- Low-Intent Visitors
+
+Why important:
+Shows whether Marketing is attracting better-quality users over time.
+
+2. Country Engagement Breakdown
+
+Chart:
+Horizontal bar or scatter.
+
+Countries with flags:
+🇧🇼 Botswana
+🇿🇦 South Africa
+🇿🇲 Zambia
+🇳🇦 Namibia
+🇲🇿 Mozambique
+🇿🇼 Zimbabwe
+🇦🇴 Angola
+🇲🇼 Malawi
+
+Metrics:
+- Visitors
+- Engagement Rate
+- Potential Customers
+- Campaign Opportunity Score
+
+Why important:
+Shows whether a market has both volume and quality.
+
+3. Landing Page Performance
+
+Styled table.
+
+Columns:
+- Landing Page
+- Visitors
+- Engagement Rate
+- Service Clicks
+- Demo / Contact Actions
+- Conversion Rate
+- Status
+
+Pages:
+- Homepage
+- AI Cyber Assistant
+- Cybersecurity Services
+- Cloud & Data
+- Advisory & Training
+- Contact Page
+
+Why important:
+Shows which pages move users toward action.
+
+4. Service Promotion Gap Detail
+
+Chart:
+Grouped bar or table.
+
+Columns:
+- Service
+- Visit Share
+- Conversion Share
+- Gap
+- Status
+- Recommendation
+
+Why important:
+Shows what Marketing should promote next.
+
+5. Channel / Source Quality
+
+Chart:
+Bar chart.
+
+Sources:
+- Organic Search
+- Direct
+- Social
+- Referral
+- Email
+- Paid Campaign
+
+Metrics:
+- Engaged Visitors
+- Conversion Rate
+- Potential Customers
+
+Why important:
+Shows which traffic source brings valuable users.
+
+6. SADC Reach Map + Ranking
+
+Map + ranked list.
+
+Ranking columns:
+- Country
+- Engagement Rate
+- Potential Customers
+- Opportunity Score
+- Recommended Action
+
+Why important:
+Combines geography with campaign prioritisation.
+
+7. Marketing Insight Assistant
+
+AI-style card.
+
+Example bullets:
+- Botswana has the highest campaign response.
+- Namibia shows rising engagement and should be tested.
+- AI Cyber Assistant is under-promoted because conversion share exceeds visit share.
+- Weekday late morning has the strongest activity.
+- Recommended action: run a focused campaign for AI Cyber Assistant in Botswana and Namibia.
+
+----------------------------------------------------
+MARKETING FORECASTING TAB
+----------------------------------------------------
+
+Purpose:
+Show what Marketing should expect and prepare for.
+
+Include:
+
+1. Forecast Summary KPI row
+
+Cards:
+- Forecasted Engaged Visitors
+- Campaign Visits Forecast
+- Expected Potential Customers
+- Forecasted Opportunity Value
+- Forecast Confidence
+
+2. Audience Growth Forecast by Country
+
+Line chart.
+
+Lines:
+- Botswana
+- South Africa
+- Zambia
+- Namibia
+- Mozambique
+
+Must include:
+- Actual
+- Forecast
+- Target/Aim
+- Confidence Band
+
+Tooltip:
+Date
+Actual
+Forecast
+Target
+Confidence Range
+Gap to Target
+Status
+
+3. Engaged Sessions Forecast
+
+Line chart.
+
+Must include:
+- Actual
+- Forecast
+- Target
+- Previous Month Actual
+- Confidence Band
+
+Why important:
+Shows whether audience quality is expected to improve.
+
+4. Campaign What-If Scenario
+
+Interactive slider:
+Campaign Lift % from 0% to 30%
+
+Outputs:
+- Additional Engaged Visitors
+- Additional Potential Customers
+- Estimated Opportunity Value
+- Forecast vs Target
+
+Why important:
+Shows the business impact of increasing campaign effort.
+
+5. Campaign Target Tracker
+
+Chart:
+Today’s campaign visits vs target.
+
+Lines:
+- Actual
+- Forecasted End-of-Day
+- Target
+
+Why important:
+Shows whether today’s campaign activity is on track.
+
+6. Campaign Recommendation Card
+
+Checklist:
+- Increase AI Assistant campaign exposure.
+- Prioritise high-engagement markets.
+- Schedule posts during peak human activity.
+- Reduce spend on low-engagement markets.
+
+7. Marketing Alert Card
+
+Examples:
+- Engagement rate below target.
+- Landing page drop-off increasing.
+- Campaign market below expected response.
+- Under-promoted service detected.
+
+----------------------------------------------------
+MARKETING DATA & EXPORT TAB
+----------------------------------------------------
+
+Purpose:
+Provide evidence, export files, and methodology.
+
+Include functional downloads:
+
+1. Campaign Opportunity Table
+
+Columns:
+- Country
+- Visitors
+- Engagement Rate
+- Potential Customers
+- Opportunity Score
+- Recommended Action
+
+Use flags and full country names.
+
+2. Filtered Audience Data
+
+Styled table with search/filter if feasible.
+
+3. Evidence Snapshot
+
+Cards:
+- Total Engaged Visitors
+- Average Engagement Rate
+- Top Campaign Market
+- Under-Promoted Services
+- Campaign Data Quality
+
+4. Export Center
+
+Functional buttons:
+- Weekly PDF Report
+- Monthly PDF Report
+- Campaign Opportunity CSV
+- Filtered Audience CSV
+- Landing Page Export CSV
+- Campaign Performance Export CSV
+- Methodology PDF
+
+5. Data Quality Summary
+
+Progress bars:
+- Data Completeness
+- Duplicate Rate
+- Data Freshness
+- Campaign Coverage
+- Engagement Coverage
+
+6. Methodology Note
+
+Explain:
+- audience segmentation
+- campaign opportunity score
+- service promotion gap logic
+- synthetic data limitation
+- last 7 days default period
+- refresh schedule
+
+====================================================
+4. EXECUTIVE DASHBOARD — CYBERNOVA HORIZON
+====================================================
+
+Title:
+CyberNova Horizon
+
+Subtitle:
+Executive Insights Dashboard • SADC Expansion Intelligence
+
+Main question:
+Is CyberNova moving in the right direction, and where should leadership invest next?
+
+Default date range:
+Last 7 days.
+
+----------------------------------------------------
+EXECUTIVE OVERVIEW TAB
+----------------------------------------------------
+
+Purpose:
+Give leadership the strategic picture.
+
+Include:
+
+A. KPI cards
+
+1. Growth Direction
+Meaning:
+Overall strategic growth vs previous period.
+
+2. Potential Customers Generated
+Meaning:
+Qualified opportunity volume.
+
+3. AI Assistant Traction
+Meaning:
+Share or volume of interest in the AI Assistant product.
+
+4. Active SADC Markets
+Meaning:
+Number of active regional markets.
+
+5. Strategic Risk Alerts
+Meaning:
+Issues requiring leadership attention.
+
+B. Board Summary
+
+Text:
+AI Assistant traction is strong across core and strategic hubs. Protect core markets while selectively testing high-growth opportunities.
+
+C. Live Strategy Pulse
+
+Refresh every 1 second.
+
+Metrics:
+- Strategic Demand
+- Potential Customers
+- AI Assistant Interest
+- Risk Alert
+- Data Sync Timestamp
+
+D. Regional Expansion Priority Map
+
+Main map visual.
+
+Shows:
+SADC markets with statuses:
+- Core Market
+- Strategic Hub
+- High Growth
+- Emerging
+- Stable
+
+Tooltip:
+Country
+City
+Status
+Strategic Demand
+Potential Customers
+AI Assistant Interest
+Opportunity Value
+Risk Level
+Recommended Executive Action
+
+Why important:
+Shows where leadership should invest, monitor, or review.
+
+E. Strategic Growth Trend
+
+Line chart.
+
+Lines:
+- Revenue
+- AI Solutions
+- Services
+- Target Monthly
+- Previous Month Actual
+
+Required anchors:
+- Target line
+- Previous month actual line
+- Gap label
+
+F. AI Assistant Traction
+
+Bar + line chart.
+
+Bars:
+AI Assistant Interactions
+
+Line:
+AI Assistant Interest Rate
+
+Add:
+Target Achievement badge.
+
+G. 90-Day Potential Customer Forecast
+
+Chart:
+- Actual
+- Forecast Linear
+- Target Aim
+- Confidence Range
+
+Label:
+Rule-based linear forecast, not predictive AI.
+
+H. Right drawer / insight panel
+
+Cards:
+- Regional Priority
+- Strategic Signals
+- Risk Outlook
+- Investment Recommendation
+
+----------------------------------------------------
+EXECUTIVE ANALYTICS TAB
+----------------------------------------------------
+
+Purpose:
+Explain the strategic drivers behind the headline numbers.
+
+Include:
+
+1. Regional Target Table
+
+Styled table.
+
+Columns:
+- Country
+- Target
+- Actual
+- Gap
+- Status
+- Recommended Action
+
+Countries with flags:
+🇿🇦 South Africa
+🇿🇲 Zambia
+🇲🇿 Mozambique
+🇧🇼 Botswana
+🇦🇴 Angola
+🇳🇦 Namibia
+🇿🇼 Zimbabwe
+🇲🇼 Malawi
+🇨🇩 Democratic Republic of the Congo
+
+Statuses:
+- Above Target
+- On Track
+- On Watch
+- Below Target
+
+Why important:
+Shows which markets are meeting strategic expectations.
+
+2. Market Contribution Analysis
+
+Chart:
+Stacked bar or horizontal bar.
+
+Metrics:
+- Strategic Demand
+- Potential Customers
+- AI Assistant Interest
+- Opportunity Value
+
+Why important:
+Shows which countries drive regional performance.
+
+3. AI Assistant by Market
+
+Chart:
+Bar chart.
+
+Metrics:
+- AI Assistant Interest
+- AI Assistant Interactions
+- AI-to-Demo Conversion
+
+Anchors:
+- Monthly AI Traction Target
+- Previous Month Actual
+
+Why important:
+Shows where the flagship product is gaining traction.
+
+4. Risk / Anomaly Trend
+
+Line chart.
+
+Use business wording only:
+- Risk Events
+- Visit Issues
+- Data Quality Warnings
+- Unusual Demand Spikes
+
+Do not show raw HTTP status, IPs, user-agents, or bytes.
+
+5. Strategic Signals Breakdown
+
+Cards:
+- Policy Momentum
+- Digital Adoption
+- Partner Activity
+- Market Readiness
+- Competitive Pressure
+
+6. Executive Insight Assistant
+
+Board-level insight card.
+
+Example bullets:
+- South Africa remains the strongest core market.
+- Zambia shows strategic growth and should be prioritised for investment.
+- Botswana remains stable but below expansion growth rate.
+- AI Assistant traction is strongest in core and strategic hubs.
+- Recommended action: invest in Zambia and South Africa, monitor Mozambique and Namibia.
+
+----------------------------------------------------
+EXECUTIVE FORECASTING TAB
+----------------------------------------------------
+
+Purpose:
+Support investment and leadership planning.
+
+Include:
+
+1. Forecast Summary KPI row
+
+Cards:
+- 90-Day Potential Customer Forecast
+- Forecasted Strategic Demand
+- AI Assistant Traction Forecast
+- Forecasted Opportunity Value
+- Confidence Level
+
+2. 90-Day Potential Customer Forecast
+
+Chart:
+- Actual
+- Forecast Linear
+- Target/Aim
+- Confidence Range
+- Today Marker
+
+Label:
+Rule-based linear forecast, not predictive AI.
+
+3. Regional Expansion Forecast
+
+Status movement table.
+
+Columns:
+- Country
+- Current Status
+- Forecast Status
+- Reason
+- Recommended Action
+
+Example:
+South Africa — Core Market → Invest
+Zambia — Strategic Hub → Invest
+Botswana — Stable → Monitor
+Mozambique — Emerging → Monitor
+Angola — Emerging → Review
+
+4. AI Assistant Traction Forecast
+
+Line chart.
+
+Must include:
+- Actual AI Interest
+- Forecast AI Interest
+- Monthly Target
+- Previous Month Actual
+- Confidence Band
+
+5. Forecast vs Target
+
+Chart:
+- Forecast
+- Target
+- Lower Band
+- Upper Band
+
+Side metrics:
+- Forecasted Opportunity Value
+- Target
+- Gap
+- Confidence Level
+- Status
+
+6. Risk / Anomaly Outlook
+
+Gauge/card:
+- Low / Medium / High
+- forecasted risk events
+- data quality outlook
+- operational stability note
+
+7. Executive Investment Recommendation
+
+Decision card.
+
+Sections:
+Invest:
+- South Africa
+- Zambia
+
+Monitor:
+- Mozambique
+- Namibia
+- Botswana
+
+Review:
+- Angola
+- Malawi
+- Democratic Republic of the Congo
+
+8. Scenario Cards
+
+Three cards:
+- Conservative Case
+- Base Case
+- Growth Case
+
+Each shows:
+- Potential Customers
+- Opportunity Value
+- Risk Level
+- Recommended Strategy
+
+----------------------------------------------------
+EXECUTIVE DATA & EXPORT TAB
+----------------------------------------------------
+
+Purpose:
+Provide board-level evidence and reporting exports.
+
+Include functional downloads:
+
+1. Executive Decision Brief
+
+Card with summary bullets:
+- Top growth market
+- Top risk
+- AI Assistant performance
+- investment recommendation
+- forecast confidence
+
+2. Regional Priority Table
+
+Columns:
+- Country
+- Status
+- Potential Customers
+- AI Assistant Interest
+- Opportunity Value
+- Risk Level
+- Recommended Action
+
+Use full names and flags.
+
+3. Risk / Anomaly Evidence Table
+
+Columns:
+- Date
+- Market
+- Risk Type
+- Severity
+- Business Impact
+- Action Needed
+
+4. Filtered Strategic Data
+
+Styled table with search/filter if feasible.
+
+5. Export Center
+
+Functional buttons:
+- Weekly PDF Report
+- Monthly PDF Report
+- Executive Summary PDF
+- Board Brief PDF
+- Regional Priority CSV
+- Risk Evidence CSV
+- Filtered Strategic Data CSV
+- Methodology PDF
+
+6. Data Quality Summary
+
+Progress bars:
+- Data Completeness
+- Data Freshness
+- Country Coverage
+- Risk Signal Coverage
+- Forecast Confidence
+
+7. Methodology Note
+
+Explain:
+- strategic demand score
+- regional priority logic
+- AI Assistant traction calculation
+- risk scoring
+- rule-based forecasting limitation
+- synthetic data limitation
+- last 7 days default period
+
+====================================================
+5. SHARED EXPORT IMPLEMENTATION DETAILS
+====================================================
+
+Create reusable export functions.
+
+Function names:
+- get_filtered_data(dashboard_name, filters)
+- build_kpi_summary(dashboard_name, filtered_df)
+- build_country_summary(dashboard_name, filtered_df)
+- build_weekly_report_pdf(dashboard_name, filtered_df, filters, kpis)
+- build_monthly_report_pdf(dashboard_name, filtered_df, filters, kpis)
+- dataframe_to_csv_bytes(df)
+- dataframe_to_excel_bytes(sheets_dict)
+
+Use st.download_button.
+
+Weekly PDF must include:
+- title
+- dashboard name
+- date range
+- filter context
+- KPI summary
+- key insights
+- top country/market table
+- evidence preview
+- methodology note
+- prototype disclaimer
+
+Monthly PDF must include the same sections, but use monthly title.
+
+CSV exports:
+Must export the filtered data currently displayed.
+
+Excel exports if implemented:
+Use multiple sheets:
+- KPI Summary
+- Filtered Data
+- Country Summary
+- Methodology
+
+Do not leave export buttons as decorative only.
+
+====================================================
+6. FINAL CHECK
+====================================================
+
+Before finishing, verify:
+
+Date logic:
+- Default date is last 7 days.
+- Reset filters returns to last 7 days.
+- No Jan–June hardcoding remains.
+
+Exports:
+- Weekly PDF download works.
+- Monthly PDF download works.
+- CSV downloads work.
+- Exported data respects current filters.
+- File names include dashboard and date range.
+
+Dashboards:
+- Marketing has Overview, Analytics, Forecasting, Data & Export.
+- Executive has Overview, Analytics, Forecasting, Data & Export.
+- Sales remains intact.
+- Role-based access still works.
+- Live refresh still works every 1 second.
+- No default Streamlit UI dominates.
+- Full country names and flags are used.
+- Trend and forecast charts include target anchors and previous-period anchors.
+- Forecast charts include confidence bands. 

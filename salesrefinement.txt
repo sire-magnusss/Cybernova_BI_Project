@@ -1,0 +1,790 @@
+Follow the standing CyberNova Streamlit UI direction.
+
+We are fixing the Sales dashboard only, especially the Sales Overview page. Use a two-agent approach if possible:
+
+Agent 1: Sales Overview layout, live logic, map/table/chart behaviour.
+Agent 2: CSS/theme polish, containers, spacing, colours, typography, responsiveness.
+
+Do NOT rebuild the whole app.
+Do NOT touch login unless needed.
+Do NOT change Marketing or Executive unless shared theme classes require safe consistency fixes.
+Keep Streamlit as the main app.
+Do NOT use Next.js.
+Do NOT use Java.
+Use JavaScript only for small UI polish through st.components.v1.html if needed.
+Use Python, Streamlit, Plotly, PyDeck/custom HTML/SVG, CSS, and minimal JavaScript.
+
+The goal:
+Make the Sales Overview page look close to the supplied CyberNova reference image while making it more logical, more spacious, more live, and more decision-focused.
+
+====================================================
+0. CURRENT ISSUES TO FIX
+====================================================
+
+Inspect the current Sales Overview page first.
+
+Known issues:
+1. “Open/Close Insights” button takes up space and does not support the dashboard story.
+2. The live strip duplicates the KPI cards and creates contradiction.
+3. KPI cards need a proper container, better spacing, and live behaviour.
+4. Context chips under the dashboard title need to stretch cleanly left-to-right with uniform justification.
+5. Regional leaderboard should move next to the map as a live country table.
+6. Country names need flags, but no emoji flags. Use SVG flag images.
+7. Admin/profile/dashboard switcher/filter section should become a drawer.
+8. Bottom visualisations need a shared container and even spacing.
+9. Styling must be consistent with the CyberNova wireframe colours.
+10. Filters must still work.
+11. Insights must update based on selected filters and selected market.
+
+====================================================
+1. STREAMLIT-COMPATIBLE STYLING TOOLS
+====================================================
+
+Use:
+- Python for Streamlit logic.
+- CSS for layout, containers, cards, drawer, spacing, hover effects, typography.
+- HTML through st.markdown(..., unsafe_allow_html=True) for premium cards/tables.
+- JavaScript through st.components.v1.html only if needed for drawer animation or SVG map polish.
+- Plotly for interactive charts and hover tooltips.
+- PyDeck or custom HTML/SVG for the map.
+
+Do NOT use:
+- Java
+- Next.js
+- full React app
+- default Streamlit metric cards where they look ugly
+- emoji icons or emoji flags
+
+Use SVG icons only.
+For country flags, use SVG flag images such as flagcdn URLs or local SVG assets.
+
+Example flag image approach:
+<img class="flag-svg" src="https://flagcdn.com/za.svg" alt="South Africa flag" />
+
+Countries:
+South Africa: za
+Zambia: zm
+Mozambique: mz
+Botswana: bw
+Angola: ao
+Democratic Republic of the Congo: cd
+Namibia: na
+Zimbabwe: zw
+Malawi: mw
+
+If external SVG loading is not reliable, create local fallback SVG flag placeholders in assets/flags/.
+
+====================================================
+2. GLOBAL SALES OVERVIEW STORY
+====================================================
+
+The Sales Overview must answer:
+
+“What is currently going on, where are potential customers coming from, and what should Sales prioritise now?”
+
+Remove elements that do not answer this story.
+
+The final Sales Overview should flow like this:
+
+1. Header
+2. Context/filter summary bar
+3. “What is currently going on” KPI container
+4. Real-time Potential Customer Hotzones map + live country leaderboard beside it
+5. Right-side insights inside collapsible admin/insight drawer only where useful
+6. Bottom analytics container with 3 evenly spaced visuals
+7. Bottom status bar
+
+Do not keep a separate live strip.
+Live behaviour must move into the KPI cards and live map/table.
+
+====================================================
+3. REMOVE THE OPEN/CLOSE INSIGHTS BUTTON
+====================================================
+
+Completely remove the visible “Open/Close Insights” button from the main dashboard content.
+
+Reason:
+It wastes space and interrupts the Sales Overview flow.
+
+Do not leave empty space where it was.
+
+If insight details are still needed, place them inside the right drawer/admin drawer, not as a large button in the main content.
+
+====================================================
+4. HEADER AND CONTEXT SECTION
+====================================================
+
+Keep the header:
+
+Welcome back, Alex/Admin
+CyberNova Pulse
+Sales Command Center • Potential Customer Intelligence
+Sales View dropdown
+Date range selector
+Filter icon
+All systems operational pill
+
+Below the dashboard title, create a full-width context section that stretches evenly left-to-right.
+
+Class:
+.sales-context-container
+
+Inside it, use justified chips:
+- Period: Last 7 Days / selected date range
+- Market: selected market or All
+- Service: selected service or All Services
+- Segment: selected segment or All Segments
+- Outcome: selected visit outcome or All
+- Filtered Noise: count
+- Quality: percentage
+
+Style:
+- full-width container
+- display flex
+- justify-content: space-between
+- gap: 12px
+- wrap if needed
+- no cramped chips
+- consistent chip width where possible
+- thin cyan border
+- dark glass background
+
+CSS idea:
+.sales-context-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  background: rgba(7, 14, 22, 0.72);
+}
+
+.context-chip {
+  flex: 1;
+  min-width: 145px;
+  text-align: center;
+}
+
+====================================================
+5. KPI SECTION — “WHAT IS CURRENTLY GOING ON”
+====================================================
+
+Replace the separate live strip with a live KPI section.
+
+Create a full-width container:
+
+Title:
+What is currently going on
+
+Subtitle:
+Live Sales indicators for the selected period and market.
+
+Class:
+.sales-live-kpi-container
+
+Inside it, place 5 large KPI cards:
+
+1. Pipeline Target Attainment
+Value: 87%
+Subtext: $82.6M / $95M target
+Status: On Watch
+This is the anchor card.
+
+2. Potential Customers
+Value: live value
+Change: live delta
+Subtext: vs last 7 days / selected period
+
+3. Demo Requests
+Value: live value
+Change: live delta
+Subtext: vs last 7 days / selected period
+
+4. Revenue Today / Potential Revenue Today
+Value: live value
+Subtext: estimated potential value today
+
+5. Top Sales Market
+Value: full country name with SVG flag
+Example:
+[South Africa SVG flag] South Africa
+Subtext: 36% of total potential
+
+Remove the old separate live strip completely.
+
+Live behaviour:
+- refresh KPI values every 1 second
+- do not refresh whole page if avoidable
+- use st.fragment(run_every="1s") where supported
+- preserve filters and active tab
+- use smooth realistic changes, not chaotic random jumps
+
+KPI card design:
+- bigger than current cards
+- same height
+- evenly spaced
+- strong typography
+- subtle sparkline allowed
+- anchor card highlighted with stronger border
+
+CSS:
+.sales-live-kpi-container {
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid var(--border-soft);
+  background: rgba(7,14,22,0.74);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.kpi-card {
+  min-height: 150px;
+  padding: 22px;
+}
+
+.kpi-card.anchor {
+  border-color: var(--border-active);
+  box-shadow: 0 0 28px rgba(0,245,212,0.12);
+}
+
+====================================================
+6. MAP SECTION — LIVE MAP + LIVE COUNTRY TABLE
+====================================================
+
+The map already looks decent. Keep the map but make it more useful and live.
+
+Create a container:
+
+Title:
+Potential Customer Hotzones
+
+Subtitle:
+Live regional demand and potential customer movement across SADC.
+
+Layout:
+- Left: large map
+- Right: live country leaderboard/table
+
+Use a 70/30 or 68/32 split:
+- map area: 68–70%
+- country table: 30–32%
+
+Class:
+.sales-map-table-container
+
+CSS:
+.sales-map-table-container {
+  display: grid;
+  grid-template-columns: minmax(620px, 1fr) 360px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+On smaller screens:
+- stack table below map.
+
+Map requirements:
+- SADC/Southern Africa only
+- dark CyberNova style
+- glowing nodes
+- live pulsing nodes
+- curved arcs
+- status legend
+- full country names in tooltips
+- no emojis
+- SVG/map icons only
+
+Map nodes:
+- Luanda, Angola — Emerging
+- Windhoek, Namibia — Emerging
+- Lusaka, Zambia — Strategic Hub
+- Gaborone, Botswana — Stable
+- Harare, Zimbabwe — High Growth
+- Maputo, Mozambique — Strategic Hub
+- Durban, South Africa — High Growth
+- Cape Town, South Africa — Core Market
+- Lilongwe, Malawi — Emerging
+
+Live map behaviour:
+- node size updates based on live potential customers
+- node glow intensity updates every second
+- selected market has stronger ring/glow
+- clicking node filters dashboard if feasible
+- if click is not feasible, add a Selected Market dropdown above the table
+
+Tooltip:
+City
+Country
+Status
+Live Potential Customers
+Demo Requests
+Conversion Rate
+Potential Revenue
+AI Assistant Interest
+Risk Level
+Recommended Action
+
+Live country table beside map:
+Title:
+Regional Live Leaderboard
+
+Rows:
+- SVG flag
+- full country name
+- live count
+- potential revenue
+- conversion rate
+- trend arrow/status
+
+Use these rows:
+South Africa
+Zambia
+Mozambique
+Botswana
+Angola
+Namibia
+Zimbabwe
+Malawi
+Democratic Republic of the Congo
+
+No emoji flags.
+Use SVG flag images.
+
+Example row:
+[ZA SVG flag] South Africa | 448 | $18.2M | 2.6% | Rising
+
+This replaces the old bottom “Regional Leaderboard” card.
+Do not keep duplicate leaderboard below.
+
+Table styling:
+- custom HTML table if st.dataframe looks ugly
+- row hover glow
+- selected row highlight
+- sticky header if possible
+- compact but readable
+- full country names
+
+====================================================
+7. RIGHT ADMIN / FILTER AREA AS DRAWER
+====================================================
+
+The admin/profile/dashboard switcher/global filters section should become a drawer.
+
+Goal:
+The main dashboard should feel spacious, but the user can open the drawer to manage role, dashboards, profile, and filters.
+
+Create drawer:
+- Open/close button near top-right.
+- Button can show SVG hamburger/filter icon.
+- Store state in st.session_state["sales_admin_drawer_open"].
+- Drawer should slide in/out from the right.
+- Use CSS transition.
+- Use Streamlit button fallback if JS not needed.
+
+Drawer contents:
+1. Profile
+   Admin / Alex M.
+   Access level
+   Online status
+
+2. Dashboard switcher
+   CyberNova Pulse
+   CyberNova Reach
+   CyberNova Horizon
+   Only show dashboards allowed by current role.
+
+3. Global filters
+   Start Date
+   End Date
+   Market
+   Service
+   Segment
+   Visit Outcome
+
+4. Apply button
+5. Reset button
+6. Logout button
+7. Prototype note
+
+Do not permanently show this drawer as a fixed right column.
+Default:
+- closed or compact on normal desktop
+- open only when user clicks drawer toggle
+- it must not cover main content unless intentionally overlaying
+
+CSS:
+.admin-drawer {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  height: calc(100vh - 36px);
+  padding: 22px;
+  border-radius: 24px;
+  background: rgba(7,14,22,0.96);
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 0 70px rgba(0,0,0,0.60);
+  backdrop-filter: blur(18px);
+  z-index: 1000;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.admin-drawer.closed {
+  transform: translateX(112%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-drawer.open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.drawer-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1100;
+}
+
+====================================================
+8. INSIGHTS MUST REFLECT CURRENT DATA
+====================================================
+
+The right insight cards should not be static if filters change.
+
+Insights must update based on:
+- selected date range
+- selected market
+- selected service
+- selected segment
+- selected visit outcome
+
+At minimum update:
+- Regional Priority
+- Strategic Signals
+- Sales Risk Outlook
+- Recommended Action
+
+Create helper:
+build_sales_insights(filtered_df, live_state)
+
+Returns:
+- priority_market
+- priority_reason
+- strategic_signals
+- risk_level
+- recommended_action
+
+Example logic:
+- priority_market = market with highest potential customers or potential revenue
+- risk_level = Low/Medium/High based on conversion drop-off, alert count, stale opportunities
+- recommended_action = based on top segment/service and conversion gap
+
+Place these insights:
+- in the drawer, or
+- directly beside map only if space allows after the new map/table layout.
+
+Do not let insights become a random decorative block.
+
+====================================================
+9. BOTTOM VISUALISATIONS CONTAINER
+====================================================
+
+Create a container for exactly 3 bottom visualisations.
+
+Title:
+Sales performance drivers
+
+Subtitle:
+Trend, funnel, and service mix explaining current sales movement.
+
+Class:
+.sales-bottom-visuals-container
+
+Inside:
+1. Sales Growth Trend
+2. Pipeline Funnel
+3. Revenue / Service Mix
+
+Remove the old bottom Regional Leaderboard because it now lives beside the map.
+
+Layout:
+- 3 equal-width cards
+- same height
+- evenly spaced
+- charts should not be cramped
+
+CSS:
+.sales-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.chart-card {
+  min-height: 360px;
+  padding: 20px;
+}
+
+Sales Growth Trend:
+- Plotly line chart
+- Actual Potential Customers
+- Demo Requests
+- Monthly Target
+- Previous Month Actual
+- clear legend
+- hover shows actual, target, previous month, gap, status
+- consistent colours:
+  cyan = potential customers
+  green = demo requests
+  purple = target
+  gray = previous month
+
+Pipeline Funnel:
+- Stages:
+  Awareness 7,624
+  Engaged 3,210
+  Qualified 1,248
+  Proposal 512
+  Won 198
+- Overall Conversion: 2.6%
+- show largest drop-off note
+
+Revenue / Service Mix:
+- Make it live/recomputed from filtered data if possible.
+- Donut chart with:
+  AI Solutions
+  Cybersecurity
+  Cloud & Data
+  Advisory & Training
+  Other Services
+- centre label:
+  Total Potential Revenue
+- update when date/market/service filters change
+- use consistent colours
+
+====================================================
+10. CONSISTENT CSS THEME
+====================================================
+
+Agent 2 should do a theme pass.
+
+Use these exact colours:
+
+:root {
+  --bg-black: #020509;
+  --bg-deep: #050B12;
+  --bg-deeper: #070E16;
+
+  --panel: rgba(7, 14, 22, 0.82);
+  --panel-strong: rgba(9, 18, 28, 0.94);
+
+  --border-soft: rgba(255, 255, 255, 0.10);
+  --border-cyan: rgba(0, 245, 212, 0.32);
+  --border-green: rgba(118, 255, 54, 0.35);
+
+  --cyan: #00F5D4;
+  --cyan-soft: #00CFEA;
+  --green: #76FF36;
+  --lime: #98FF2F;
+  --yellow: #FFD84A;
+  --orange: #F59E0B;
+  --red: #F87171;
+  --purple: #A855F7;
+  --gray-anchor: #8A98A6;
+
+  --text-main: #F5F7FA;
+  --text-muted: rgba(245, 247, 250, 0.62);
+  --text-soft: rgba(245, 247, 250, 0.42);
+}
+
+Rules:
+- background must be near-black, not blue/grey
+- cards must use --panel or --panel-strong
+- main text must use --text-main
+- secondary text must use --text-muted
+- chart labels must be legible
+- no clashing colours
+- no random colours
+- no overuse of bright colours
+- cyan/green should guide attention
+- yellow/orange/red only for status/warnings
+
+Check contrast manually:
+- KPI values readable
+- table text readable
+- chart labels readable
+- map labels readable
+- form inputs readable
+- active buttons readable
+
+====================================================
+11. FILTER FUNCTIONALITY
+====================================================
+
+Filters must work.
+
+Filters:
+- date_start
+- date_end
+- selected_market
+- selected_service
+- selected_segment
+- selected_visit_outcome
+
+All of these must update:
+- KPI cards
+- live KPI values
+- map nodes/table
+- insights
+- bottom charts
+- data/export tables later
+
+Reset Filters:
+- date range resets to last 7 days
+- market = All
+- service = All Services
+- segment = All Segments
+- visit outcome = All
+
+Do not hardcode January to April in labels.
+Default date = last 7 days from max dataset date or today.
+
+====================================================
+12. LIVE FUNCTIONALITY
+====================================================
+
+Live sections:
+- KPI cards
+- map nodes
+- live country leaderboard
+- Revenue / Service Mix if possible
+- sync timestamp
+
+Refresh every 1 second using:
+@st.fragment(run_every="1s")
+
+Fallback:
+streamlit_autorefresh(interval=1000)
+
+Do not reset:
+- active tab
+- drawer state
+- filters
+- selected market
+- selected dashboard
+- current role
+
+Live values should be realistic:
+- potential customers change gradually
+- demo requests change gradually
+- revenue changes based on potential customers
+- top market is based on current filtered data/live counts
+- no random chaos
+
+====================================================
+13. REMOVE UNNECESSARY ELEMENTS
+====================================================
+
+Remove:
+- separate live strip
+- open/close insights button in main content
+- duplicate regional leaderboard at bottom
+- emojis
+- unnecessary dashboard elements that do not answer the Sales story
+- raw technical log wording
+- excessive decorative text
+
+Keep:
+- header
+- context chips
+- live KPI section
+- live map + live country leaderboard
+- bottom 3 visualisations
+- bottom status bar
+- drawer for admin/profile/filters
+
+====================================================
+14. FINAL SALES OVERVIEW TARGET LAYOUT
+====================================================
+
+Final layout should be:
+
+[Header: welcome, title, controls, status]
+
+[Context chips stretched evenly across full width]
+
+[Container: What is currently going on]
+  [Pipeline Target] [Potential Customers] [Demo Requests] [Revenue Today] [Top Sales Market]
+
+[Container: Live regional opportunity]
+  [Large Potential Customer Hotzones Map] [Live Regional Leaderboard Table]
+
+[Container: Sales performance drivers]
+  [Sales Growth Trend] [Pipeline Funnel] [Revenue / Service Mix]
+
+[Bottom Status Bar]
+
+[Admin/Profile/Filters Drawer hidden until opened]
+
+====================================================
+15. APPLY CONSISTENT THEME TO OTHER SALES TABS
+====================================================
+
+After fixing Overview, apply the same styling classes to:
+- Sales Analytics
+- Sales Forecasting
+- Sales Data & Export
+
+Do not fully redesign their content yet unless quick.
+Main goal:
+- same colours
+- same containers
+- same card padding
+- same typography
+- same table styling
+- same chart backgrounds
+- same no-default-Streamlit look
+
+====================================================
+16. ACCEPTANCE CHECKLIST
+====================================================
+
+Before finishing, verify:
+
+Overview:
+- open/close insights button removed
+- live strip removed
+- KPI cards are live and inside “What is currently going on” container
+- KPI cards are evenly spaced and larger
+- Top Sales Market uses SVG flag, not emoji
+- context chips stretch uniformly
+- map is live/realtime
+- live regional leaderboard is next to the map
+- leaderboard uses SVG flags and full country names
+- bottom visuals are exactly 3 cards in one container
+- Revenue / Service Mix updates with filters/live data
+- admin/profile/filter area is a drawer
+- filters work
+- reset filters works
+- insights update from filtered data
+- colours are consistent
+- no clashing colours
+- no overlapping content
+- no default Streamlit-looking elements dominate
+
+Return:
+1. changed files
+2. what was fixed
+3. how live updates work
+4. any limitations
+5. how to run the app

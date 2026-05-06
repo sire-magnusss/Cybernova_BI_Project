@@ -1,0 +1,536 @@
+You are working on my new Streamlit file:
+
+cybernovaapp.py
+
+Do not rebuild the Sales dashboard from scratch. Preserve the current Sales dashboard shell and extend it.
+
+TASK:
+Add:
+1. Marketing dashboard — CyberNova Reach
+2. Executive dashboard — CyberNova Horizon
+3. Minimal but premium role-based login page
+4. Role-based access control using st.session_state
+
+This is a Streamlit app, not React.
+Use Python Streamlit + pandas/numpy + Plotly + custom HTML/CSS.
+You may use small HTML/CSS/JavaScript via st.components.v1.html only for visual polish.
+Do not use Java.
+Do not convert the app to React.
+
+IMPORTANT:
+Keep the app visually aligned with the CyberNova dark reference dashboards:
+- deep navy/black background
+- glassmorphism cards
+- neon cyan/teal/green accents
+- yellow for monitor/emerging
+- red/orange for risk
+- purple for target/aim anchors
+- rounded cards
+- glowing active states
+- no default Streamlit-looking UI
+
+Use these colours exactly:
+--bg-main: #02070A
+--bg-panel: #071820
+--bg-card: rgba(8, 22, 28, 0.78)
+--border-soft: rgba(77, 255, 225, 0.14)
+--border-active: rgba(0, 255, 209, 0.55)
+--text-main: #F8FAFC
+--text-muted: #8A98A6
+--cyan: #22D3EE
+--teal: #14B8A6
+--green: #7CFF4F
+--yellow: #FFD84A
+--orange: #F59E0B
+--red: #F87171
+--purple: #A855F7
+--gray-anchor: #8A98A6
+
+--------------------------------------------------
+1. LOGIN PAGE
+--------------------------------------------------
+
+Create a minimal premium sign-in screen shown before the dashboard.
+
+The login page must look like the CyberNova sign-in reference:
+- dark background
+- CyberNova logo
+- BI INTELLIGENCE PORTAL
+- clean split layout or centered card
+- minimal information only
+- no clutter
+
+Login page content:
+
+Left/minimal brand panel:
+CYBERNOVA ANALYTICS
+BI INTELLIGENCE PORTAL
+
+Heading:
+Sign in to your intelligence workspace.
+
+Short text:
+Your role unlocks the right dashboard, charts, and decisions. No noise — just the signals that matter.
+
+Optional 3 small feature chips only:
+- Live Pulse
+- Strategic Analytics
+- Reports
+
+Right login card:
+Sign in to your dashboard
+Select your role to access the right intelligence workspace.
+
+Fields:
+- Select your role
+- Password
+- Sign In to Dashboard button
+
+Small prototype note:
+Prototype access layer only. Production deployment would require secure authentication, password hashing, audit logging, and full role-based access control.
+
+Do not show too much text.
+Do not show huge credential tables unless a small “Demo credentials” expander is used.
+
+Demo roles:
+- Sales Team Lead
+- Marketing Lead
+- Executive Management
+- Admin / Lecturer View
+
+Use simple prototype passwords:
+Sales Team Lead: sales123
+Marketing Lead: marketing123
+Executive Management: executive123
+Admin / Lecturer View: admin123
+
+When sign-in succeeds:
+st.session_state.authenticated = True
+st.session_state.current_role = selected role
+st.session_state.active_dashboard = first allowed dashboard for that role
+st.session_state.active_tab = "Overview"
+
+If password is wrong:
+show a clean inline error message.
+
+Add logout button in the dashboard sidebar/header:
+Logout clears authentication session state and returns to login.
+
+--------------------------------------------------
+2. ROLE-BASED ACCESS
+--------------------------------------------------
+
+Implement role access mapping:
+
+Sales Team Lead:
+allowed dashboards = ["Sales"]
+
+Marketing Lead:
+allowed dashboards = ["Marketing"]
+
+Executive Management:
+allowed dashboards = ["Executive"]
+
+Admin / Lecturer View:
+allowed dashboards = ["Sales", "Marketing", "Executive"]
+
+Rules:
+- A role must only see dashboards it is allowed to access.
+- Sales user should not see Marketing or Executive in the switcher.
+- Marketing user should not see Sales or Executive.
+- Executive user should not see Sales or Marketing.
+- Admin/Lecturer sees all three.
+- If active_dashboard is not allowed after login/logout/reset, default to the first allowed dashboard.
+- Preserve active_tab, active_dashboard, selected filters, and selected market using st.session_state.
+
+Create helper functions:
+init_auth_state()
+render_login_page()
+check_login()
+logout()
+get_allowed_dashboards(role)
+can_access_dashboard(role, dashboard)
+render_dashboard_switcher()
+
+--------------------------------------------------
+3. DASHBOARD STRUCTURE
+--------------------------------------------------
+
+The app must now support three dashboards:
+
+Sales:
+title = CyberNova Pulse
+subtitle = Sales Command Center • Potential Customer Intelligence
+
+Marketing:
+title = CyberNova Reach
+subtitle = Marketing Intelligence Hub • Campaign Opportunity Intelligence
+
+Executive:
+title = CyberNova Horizon
+subtitle = Executive Insights Dashboard • SADC Expansion Intelligence
+
+Each dashboard must have exactly four tabs:
+Overview | Analytics | Forecasting | Data & Export
+
+Do not create extra main tabs like:
+Markets, Pipeline, Reports, Signals, Performance, AI Insights, Settings.
+
+These can exist only as cards/buttons inside the four tabs.
+
+--------------------------------------------------
+4. CONFIG-DRIVEN BUILD
+--------------------------------------------------
+
+Do not duplicate massive layout code for each dashboard.
+
+Create a config dictionary like:
+
+DASHBOARD_CONFIG = {
+  "Sales": {...},
+  "Marketing": {...},
+  "Executive": {...}
+}
+
+Each config should define:
+- title
+- subtitle
+- role label
+- primary question
+- kpis
+- live pulse metrics
+- overview cards
+- right insight cards
+- map title
+- map subtitle
+- map mode
+- analytics placeholders
+- forecasting placeholders
+- data export placeholders
+}
+
+Then create reusable render functions:
+render_dashboard()
+render_header()
+render_sidebar()
+render_tabs()
+render_context_chips()
+render_kpi_row()
+render_live_pulse()
+render_map_card()
+render_right_insight_cards()
+render_bottom_cards()
+render_analytics_tab()
+render_forecasting_tab()
+render_data_export_tab()
+render_status_bar()
+
+--------------------------------------------------
+5. SALES DASHBOARD
+--------------------------------------------------
+
+Preserve the current Sales dashboard structure and visual direction.
+
+Sales Overview should include:
+- Pipeline Target Attainment anchor card
+- Potential Customers
+- Demo Requests
+- AI-to-Demo Conversion
+- Top Sales Market
+- Live Sales Pulse
+- Potential Customer Hotzones Map
+- Regional Priority card
+- Strategic Signals card
+- Sales Risk Outlook card
+- Sales Growth Trend with anchors
+- Pipeline Funnel
+- Revenue / Service Mix
+- Regional Leaderboard
+- Bottom status bar
+
+Sales live pulse:
+- Potential Customers Now
+- Demo Requests Now
+- Potential Revenue Today
+- Top Active Market
+- Lead Velocity
+
+Sales Growth Trend anchors:
+- Actual line
+- Monthly Target dashed purple/blue line
+- Previous Month Actual dotted gray line
+- Gap-to-target label
+
+--------------------------------------------------
+6. MARKETING DASHBOARD
+--------------------------------------------------
+
+Create Marketing dashboard using same visual system.
+
+Marketing Overview KPI cards:
+1. Engaged Visitors
+2. Engagement Rate
+3. Best Campaign Market
+4. Best Landing Page
+5. Under-Promoted Service
+
+Marketing Live Pulse:
+- Active Human Audience
+- Top Active Market
+- Top Content / Service
+- Campaign Visits Today
+- Audience Quality
+
+Marketing Overview visuals:
+1. Market Opportunity Matrix
+   X-axis: Visitors
+   Y-axis: Engagement Rate
+   Bubble size: Potential Customers
+   This answers: Where should Marketing spend?
+
+2. Service Promotion Gap
+   Compare Visit Share vs Conversion Share.
+   If conversion share is higher than visit share, service is under-promoted.
+
+3. Content Journey Funnel
+   Landing Page → Service Page → AI/Contact Interest → Demo/Event Action
+
+4. Human Activity Timing Heatmap
+   Helps schedule campaign timing.
+
+Right-side cards:
+- Best Campaign Market
+- Campaign Signals
+- Audience Quality Outlook
+
+Marketing Analytics tab placeholders/cards:
+- Audience Segments Over Time
+- Country Engagement Breakdown
+- Landing Page Performance
+- SADC Reach Map + Ranking
+- Marketing Insight Assistant
+
+Marketing Forecasting tab placeholders/cards:
+- Audience Growth Forecast by Country
+- Engaged Sessions Forecast
+- Campaign What-If Scenario
+- Campaign Target Tracker
+- Campaign Recommendation
+
+Marketing Data & Export tab placeholders/cards:
+- Campaign Opportunity Table
+- Filtered Audience Data
+- Evidence Pack CSV
+- Weekly PDF Report
+- Monthly PDF Report
+- Methodology Note
+
+--------------------------------------------------
+7. EXECUTIVE DASHBOARD
+--------------------------------------------------
+
+Create Executive dashboard using same visual system.
+
+Executive Overview KPI cards:
+1. Growth Direction
+2. Potential Customers Generated
+3. AI Assistant Traction
+4. Active SADC Markets
+5. Strategic Risk Alerts
+
+Executive Board Summary:
+AI Assistant traction is strong across core and strategic hubs. Protect core markets while selectively testing high-growth opportunities.
+
+Executive Live Strategy Pulse:
+- Strategic Demand
+- Potential Customers
+- AI Assistant Interest
+- Risk Alert
+
+Executive Overview visuals:
+1. Regional Expansion Priority Map
+   This should be the largest visual on Executive Overview.
+   Shows SADC strategic status and recommended investment action.
+
+2. Strategic Growth Trend
+   Lines:
+   Revenue
+   AI Solutions
+   Services
+   Target Monthly
+   Previous Month Actual
+
+3. AI Assistant Traction
+   Bar + line combo
+   Add Target Achievement badge.
+
+4. 90-Day Potential Customer Forecast
+   Actual
+   Forecast Linear
+   Target Aim
+   Confidence Range
+   Label:
+   Rule-based linear forecast, not predictive AI.
+
+Right-side cards:
+- Regional Priority
+- Strategic Signals
+- Risk Outlook
+
+Executive Analytics tab placeholders/cards:
+- Regional Target Table
+- Market Contribution Analysis
+- AI Assistant by Market
+- Risk / Anomaly Trend
+- Executive Insight Assistant
+
+Executive Forecasting tab placeholders/cards:
+- 90-Day Potential Customer Forecast
+- Regional Expansion Forecast
+- AI Assistant Traction Forecast
+- Risk / Anomaly Outlook
+- Executive Investment Recommendation
+- Forecast vs Target
+
+Executive Data & Export tab placeholders/cards:
+- Executive Decision Brief
+- Regional Priority Table
+- Risk / Anomaly Evidence Table
+- Executive Summary CSV
+- Filtered Data CSV
+- Weekly PDF Report
+- Monthly PDF Report
+- Methodology Note
+
+--------------------------------------------------
+8. MAP BEHAVIOUR
+--------------------------------------------------
+
+Reuse the SADC map component for all dashboards, but change the meaning:
+
+Sales map:
+Potential Customer Hotzones
+Shows where potential customers are coming from.
+
+Marketing map:
+Campaign Hotzones / SADC Reach Map
+Shows where audience quality and campaign opportunity overlap.
+
+Executive map:
+Regional Expansion Priority Map
+Shows where leadership should invest, monitor, or review.
+
+Map nodes:
+- Luanda
+- Windhoek
+- Lusaka
+- Gaborone
+- Harare
+- Maputo
+- Durban
+- Cape Town
+- Lilongwe
+
+Node statuses:
+- Core Market
+- Strategic Hub
+- High Growth
+- Emerging
+- Stable
+
+Map interactions:
+- Hover tooltip shows dashboard-relevant data.
+- Click or fallback dropdown updates selected market.
+- Selected market filters cards/charts.
+- Nodes pulse subtly in live sections.
+
+--------------------------------------------------
+9. LIVE REFRESH
+--------------------------------------------------
+
+Live sections must refresh every 1 second.
+
+Use @st.fragment(run_every="1s") where supported.
+
+Only refresh:
+- live pulse strips
+- live map values/nodes if feasible
+- KPI deltas
+- alert count
+- data sync timestamp
+- small sparklines
+
+Do NOT refresh the whole app if avoidable.
+Do NOT reset login, role, active dashboard, active tab, filters, or selected market.
+
+If st.fragment is unavailable:
+use streamlit-autorefresh fallback at 1000ms and preserve st.session_state.
+
+--------------------------------------------------
+10. DATASET SELECTION
+--------------------------------------------------
+
+Before building, inspect available datasets in:
+- data/
+- data/output/
+- outputs/
+- current project root
+
+Look for .csv, .xlsx, .json, .parquet.
+
+Choose the best dataset based on whether it has or can derive:
+- timestamp/date
+- country/market
+- service/page/route
+- visit outcome
+- segment
+- human/bot/noise flag
+- demo/contact/event intent
+- AI Assistant interest
+- potential customer signal
+- revenue or potential revenue estimate
+
+If no dataset is suitable:
+use clean mock data inside cybernovaapp.py for now.
+Clearly tell me that mock fallback data was used.
+
+--------------------------------------------------
+11. ACCEPTANCE CHECKLIST
+--------------------------------------------------
+
+After implementation, verify:
+
+Login:
+- login page appears first
+- role selector works
+- password check works
+- wrong password error works
+- logout works
+- Admin/Lecturer sees all dashboards
+- Sales sees only Sales
+- Marketing sees only Marketing
+- Executive sees only Executive
+
+Dashboards:
+- Sales, Marketing, Executive exist
+- each has exactly four tabs
+- role restrictions work
+- visual style matches CyberNova dark reference
+- no default Streamlit metric cards
+- no extra main tabs
+- live sections refresh every 1 second
+- anchors appear in trend/forecast charts
+- bottom status bar appears
+- context chips appear
+- prototype note appears
+
+Final response:
+Tell me:
+1. which dataset was selected and why
+2. whether mock fallback data was used
+3. how to run the app
+4. what was implemented
+5. what remains for the next phase
+
+Keep explanations short.
+Output changed files only.

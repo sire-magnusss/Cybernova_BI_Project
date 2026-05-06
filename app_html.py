@@ -509,44 +509,51 @@ ROLES: dict[str, dict] = {
     "Admin / Lecturer View": {"pw": "admin123",     "access": ["CyberNova Pulse","CyberNova Reach","CyberNova Horizon"]},
 }
 DASHBOARDS  = ["CyberNova Pulse", "CyberNova Reach", "CyberNova Horizon"]
-EXCEL_PATH  = "data/output/cybernova_web_logs.xlsx"    # primary live data source
-ENRICH_PATH = "data/output/cybernova_enriched_logs.csv" # enrichment join
+import pathlib as _pl
+_BASE       = _pl.Path(__file__).parent
+EXCEL_PATH  = str(_BASE / "data" / "output" / "cybernova_web_logs.xlsx")
+ENRICH_PATH = str(_BASE / "data" / "output" / "cybernova_enriched_logs.csv")
 
 # ─────────────────────────────────────────────────────────────────
-# DATA LOADING  — Excel is the true source; CSV supplies enriched cols
+# DATA LOADING  — enriched CSV is the primary source (all cols pre-merged)
 # ─────────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def load_data() -> pd.DataFrame | None:
-    # ── 1. Load raw Excel web logs (copy to temp to bypass OneDrive lock)
+    # ── 1. Try enriched CSV first (has all columns pre-merged) ────
+    df = None
     try:
-        tmp = tempfile.mktemp(suffix=".xlsx")
-        shutil.copy2(EXCEL_PATH, tmp)
-        xl = pd.read_excel(tmp)
-        try:
-            os.unlink(tmp)
-        except Exception:
-            pass
+        df = pd.read_csv(ENRICH_PATH, low_memory=False)
     except Exception:
+        pass
+
+    # ── 2. Fallback: load Excel (copy to temp to bypass OneDrive lock)
+    if df is None:
+        try:
+            tmp = tempfile.mktemp(suffix=".xlsx")
+            shutil.copy2(EXCEL_PATH, tmp)
+            df = pd.read_excel(tmp)
+            try:
+                os.unlink(tmp)
+            except Exception:
+                pass
+        except Exception:
+            return None
+
+    if df is None or df.empty:
         return None
 
-    # ── 2. Join with enriched CSV to get derived columns ──────────
-    try:
-        csv = pd.read_csv(ENRICH_PATH)
-        xl["_key"]  = xl["ip_address"].astype(str)  + "|" + xl["date"].astype(str)  + "|" + xl["time"].astype(str)
-        csv["_key"] = csv["ip_address"].astype(str) + "|" + csv["date"].astype(str) + "|" + csv["time"].astype(str)
-        enrich_cols = [c for c in csv.columns if c not in xl.columns and c != "_key"]
-        df = xl.merge(csv[["_key"] + enrich_cols], on="_key", how="left")
-        df.drop(columns=["_key"], inplace=True)
-    except Exception:
-        df = xl.copy()
+    # ── 3. Parse timestamps and dates ────────────────────────────
+    if "timestamp" not in df.columns and "date" in df.columns and "time" in df.columns:
+        df["timestamp"] = pd.to_datetime(
+            df["date"].astype(str) + " " + df["time"].astype(str), errors="coerce"
+        )
+    else:
+        df["timestamp"] = pd.to_datetime(df.get("timestamp", pd.Series()), errors="coerce")
 
-    # ── 3. Derive timestamp and parse dates ───────────────────────
-    df["timestamp"] = pd.to_datetime(
-        df["date"].astype(str) + " " + df["time"].astype(str), errors="coerce"
-    )
     for col in ("date", "first_request_ts", "last_request_ts"):
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors="coerce")
+
     if "anomaly_name" in df.columns:
         df["anomaly_name"] = df["anomaly_name"].fillna("None").astype(str)
     if "session_number_for_ip" in df.columns:
@@ -555,9 +562,9 @@ def load_data() -> pd.DataFrame | None:
     for bc in ("is_bot","is_warm_lead","is_anomaly","converted_to_lead",
                "is_sadc","is_weekend","is_campaign_period"):
         if bc in df.columns:
-            df[bc] = df[bc].astype(bool)
+            df[bc] = df[bc].fillna(False).astype(bool)
 
-    # ── 4. Sort by timestamp for natural live-ticker order ─────────
+    # ── 4. Sort by timestamp for natural live-ticker order ────────
     df = df.sort_values("timestamp").reset_index(drop=True)
     return df
 
@@ -2002,10 +2009,8 @@ def render_report_section(
 </div>""", unsafe_allow_html=True)
     # Date-bounded slices for weekly and monthly reports
     _today       = date.today()
-    _week_start  = _today - timedelta(days=7)
-    _month_ago   = date(_today.year if _today.month > 1 else _today.year - 1,
-                        _today.month - 1 if _today.month > 1 else 12,
-                        _today.day)
+    _week_start  = _today - timedelta(days=6)
+    _month_ago   = _today - timedelta(days=29)
 
     def _slice_df(df: pd.DataFrame, start: date, end: date) -> pd.DataFrame:
         if df.empty or "date" not in df.columns:
@@ -3555,26 +3560,45 @@ def render_sidebar(df: pd.DataFrame) -> dict:
 # LOGIN  — two-panel full-page design
 # ─────────────────────────────────────────────────────────────────
 def render_login() -> None:
-    # ── Page-level CSS overrides ──────────────────────────────────
+    # ── Page-level CSS overrides — dark cyber theme ───────────────
     st.markdown("""
 <style>
 .stApp {
-  background: #F8FAFC !important;
+  background: radial-gradient(ellipse at 15% 0%,rgba(0,212,255,.09),transparent 40%),
+    radial-gradient(ellipse at 88% 12%,rgba(16,185,129,.07),transparent 38%),
+    #030C16 !important;
 }
 .block-container {
   padding-top: .6rem !important;
   padding-bottom: 1rem !important;
-  max-width: 1300px !important;
+  max-width: 1340px !important;
 }
 [data-testid="stSidebarCollapsedControl"],
 section[data-testid="stSidebar"] { display: none !important; }
-.stSelectbox label { color: #52606D !important; font-weight: 700 !important; font-size: 13px !important; }
-.stTextInput  label { color: #52606D !important; font-weight: 700 !important; font-size: 13px !important; }
+.stSelectbox label { color: #7B9BB5 !important; font-weight: 700 !important; font-size: 13px !important; }
+.stTextInput  label { color: #7B9BB5 !important; font-weight: 700 !important; font-size: 13px !important; }
 div[data-testid="stSelectbox"] > div > div {
-  border-radius: 11px !important; border: 1.5px solid #D9E2EC !important;
+  background: rgba(10,22,40,0.90) !important;
+  border-radius: 11px !important; border: 1.5px solid rgba(0,212,255,.25) !important;
+  color: #B0C4D8 !important;
 }
 div[data-testid="stTextInputRootElement"] input {
-  border-radius: 11px !important; border: 1.5px solid #D9E2EC !important;
+  background: rgba(10,22,40,0.90) !important;
+  color: #B0C4D8 !important;
+  border-radius: 11px !important; border: 1.5px solid rgba(0,212,255,.25) !important;
+}
+[data-baseweb="menu"] { background: #0A1628 !important; }
+[data-baseweb="option"] { background: #0A1628 !important; color: #94A3B8 !important; }
+[data-baseweb="option"]:hover { background: rgba(0,212,255,.10) !important; }
+.stButton > button {
+  background: linear-gradient(135deg,#00D4FF,#10B981) !important;
+  color: #030C16 !important; font-weight: 900 !important;
+  border: none !important; border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0,212,255,.35) !important;
+}
+.stButton > button:hover {
+  box-shadow: 0 12px 32px rgba(0,212,255,.55) !important;
+  transform: translateY(-2px);
 }
 </style>""", unsafe_allow_html=True)
 
@@ -3620,12 +3644,13 @@ div[data-testid="stTextInputRootElement"] input {
             feat_cards_html += f"""
 <div style="display:flex;gap:14px;align-items:flex-start;
   padding:14px 16px 14px 14px;margin-bottom:10px;
-  background:{SLATE_SOFT};
-  border:1px solid {BORDER};
+  background:rgba(10,22,40,0.75);
+  border:1px solid rgba(0,212,255,.14);
   border-radius:16px;
-  box-shadow:0 4px 18px rgba(0,0,0,.18);">
+  box-shadow:0 4px 18px rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);">
   <div style="width:40px;height:40px;flex-shrink:0;border-radius:12px;
-    background:linear-gradient(135deg,{col_main}dd,{col_main}66);
+    background:linear-gradient(135deg,{col_main}cc,{col_main}55);
     display:flex;align-items:center;justify-content:center;
     box-shadow:0 6px 16px {col_main}44;">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -3634,9 +3659,9 @@ div[data-testid="stTextInputRootElement"] input {
     </svg>
   </div>
   <div style="flex:1;min-width:0;">
-    <div style="color:{NAVY};font-weight:800;font-size:14px;margin-bottom:4px;
+    <div style="color:#E2E8F0;font-weight:800;font-size:14px;margin-bottom:4px;
       letter-spacing:-.01em;">{feat_title}</div>
-    <div style="color:{SECONDARY};font-size:12.5px;line-height:1.6;">
+    <div style="color:#64748B;font-size:12.5px;line-height:1.6;">
       {feat_descs[feat_title]}
     </div>
   </div>
@@ -3651,13 +3676,13 @@ div[data-testid="stTextInputRootElement"] input {
   <!-- Logo + brand -->
   <div style="display:flex;align-items:center;gap:18px;margin-bottom:2rem;">
     <div style="border-radius:20px;overflow:hidden;flex-shrink:0;
-      box-shadow:0 12px 32px rgba(37,99,255,.25),0 0 0 2px rgba(22,184,199,.20);">
+      box-shadow:0 12px 32px rgba(0,212,255,.30),0 0 0 2px rgba(0,212,255,.22);">
       {logo_img}
     </div>
     <div>
-      <div style="color:{NAVY};font-size:1.5rem;font-weight:900;
+      <div style="color:white;font-size:1.5rem;font-weight:900;
         letter-spacing:-.04em;line-height:1.1;">CyberNova Analytics</div>
-      <div style="color:{CYAN};font-size:.8rem;font-weight:700;
+      <div style="color:#00D4FF;font-size:.8rem;font-weight:700;
         margin-top:4px;letter-spacing:.06em;text-transform:uppercase;">
         BI Intelligence Portal
       </div>
@@ -3666,11 +3691,11 @@ div[data-testid="stTextInputRootElement"] input {
 
   <!-- Headline -->
   <div style="margin-bottom:1.6rem;">
-    <h2 style="color:{NAVY};font-size:1.8rem;font-weight:900;letter-spacing:-.04em;
+    <h2 style="color:white;font-size:1.8rem;font-weight:900;letter-spacing:-.04em;
       line-height:1.18;margin:0 0 .6rem;">
       Sign in to your<br>intelligence workspace.
     </h2>
-    <p style="color:{SECONDARY};font-size:14px;line-height:1.65;margin:0;max-width:420px;">
+    <p style="color:#64748B;font-size:14px;line-height:1.65;margin:0;max-width:420px;">
       Your role unlocks the right analytics, charts, and decisions.
       No noise — just the signals that matter to your team.
     </p>
@@ -3683,23 +3708,23 @@ div[data-testid="stTextInputRootElement"] input {
 
   <!-- Role callout -->
   <div style="display:flex;align-items:center;gap:10px;padding:.75rem 1.1rem;
-    border-radius:14px;background:{BLUE_SOFT};border:1px solid #BFDBFE;margin-bottom:.9rem;">
+    border-radius:14px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);margin-bottom:.9rem;">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-      stroke="{BLUE}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      stroke="#00D4FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
       <circle cx="9" cy="7" r="4"/>
       <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>
-    <span style="color:{BLUE};font-size:13px;font-weight:700;">
+    <span style="color:#00D4FF;font-size:13px;font-weight:700;">
       Select your role to access the correct intelligence workspace
     </span>
   </div>
 
   <!-- CET333 badge -->
   <div style="padding:.55rem .9rem;border-radius:10px;
-    background:{AMBER_SOFT};border:1px solid #FCD34D;">
-    <span style="color:#92400E;font-size:11px;font-weight:800;">
-      CET333 Product Development &nbsp;&middot;&nbsp; Prototype &nbsp;&middot;&nbsp;
+    background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.30);">
+    <span style="color:#F59E0B;font-size:11px;font-weight:800;">
+      CET333 Product Development &nbsp;&middot;&nbsp; Prototype v1.0 &nbsp;&middot;&nbsp;
       CyberNova Analytics Ltd (Fictitious)
     </span>
   </div>
@@ -3719,52 +3744,49 @@ div[data-testid="stTextInputRootElement"] input {
         cred_rows = ""
         for r, info in ROLES.items():
             badge_str = "&nbsp;+&nbsp;".join(
-                f'<span style="background:{dash_colours.get(d,BLUE)}22;'
+                f'<span style="background:{dash_colours.get(d,BLUE)}33;'
                 f'color:{dash_colours.get(d,BLUE)};font-size:10px;font-weight:800;'
                 f'padding:2px 7px;border-radius:6px;">'
                 f'{d.replace("CyberNova ","")}</span>'
                 for d in info["access"]
             )
             cred_rows += f"""
-<tr>
-  <td style="padding:9px 10px;font-weight:700;color:{NAVY};font-size:12px;
-    border-bottom:1px solid {BORDER};">{r}</td>
-  <td style="padding:9px 10px;font-size:12px;border-bottom:1px solid {BORDER};">
-    {badge_str}
-  </td>
-  <td style="padding:9px 10px;border-bottom:1px solid {BORDER};">
-    <code style="background:{BLUE_SOFT};color:{BLUE};font-size:11.5px;
-      padding:3px 9px;border-radius:7px;font-weight:800;
-      letter-spacing:.03em;">{info["pw"]}</code>
+<tr style="border-bottom:1px solid rgba(0,212,255,.10);">
+  <td style="padding:9px 10px;font-weight:700;color:#B0C4D8;font-size:12px;">{r}</td>
+  <td style="padding:9px 10px;font-size:12px;">{badge_str}</td>
+  <td style="padding:9px 10px;">
+    <code style="background:rgba(0,212,255,.12);color:#00D4FF;font-size:11.5px;
+      padding:3px 9px;border-radius:7px;font-weight:800;letter-spacing:.03em;">{info["pw"]}</code>
   </td>
 </tr>"""
 
         st.markdown(f"""
-<div style="background:white;border-radius:24px;padding:1.6rem 1.8rem 1.5rem;
-  box-shadow:0 20px 50px rgba(0,0,0,.30),0 0 0 1px rgba(37,99,255,.07);
-  margin-top:1.5rem;margin-bottom:.9rem;">
+<div style="background:rgba(10,22,40,0.88);border-radius:24px;padding:1.6rem 1.8rem 1.5rem;
+  border:1px solid rgba(0,212,255,.18);
+  box-shadow:0 20px 50px rgba(0,0,0,.60),0 0 40px rgba(0,212,255,.06);
+  margin-top:1.5rem;margin-bottom:.9rem;backdrop-filter:blur(12px);">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-      stroke="{BLUE}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      stroke="#00D4FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="11" width="18" height="11" rx="2"/>
       <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
     </svg>
     <span style="font-size:11px;font-weight:800;text-transform:uppercase;
-      letter-spacing:.1em;color:{SECONDARY};">Demo Credentials</span>
+      letter-spacing:.1em;color:#00D4FF;">Demo Credentials</span>
   </div>
-  <div style="border:1px solid {BORDER};border-radius:12px;overflow:hidden;">
+  <div style="border:1px solid rgba(0,212,255,.12);border-radius:12px;overflow:hidden;">
     <table style="width:100%;border-collapse:collapse;font-size:12px;">
       <thead>
-        <tr style="background:{SLATE_SOFT};">
-          <th style="padding:8px 10px;text-align:left;color:{SECONDARY};font-size:10px;
+        <tr style="background:rgba(0,212,255,.06);">
+          <th style="padding:8px 10px;text-align:left;color:#64748B;font-size:10px;
             font-weight:800;text-transform:uppercase;letter-spacing:.08em;
-            border-bottom:1px solid {BORDER};">Role</th>
-          <th style="padding:8px 10px;text-align:left;color:{SECONDARY};font-size:10px;
+            border-bottom:1px solid rgba(0,212,255,.10);">Role</th>
+          <th style="padding:8px 10px;text-align:left;color:#64748B;font-size:10px;
             font-weight:800;text-transform:uppercase;letter-spacing:.08em;
-            border-bottom:1px solid {BORDER};">Dashboard Access</th>
-          <th style="padding:8px 10px;text-align:left;color:{SECONDARY};font-size:10px;
+            border-bottom:1px solid rgba(0,212,255,.10);">Dashboard Access</th>
+          <th style="padding:8px 10px;text-align:left;color:#64748B;font-size:10px;
             font-weight:800;text-transform:uppercase;letter-spacing:.08em;
-            border-bottom:1px solid {BORDER};">Password</th>
+            border-bottom:1px solid rgba(0,212,255,.10);">Password</th>
         </tr>
       </thead>
       <tbody>{cred_rows}</tbody>
@@ -3774,20 +3796,22 @@ div[data-testid="stTextInputRootElement"] input {
 
         # ── Login card ────────────────────────────────────────────
         st.markdown(f"""
-<div style="background:white;border-radius:24px;
-  padding:1.8rem 1.8rem .5rem;
-  box-shadow:0 20px 50px rgba(0,0,0,.30),0 0 0 1px rgba(37,99,255,.07);
-  margin-bottom:.5rem;">
+<div style="background:rgba(10,22,40,0.88);border-radius:24px;
+  padding:1.8rem 1.8rem 1rem;
+  border:1px solid rgba(0,212,255,.18);
+  box-shadow:0 20px 50px rgba(0,0,0,.60),0 0 40px rgba(0,212,255,.06);
+  margin-bottom:.8rem;backdrop-filter:blur(12px);">
   <div style="display:inline-flex;align-items:center;gap:8px;
-    background:{BLUE_SOFT};border-radius:999px;padding:5px 12px;margin-bottom:14px;">
-    <div style="width:7px;height:7px;border-radius:999px;background:{GREEN};
+    background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.30);
+    border-radius:999px;padding:5px 12px;margin-bottom:14px;">
+    <div style="width:7px;height:7px;border-radius:999px;background:#10B981;
       box-shadow:0 0 0 3px rgba(16,185,129,.28);"></div>
-    <span style="color:{BLUE};font-size:11px;font-weight:800;
+    <span style="color:#10B981;font-size:11px;font-weight:800;
       text-transform:uppercase;letter-spacing:.09em;">Live Dashboard</span>
   </div>
   <h3 style="margin:0 0 5px;font-size:1.45rem;font-weight:900;
-    color:{NAVY};letter-spacing:-.04em;">Sign in to your dashboard</h3>
-  <p style="margin:0 0 1.1rem;color:{MUTED};font-size:13.5px;line-height:1.55;">
+    color:white;letter-spacing:-.04em;">Sign in to your dashboard</h3>
+  <p style="margin:0 0 1.1rem;color:#64748B;font-size:13.5px;line-height:1.55;">
     Select your role to access the right intelligence workspace.
   </p>
 </div>""", unsafe_allow_html=True)
@@ -3807,11 +3831,10 @@ div[data-testid="stTextInputRootElement"] input {
                 st.error("Incorrect password — please check your credentials.")
 
         st.markdown(f"""
-<div style="background:{AMBER_SOFT};border-left:3px solid {AMBER};
-  padding:.6rem .9rem;border-radius:8px;color:#78350F;
+<div style="background:rgba(245,158,11,.08);border-left:3px solid #F59E0B;
+  padding:.6rem .9rem;border-radius:8px;color:#F59E0B;
   font-size:11.5px;line-height:1.55;margin-top:.6rem;margin-bottom:1rem;">
-  <strong>Prototype access layer only.</strong> Production deployment would require
-  authentication, password hashing, audit logging, and full role-based access control.
+  <strong>Prototype v1.0 — Review and evaluation only.</strong> Not for production use.
 </div>""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────
@@ -3870,8 +3893,10 @@ def main() -> None:
         df = load_data()
 
     if df is None:
-        st.error("Dataset not found at `data/output/cybernova_web_logs.xlsx`. "
-                 "Ensure the Excel file exists in data/output/.")
+        st.error(
+            "Dataset not found. Ensure `cybernova_enriched_logs.csv` (or `cybernova_web_logs.xlsx`) "
+            f"exists in `{str(_BASE / 'data' / 'output')}`."
+        )
         return
 
     missing = [c for c in ("timestamp","date","country","service_name","status_class",

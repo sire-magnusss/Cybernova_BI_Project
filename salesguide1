@@ -1,0 +1,911 @@
+Follow the standing CyberNova Streamlit UI direction.
+
+We are now focusing heavily on the Sales dashboard styling and completing all Sales pages: Overview, Analytics, Forecasting, and Data & Export.
+
+This is a Streamlit app.
+Do NOT use Next.js.
+Do NOT use Java.
+Do NOT rebuild in React.
+
+Allowed styling/frontend tools inside Streamlit:
+- Custom CSS via st.markdown(..., unsafe_allow_html=True)
+- Custom HTML cards via st.markdown(..., unsafe_allow_html=True)
+- JavaScript only through st.components.v1.html for small visual interactions such as drawer toggles, animated map overlays, hover polish, or UI effects
+- Plotly for charts and hover tooltips
+- PyDeck / Plotly / custom SVG for map visuals
+- Streamlit session_state for active tab, selected market, drawer state, filters, live values
+
+Goal:
+Make the Sales dashboard look as close as possible to the supplied CyberNova dark reference image:
+- premium dark SaaS dashboard
+- glassmorphism cards
+- neon cyan/green/yellow accents
+- large central SADC map
+- properly spaced KPI cards
+- no default Streamlit look
+- no clutter
+- no overlapping text
+- clean readable charts
+- professional dashboard storytelling
+
+IMPORTANT:
+Do not destroy the current dashboard structure.
+Refine and improve the current cybernovaapp.py file.
+Build targeted improvements.
+
+====================================================
+1. GLOBAL SALES DASHBOARD LAYOUT
+====================================================
+
+The Sales dashboard must use exactly four tabs:
+
+Overview | Analytics | Forecasting | Data & Export
+
+Do not create additional main tabs such as Reports, Settings, AI Insights, Markets, Pipeline, Demos, or Signals.
+
+Use this layout structure:
+
+Left sidebar:
+- CyberNova logo
+- BI PORTAL
+- Navigation buttons:
+  Overview
+  Analytics
+  Forecasting
+  Data & Export
+- Profile block:
+  Alex M.
+  Sales Director
+  Online
+
+Top header:
+- Welcome back, Alex
+- Dynamic time with green online dot
+- CyberNova Pulse
+- Sales Command Center • Potential Customer Intelligence
+- Sales View dropdown
+- Date range selector
+- Filter button
+- All systems operational status pill
+
+Main content:
+- Active tab bar
+- Context chips
+- KPI row or KPI stack
+- Main content grid
+- Bottom status bar
+
+Use a 12-column dashboard grid feel:
+- Left sidebar: fixed width around 92px–120px
+- Main content: full remaining width
+- Card gap: 16px
+- Section gap: 20px–24px
+- Card radius: 18px–24px
+- Card padding: 18px–26px
+
+Do not allow cards to touch or overlap.
+
+====================================================
+2. EXACT COLOUR SYSTEM
+====================================================
+
+Use these exact CSS variables:
+
+:root {
+  --bg-main: #02070A;
+  --bg-panel: #071820;
+  --bg-card: rgba(8, 22, 28, 0.78);
+  --bg-card-strong: rgba(10, 28, 36, 0.92);
+  --border-soft: rgba(77, 255, 225, 0.14);
+  --border-active: rgba(0, 255, 209, 0.55);
+  --text-main: #F8FAFC;
+  --text-muted: #8A98A6;
+  --cyan: #22D3EE;
+  --teal: #14B8A6;
+  --green: #7CFF4F;
+  --yellow: #FFD84A;
+  --orange: #F59E0B;
+  --red: #F87171;
+  --purple: #A855F7;
+  --gray-anchor: #8A98A6;
+}
+
+Colour meaning:
+- cyan/teal = live intelligence, AI, strategic hubs
+- green = positive growth, success, on track
+- yellow/gold = emerging, monitor, medium opportunity
+- orange = caution/proposal
+- red = risk/alerts
+- purple = target/aim anchors
+- gray = previous month/baseline
+
+Do not use random colours.
+Every colour must follow the meaning above.
+
+====================================================
+3. CSS CLASSES TO CREATE / IMPROVE
+====================================================
+
+Create or refine these CSS classes:
+
+.cyber-app
+.cyber-sidebar
+.cyber-sidebar-logo
+.cyber-nav-button
+.cyber-nav-button.active
+.cyber-profile
+.cyber-main
+.cyber-header
+.cyber-top-controls
+.cyber-status-pill
+.cyber-tabs
+.cyber-tab
+.cyber-tab.active
+.context-chip-row
+.context-chip
+.kpi-grid
+.kpi-card
+.kpi-card.anchor
+.kpi-icon
+.kpi-label
+.kpi-value
+.kpi-subtext
+.kpi-change
+.live-pulse-strip
+.live-pulse-item
+.cyber-card
+.cyber-card-header
+.cyber-card-title
+.cyber-card-subtitle
+.chart-card
+.map-card
+.map-toolbar
+.right-drawer
+.right-drawer.open
+.right-drawer.closed
+.drawer-toggle-button
+.insight-card
+.risk-ring
+.flag-pill
+.country-table
+.country-row
+.status-bar
+.export-card
+.methodology-card
+.stage-pill
+.stage-pill-engaged
+.stage-pill-qualified
+.stage-pill-proposal
+.stage-pill-won
+.stage-pill-risk
+
+Styling rules:
+- All cards must use dark glassmorphism backgrounds.
+- All cards must have subtle borders.
+- Cards should glow slightly on hover.
+- Active tab must have cyan/green glow and underline.
+- Buttons must glow on hover.
+- Tables must have subtle row hover.
+- KPI cards must be bigger and evenly spaced.
+- Remove default Streamlit spacing where it makes layout ugly.
+- Hide default Streamlit menu/footer/header.
+
+Add CSS hover:
+.cyber-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-active);
+  box-shadow: 0 0 28px rgba(34, 211, 238, 0.13);
+}
+
+====================================================
+4. KPI CARD REFINEMENT
+====================================================
+
+The KPI cards are currently too tight. Make them:
+- larger
+- evenly spaced
+- consistent height
+- readable
+- aligned
+- visually premium
+
+Sales KPI cards:
+1. Pipeline Target Attainment
+   Value: 87%
+   Subtext: $82.6M / $95M target
+   Status: On Watch
+   This is the anchor KPI and should be visually strongest.
+
+2. Potential Customers
+   Value: 1,248
+   Change: ▲ 18%
+   Subtext: vs last 30 days
+
+3. Demo Requests
+   Value: 312
+   Change: ▲ 22%
+   Subtext: vs last 30 days
+
+4. AI to Demo Conversion
+   Value: 24.9%
+   Change: ▲ 3.6 pts
+   Subtext: vs last 30 days
+
+5. Top Sales Market
+   Value: South Africa
+   Subtext: 36% of total potential
+   Include South Africa flag.
+
+KPI layout:
+- Use 5 cards across if screen width allows.
+- On narrower width, use responsive wrapping.
+- Minimum card height: 132px.
+- Anchor card can be slightly wider or more highlighted.
+- Use mini sparkline on cards where useful.
+- Do not use st.metric if it looks default. Use custom HTML/CSS.
+
+====================================================
+5. RIGHT DRAWER / HAMBURGER DRAWER
+====================================================
+
+Replace the permanently crowded right panel with a pull-in / pull-out right drawer.
+
+Purpose:
+The right drawer holds secondary insight cards so the main dashboard has breathing room.
+
+Add a hamburger / insight drawer button near the top-right:
+- Icon: ☰ or ≡
+- Label optional: Insights
+- Position: top-right of main content near filters/status
+
+Drawer behavior:
+- Default can be open on desktop, collapsed on smaller screens.
+- User can open/close the drawer.
+- Store state in st.session_state["sales_drawer_open"].
+- If using JS for smoother animation, use st.components.v1.html or CSS transitions.
+- If JS becomes difficult, use Streamlit button to toggle drawer state.
+
+Drawer CSS:
+.right-drawer {
+  position: fixed or sticky;
+  right: 18px;
+  top: 110px;
+  width: 320px;
+  max-width: 340px;
+  height: calc(100vh - 140px);
+  background: rgba(8, 22, 28, 0.94);
+  border: 1px solid var(--border-soft);
+  border-radius: 22px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(18px);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  z-index: 50;
+}
+
+.right-drawer.closed {
+  transform: translateX(110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.right-drawer.open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+Drawer contents:
+1. Regional Priority
+   South Africa
+   Largest opportunity pool
+   High impact focus
+   Button: View Rationale
+
+2. Strategic Signals
+   New Solution Interest — High
+   Digital Transformation — Accelerating
+   Budget Confidence — Positive
+   Button: View All Signals
+
+3. Sales Risk Outlook
+   Gauge/ring:
+   Low
+   Stable outlook across SADC region
+   Button: View Risk Map
+
+4. Optional: Selected Market Detail
+   Show currently selected country from map/table.
+
+Important:
+When drawer is open, it must not overlap critical charts badly.
+If needed, main content can reserve drawer width on desktop.
+On smaller screens, drawer overlays content.
+
+====================================================
+6. SALES OVERVIEW PAGE
+====================================================
+
+Refine Overview styling to match the image closely.
+
+Overview must include:
+
+A. Header
+- Welcome back, Alex
+- CyberNova Pulse
+- Sales Command Center • Potential Customer Intelligence
+- Sales View dropdown
+- Date picker
+- Filter button
+- All systems operational pill
+
+B. Context chips
+- Period
+- Market
+- Service
+- Segment
+- Visit Outcome
+- Filtered Noise
+- Data Quality
+
+C. KPI row
+- 5 larger cards listed above
+
+D. Live Sales Pulse
+Refresh every 1 second.
+Metrics:
+- Potential Customers Now
+- Demo Requests Now
+- Potential Revenue Today
+- Top Active Market
+- Lead Velocity
+- Sync timestamp
+
+Style:
+- Full-width horizontal strip
+- Neon cyan/green accents
+- Segment dividers
+- Small live dot
+- Numbers should pulse subtly on update
+
+E. Potential Customer Hotzones Map
+- Main visual card
+- Large
+- SADC/Southern Africa only
+- No world map
+- Dark map card
+- Glowing nodes
+- Curved arcs
+- Status legend
+- Full country names where shown
+
+Map nodes:
+- Luanda, Angola — Emerging
+- Windhoek, Namibia — Emerging
+- Lusaka, Zambia — Strategic Hub
+- Gaborone, Botswana — Stable
+- Harare, Zimbabwe — High Growth
+- Maputo, Mozambique — Strategic Hub
+- Durban, South Africa — High Growth
+- Cape Town, South Africa — Core Market
+- Lilongwe, Malawi — Emerging
+
+Tooltip:
+City
+Country
+Status
+Potential Customers
+Demo Requests
+Conversion Rate
+Potential Revenue
+AI Assistant Interest
+Risk Level
+Recommended Action
+
+If map click is difficult, use Selected Market dropdown fallback.
+
+F. Bottom cards:
+1. Sales Growth Trend
+2. Pipeline Funnel
+3. Revenue / Service Mix
+4. Regional Leaderboard
+
+G. Bottom status bar:
+- Data Sync
+- AI Insights
+- Alerts
+- View Command Center
+
+====================================================
+7. SALES ANALYTICS PAGE — FULL IMPLEMENTATION + STYLING
+====================================================
+
+Now style and implement the Sales Analytics page properly, not as generic placeholders.
+
+Purpose:
+Explain why Sales performance is happening.
+
+Analytics layout:
+Use a clean dashboard grid:
+Top row:
+- Funnel by Market
+- Funnel by Service
+- Repeat Visitor Conversion
+- Potential Customer Segment Quality
+
+Middle row:
+- Sales Insight Assistant
+- Sales Hotzones Map
+- Top Service Demand
+
+Bottom row:
+- Potential Customers by Country
+- Demo Intent by Hour
+- Conversion Rate by Stage
+
+Cards must align properly.
+No cramped charts.
+No default Streamlit tables.
+
+A. Funnel by Market
+Chart:
+Stacked horizontal bar chart using Plotly.
+
+Countries with full names:
+- South Africa
+- Zambia
+- Mozambique
+- Botswana
+- Angola
+- Democratic Republic of the Congo
+
+Stages:
+- Awareness
+- Engaged
+- Qualified
+- Proposal
+- Won
+
+Show:
+- Overall Conversion Rate: 2.6%
+- Target Conversion Rate: 3.0%
+- Gap: -0.4 pts
+
+Hovertemplate:
+Country
+Stage
+Count
+Stage %
+Conversion Rate
+Gap to Target
+
+B. Funnel by Service
+Chart:
+Horizontal bar chart.
+
+Services / segments:
+- Strategic Hub
+- High Growth
+- Emerging
+- Core Market
+- Stable
+
+Metric:
+Conversion Rate
+
+Show:
+Best Performing: Strategic Hub — 3.8%
+
+C. Repeat Visitor Conversion
+Chart:
+Line chart.
+Lines:
+- New Visitors
+- Repeat Visitors
+- Target Conversion
+- Previous Month Actual
+
+Show:
+Repeat Visitor Conversion: 4.8%
+Lift vs New Visitors: 2.4x
+
+D. Potential Customer Segment Quality
+Chart:
+Bubble scatter.
+
+X-axis:
+Volume of Potential Customers
+
+Y-axis:
+Conversion Rate
+
+Bubble size:
+Segment Quality Score
+
+Segments:
+- Strategic Hub
+- High Growth
+- Emerging
+- Core Market
+- Stable
+
+Right-side small score list:
+Strategic Hub — 92
+High Growth — 78
+Emerging — 61
+Core Market — 47
+Stable — 32
+
+E. Sales Insight Assistant
+AI-style insight card.
+Use CyberNova assistant visual styling.
+
+Include:
+- South Africa is the largest opportunity pool.
+- Zambia shows strong growth momentum.
+- Biggest funnel drop-off is Qualified → Proposal.
+- Repeat visitors convert 2.4x higher than new visitors.
+- Recommended action: prioritise high-intent repeat visitors and proposal-stage follow-ups.
+
+Button:
+Ask CyberNova
+
+F. Sales Hotzones Map
+Small diagnostic map.
+Show heat levels:
+- High
+- Medium
+- Low
+
+G. Top Service Demand
+Horizontal bars:
+- Strategic Hub
+- High Growth
+- Emerging
+- Core Market
+- Stable
+
+Include:
+Potential Customers
+Change vs last 30 days
+
+H. Potential Customers by Country
+Use full country names and flags.
+
+Rows:
+🇿🇦 South Africa
+🇿🇲 Zambia
+🇲🇿 Mozambique
+🇧🇼 Botswana
+🇦🇴 Angola
+🇨🇩 Democratic Republic of the Congo
+
+Columns:
+- Country
+- Potential Customers
+- vs Last 30 Days
+- Conversion Rate
+- Potential Revenue
+
+Use custom HTML table if Streamlit dataframe looks ugly.
+Use sticky header if possible.
+Row hover should glow subtly.
+
+I. Demo Intent by Hour
+Heatmap:
+Days: Mon–Sun
+Hours: 00–22
+Colour scale:
+Low Intent → High Intent
+
+Hover:
+Day
+Hour
+Demo Intent Count
+Potential Revenue
+Recommended Follow-Up Window
+
+J. Conversion Rate by Stage
+Line/funnel decay chart:
+Awareness → Engaged → Qualified → Proposal → Won
+
+Highlight:
+Largest Drop-Off: Qualified → Proposal
+or Engaged → Qualified depending on data.
+
+Show:
+Opportunity note:
+Improve qualification criteria and follow-up speed to convert more potential customers.
+
+====================================================
+8. SALES FORECASTING PAGE — FULL IMPLEMENTATION + STYLING
+====================================================
+
+Purpose:
+Help Sales prepare for next 30–60 days.
+
+Use forecast cards with confidence and anchors.
+
+Top row:
+Forecast Summary KPI cards:
+1. Potential Customers Forecast — 1,642
+2. Demo Requests Forecast — 412
+3. Expected Conversions — 98
+4. Forecasted Revenue — $2.86M
+5. Confidence Level — 76%
+
+Forecast Confidence:
+Gauge/ring:
+76%
+Medium-High
+Based on historical accuracy
+
+Main charts:
+A. 30-Day Potential Customer Forecast
+Lines:
+- Actual
+- Forecast
+- Target
+- Confidence Band
+- Today marker
+
+B. Demo Request Forecast
+Lines:
+- Actual
+- Forecast
+- Target
+- Confidence Band
+- Today marker
+
+C. Forecast vs Target
+Lines:
+- Forecast
+- Target
+- Lower Band
+- Upper Band
+
+Side metrics:
+Forecast: $2.86M
+Target: $3.20M
+Gap: -$340K
+Confidence: 76%
+
+D. AI-to-Demo What-If Analysis
+Slider:
+15% to 35%
+
+Scenario cards:
+Low 20% — Demo Requests 332
+Current 24.9% — Demo Requests 412
+High 30% — Demo Requests 496
+
+Outputs:
+Expected Conversions
+Forecasted Revenue
+Gap to Target
+
+E. Sales Readiness Recommendations
+Checklist:
+- Increase follow-up cadence
+- Enable industry-specific playbooks
+- Prioritise enterprise accounts
+- Upskill SDRs on demo conversion
+
+F. Market Outlook
+Use flags and full country names:
+🇿🇦 South Africa — High Growth
+🇿🇲 Zambia — High Growth
+🇧🇼 Botswana — Stable
+🇲🇿 Mozambique — Emerging
+
+G. Sales Risk Outlook
+Gauge:
+Low
+Outlook: Stable
+
+H. Forecast Signals
+Small cards:
+- Rising website visits
+- Product page engagement
+- Intent signals increasing
+- Competitive mentions low and stable
+
+I. Alert Center
+Alerts:
+- Zambia demo conversion below forecast
+- Large opportunity aging
+
+Forecasting visual rules:
+Every forecast chart must include:
+- actual line
+- forecast line
+- target/aim line
+- confidence band
+- hover tooltip with actual/forecast, target, gap, confidence, status
+
+Add label:
+Rule-based linear forecast, not predictive AI.
+
+====================================================
+9. SALES DATA & EXPORT PAGE — FULL IMPLEMENTATION + STYLING
+====================================================
+
+Purpose:
+Provide evidence, exports, action queue, and methodology.
+
+Layout:
+Top row:
+- Sales Action Queue
+- Potential Customers Table
+- Evidence Snapshot
+
+Middle row:
+- Export Center
+- Data Quality Summary
+- Methodology & Assumptions
+
+Bottom row:
+- Potential Revenue by Region
+- New Potential Customers Trend
+- Top Potential Customers by Potential Revenue
+
+A. Sales Action Queue
+Rows:
+- Follow up with Luanda — Due Today
+- Qualify Lusaka Strategic Hub — Due Tomorrow
+- Re-engage Windhoek prospect — Due May 30
+- Prepare proposal for Durban — Due May 31
+- Intro call — Cape Town — Due Jun 1
+
+Each row:
+- icon
+- action
+- market
+- priority
+- due date
+- owner
+- expected value
+
+B. Potential Customers Table
+Use custom styled table with:
+- Search field
+- Filter button
+- Column button
+- Pagination
+
+Columns:
+Potential Customer
+Region
+Hub
+Stage
+Score
+Potential Revenue
+Last Activity
+Owner
+
+Stage pills:
+Engaged = teal
+Qualified = lime
+Proposal = orange/gold
+Won = green/cyan
+Risk = red
+
+C. Evidence Snapshot
+Metrics:
+- Total Potential Revenue: $82.6M
+- Potential Customers: 1,248
+- New Potential Customers: 312
+- Avg Potential Revenue: $66.3K
+- Avg Engagement Score: 74
+- Pipeline Health: 74% Healthy
+
+D. Export Center
+Download cards:
+- Weekly PDF Report
+- Monthly PDF Report
+- Potential Customers CSV
+- Filtered Data CSV
+- Pipeline Snapshot PDF
+- Data Dictionary
+
+E. Data Quality Summary
+Progress bars:
+- Data Completeness: 95%
+- Duplicate Rate: 2.1%
+- Data Freshness: 98%
+- Valid Emails: 96%
+- Phone Verified: 89%
+- Firmographic: 93%
+- Engagement Coverage: 74%
+
+F. Methodology & Assumptions
+Explain briefly:
+- Potential customer scoring model
+- Engagement signals
+- Potential revenue assumptions
+- Synthetic data limitation
+- All currency values in USD
+- Data refresh schedule
+
+G. Potential Revenue by Region
+Donut chart.
+
+H. New Potential Customers Trend
+Line chart.
+
+I. Top Potential Customers by Potential Revenue
+Horizontal bar chart.
+
+====================================================
+10. FLAGS AND FULL COUNTRY NAMES
+====================================================
+
+Use full country names everywhere.
+
+Country mapping:
+South Africa: 🇿🇦
+Zambia: 🇿🇲
+Mozambique: 🇲🇿
+Botswana: 🇧🇼
+Angola: 🇦🇴
+Democratic Republic of the Congo: 🇨🇩
+Namibia: 🇳🇦
+Zimbabwe: 🇿🇼
+Malawi: 🇲🇼
+
+Do not use shortened names like “S. Africa” in tables.
+Only use short labels if space is extremely limited on the map itself.
+
+Tables and leaderboard must show:
+🇿🇦 South Africa
+not “S. Africa”.
+
+====================================================
+11. STREAMLIT-COMPATIBLE STYLING LANGUAGES
+====================================================
+
+Use:
+- Python for Streamlit structure and data logic.
+- CSS for layout, cards, drawer, spacing, hover, dark theme.
+- HTML inside st.markdown for custom cards and tables.
+- JavaScript inside st.components.v1.html only for optional drawer/map animations.
+- Plotly for interactive charts and hover tooltips.
+- PyDeck or Plotly for maps if useful.
+
+Do not use:
+- Java
+- Next.js
+- Full React app
+- Default Streamlit metric cards if ugly
+
+If React-like UI is needed, imitate it using:
+- CSS grid
+- flexbox
+- HTML cards
+- Plotly charts
+- small JS components
+
+====================================================
+12. FINAL QUALITY CHECK
+====================================================
+
+After implementation, verify:
+- Sales dashboard looks close to the reference image.
+- KPI cards are larger and evenly spaced.
+- Right insight drawer opens/closes smoothly.
+- Analytics page is fully styled, not placeholder.
+- Forecasting page includes target anchors and confidence bands.
+- Data & Export page has styled evidence/export components.
+- Full country names and flags are used.
+- Live pulse refreshes every 1 second.
+- Static layout does not flicker.
+- Active tab persists.
+- Selected market persists.
+- No default Streamlit-looking components dominate.
+- No overlapping content.
+- No cramped chart labels.
+- All pages use the same CyberNova visual language.
+
+Return only:
+1. changed file names
+2. short summary of improvements
+3. how to run
+4. what remains next

@@ -1,0 +1,397 @@
+CyberNova BI Project - SRS Compliance Assessment
+Generated: 2026-05-06
+
+Purpose
+This document consolidates the current project structure and assesses the CyberNova BI dashboard against the requirements listed in srs.txt. The assessment uses three statuses:
+
+PASS    - Requirement is substantially implemented.
+PARTIAL - Requirement is present but incomplete, hardcoded, not fully connected, or weakly evidenced.
+FAIL    - Requirement is not currently evidenced in the implementation.
+
+
+1. Current Folder / Project Structure
+
+Main dashboard application:
+- cybernovaapp.py
+  Streamlit entry point. Handles login, role routing, dashboard selection, global filter drawer, four tabs, data loading, shared CSS, and shared overview widgets.
+
+Role-specific dashboard modules:
+- sales_views.py
+  Sales dashboard views for Analytics, Forecasting, and Data & Export.
+
+- marketing_views.py
+  Marketing dashboard views for Analytics, Forecasting, and Data & Export.
+
+- executive_views.py
+  Executive / Management dashboard views for Analytics, Forecasting, and Data & Export.
+
+Data generation and validation:
+- generate_logs.py
+  Synthetic IIS web log generator and enrichment pipeline. Produces raw IIS logs, enriched BI logs, Excel workbooks, summaries, potential customer outputs, forecasts, and quality summaries.
+
+- validate_dataset.py
+  Dataset validation script. Checks request counts, countries, services, status codes, segment distribution, warm lead rate, bot ratio, campaigns, anomalies, and daily request summaries.
+
+Supporting modules:
+- exports.py
+  PDF, CSV, Excel, KPI summary, country summary, and methodology export helpers.
+
+- live_feed.py
+  Simulated live feed writer for generating incremental synthetic traffic rows.
+
+Configuration and requirements:
+- config.yaml
+  Controls seed, date range, traffic distribution, country proportions, services, campaigns, anomalies, and output paths.
+
+- requirements.txt
+  Python dependencies for local or Streamlit deployment.
+
+Data outputs:
+- data/output/cybernova_iis_raw_logs.csv
+- data/output/cybernova_enriched_logs.csv
+- data/output/cybernova_web_logs.xlsx
+- data/output/cybernova_decision_engine_dataset.xlsx
+- data/output/generation_summary.csv
+
+
+2. Dashboard Shape
+
+PASS - The app currently has the intended three stakeholder dashboards:
+- Sales
+- Marketing
+- Executive / Management
+
+PASS - Each dashboard is presented with four tabs:
+- Overview
+- Analytics
+- Forecasting
+- Data & Export
+
+Note: The SRS originally says "three-tab Streamlit dashboard" in the product description and FR8, but the current implementation uses four tabs per role. This is not a failure if the extra Forecasting and Data & Export tabs are accepted as added functionality. If the SRS must be followed strictly, update the SRS wording to say four tabs per role.
+
+
+3. Functional Requirements Assessment
+
+FR1 - Generate >=1,000-row synthetic IIS W3C log dataset
+Status: PASS
+Evidence:
+- Generated enriched dataset contains 60,551 requests.
+- Raw IIS CSV exists at data/output/cybernova_iis_raw_logs.csv.
+- Enriched CSV exists at data/output/cybernova_enriched_logs.csv.
+- Dataset includes timestamps, Southern African IP-style addresses, URIs, HTTP methods, status codes, bytes, response times, and user agents.
+- Validation shows realistic status distribution, bot traffic, campaigns, anomalies, 404s, and country proportions.
+
+Concern:
+- Raw CSV contains IIS-style fields, but it is not a literal W3C log text file with W3C header lines. If the marker expects strict W3C Extended Log Format text, this should be strengthened or documented.
+
+
+FR2 - Ingest and preprocess log file; parse fields, resolve countries, handle malformed records, report processed/cleaned/dropped
+Status: PARTIAL
+Evidence:
+- generate_logs.py creates enriched BI-ready fields from raw request data.
+- load_data() in cybernovaapp.py loads the enriched CSV and parses timestamp/date fields.
+- Country, city, region, service group, segment, quality, risk, and funnel fields exist in the enriched dataset.
+
+Gap:
+- The dashboard does not clearly show records processed, cleaned, and dropped.
+- There is no separate visible ETL report panel proving malformed record handling.
+- App loads a prepared enriched CSV rather than visibly running a modular ETL step.
+
+
+FR3 - Perform EDA: univariate, bivariate country x service, hourly/daily time series decomposition, anomaly detection, commentary
+Status: PARTIAL
+Evidence:
+- Dashboard includes time trends, service analysis, campaign heatmaps, risk/anomaly trend cards, and insight cards.
+- generate_logs.py adds anomaly flags and risk/anomaly fields.
+- Executive dashboard includes risk/anomaly trend visuals.
+
+Gap:
+- EDA is not consistently presented as a formal analysis section.
+- Mean/median/std and decomposition outputs are not clearly surfaced for every required dimension.
+- Some interpretive commentary is hardcoded rather than directly computed from filtered data.
+
+
+FR4 - Segment traffic into four behavioural tiers and report volumes per country
+Status: PASS
+Evidence:
+- Dataset includes segment values:
+  - High-intent
+  - Product-curious
+  - General browser
+  - Bot
+- validate_dataset.py reports segment distribution.
+- Segmentation fields are used in multiple dashboard areas.
+
+Gap:
+- Volumes per country should be made more explicit in the dashboard or export, because the underlying data supports it but the requirement should be easy to demonstrate.
+
+
+FR5 - Simulate real-time log feed and refresh all dashboard metrics without manual reload
+Status: PARTIAL
+Evidence:
+- live_feed.py exists and can simulate incremental log traffic.
+- cybernovaapp.py has a 1-second Streamlit fragment for live-looking pulse counters.
+
+Gap:
+- The live pulse counters are largely session-state/random animation, not clearly sourced from newly appended log entries.
+- Main dashboard metrics do not appear to poll live_feed.py output and refresh all visuals from new rows.
+- This should not be claimed as fully implemented until all dashboard metrics are refreshed from actual appended data.
+
+
+FR6 - Geographic demand analysis: ranked bar chart and choropleth; top 5 markets; underperforming regions
+Status: PARTIAL
+Evidence:
+- Maps and market rankings exist across Sales, Marketing, and Executive dashboards.
+- Country, latitude, longitude, region group, market status, and investment recommendation fields exist in the dataset.
+- Executive dashboard flags invest/monitor/review markets.
+
+Gap:
+- Several maps and rankings use hardcoded MAP_NODES or static country values rather than filtered data.
+- Implementation uses scatter map markers more than a true choropleth.
+- Underperforming region logic exists in static cards, but should be more data-driven.
+
+
+FR7 - Service demand ranking and AI Cyber Assistant standalone KPI with growth trend
+Status: PASS
+Evidence:
+- Dataset includes service_name, business_service_name, service_group, is_ai_assistant_page, and AI-related funnel fields.
+- AI Cyber Assistant appears as a core service in the dataset and dashboards.
+- Several dashboard cards and forecasts highlight AI traction.
+
+Concern:
+- Some AI trend cards are hardcoded or seeded rather than fully computed from filtered data.
+
+
+FR8 - Three-tab Streamlit dashboard for Sales, Marketing, Management audiences
+Status: PASS WITH SRS WORDING NOTE
+Evidence:
+- Three stakeholder dashboards exist: Sales, Marketing, Executive.
+- Each role has Overview, Analytics, Forecasting, and Data & Export.
+- Role-based login controls access to each dashboard.
+
+Note:
+- Current implementation has four tabs, not three. This is probably an enhancement, but the SRS should be updated to avoid contradiction.
+
+
+FR9 - Sidebar filtering across all tabs: date range, country, service type, HTTP status
+Status: PARTIAL
+Evidence:
+- Filter drawer exists in cybernovaapp.py.
+- Date range and country/market are applied to the DataFrame before rendering tabs.
+- Service, segment, and outcome controls are shown.
+
+Gap:
+- Service filter is displayed but not applied globally.
+- Segment filter is displayed but not applied globally.
+- Outcome filter is displayed but not applied globally.
+- HTTP status filter is required by the SRS but is not implemented as a clear global filter.
+- The filter UI is a custom drawer, not the default Streamlit sidebar. This is acceptable if documented, but the SRS says sidebar.
+
+
+FR10 - Warm lead tracking for /scheduledemo.php and /event.php separately
+Status: PARTIAL
+Evidence:
+- Dataset includes is_warm_lead, has_demo_request, has_event_signup, event_type, conversion_stage, and funnel fields.
+- Warm lead events are generated and validated.
+- Sales dashboard includes lead and conversion-focused visuals.
+
+Gap:
+- is_warm_lead currently also includes /contact.php in generate_logs.py.
+- The SRS specifically asks /scheduledemo.php and /event.php to be quantified separately.
+- Dashboard should clearly show separate counts, country split, time trend, and warm lead rate for scheduled demo vs event interactions.
+
+
+FR11 - Minimum five chart types: bar, line/area, pie/donut, scatter, geographic
+Status: PASS
+Evidence:
+- Bar charts exist.
+- Line and area/forecast charts exist.
+- Donut/pie-style service charts exist.
+- Scatter/bubble charts exist.
+- Geographic maps exist.
+- Additional chart types include heatmaps and gauges.
+
+Concern:
+- Some chart titles/axis labels/annotations are stronger than others. A final presentation pass should verify every key chart has titles, labels, legends, and useful annotations.
+
+
+FR12 - Descriptive statistics by country/service/time and correlation of time-of-day vs service type
+Status: PARTIAL
+Evidence:
+- Dataset contains enough fields to compute country/service/time descriptive statistics.
+- Some summaries and data-quality views exist.
+- generate_logs.py includes statistical and forecast-related outputs.
+
+Gap:
+- Dashboard does not clearly expose mean, median, standard deviation, and totals per country/service/time period.
+- Correlation analysis of time-of-day vs service type is not clearly implemented as a visible dashboard output.
+- This is one of the weaker SRS matches and should be added explicitly.
+
+
+4. Non-Functional Requirements Assessment
+
+NFR1 - Dashboard loads within 3 seconds; filters respond within 1 second
+Status: PARTIAL / UNVERIFIED
+Evidence:
+- Streamlit caching is used for data loading.
+- Code compiled successfully.
+
+Gap:
+- No timed performance test was run.
+- Enriched CSV is around 70 MB, so first load may exceed 3 seconds on slower machines.
+- Some views contain many charts and hardcoded visuals, which may affect response time.
+
+
+NFR2 - IIS W3C conformity; realistic Southern African distribution; >=30% Botswana
+Status: PASS WITH FORMAT NOTE
+Evidence:
+- Validation shows Botswana at 31.79%.
+- Country distribution is configured in config.yaml and generated realistically across Southern Africa.
+- Status codes, bots, campaigns, anomalies, and user agents are realistic enough for a synthetic BI project.
+
+Concern:
+- Raw data is CSV with IIS-style fields rather than a literal W3C Extended Log Format file with W3C headers.
+
+
+NFR3 - Fixed random seed for reproducibility
+Status: PASS
+Evidence:
+- config.yaml has random_seed: 333.
+- generate_logs.py sets both random.seed(seed) and np.random.seed(seed).
+
+
+NFR4 - Consistent UI, >=11pt font, appropriate density per audience
+Status: PARTIAL
+Evidence:
+- UI is visually consistent and role-specific.
+- Management/Executive views are more concise than Sales/Marketing.
+- Sales and Marketing contain more operational detail.
+
+Gap:
+- Some CSS uses 9px and 10px text, which may conflict with the >=11pt requirement.
+- Text encoding issues may damage UI professionalism.
+
+
+NFR5 - Modular codebase: separate generation, ETL, analysis, UI; inline documentation; monthly re-execution
+Status: PARTIAL
+Evidence:
+- Project is split into generator, validator, main app, role views, exports, and live feed.
+- config.yaml supports repeatable generation.
+- Several modules have docstrings and comments.
+
+Gap:
+- ETL, analysis, and UI are not fully separated. generate_logs.py handles many responsibilities.
+- Dashboard modules mix static mock content, analytics, and UI.
+- Some comments/text suffer from encoding corruption.
+
+
+NFR6 - Pipeline handles up to 50,000 log entries without restructuring
+Status: PASS
+Evidence:
+- Current generated dataset has 60,551 rows.
+- App can load the enriched CSV with pandas.
+- Validation completed successfully.
+
+Concern:
+- Performance still needs timing validation.
+
+
+NFR7 - Deployable locally or via Streamlit Community Cloud from requirements.txt
+Status: PASS / LIKELY
+Evidence:
+- requirements.txt exists.
+- App is Streamlit-based.
+- No proprietary BI platform is used.
+
+Concern:
+- Streamlit Cloud deployment may need checking because large data files and Excel outputs may exceed practical limits.
+
+
+NFR8 - All data synthetic, no real personal data; professionally documented
+Status: PASS
+Evidence:
+- Dataset is generated synthetically.
+- SRS states no real server logs exist.
+- generate_logs.py and validation outputs support synthetic generation.
+
+Concern:
+- Documentation can be improved by adding a clear methodology/testing report and fixing text encoding issues.
+
+
+5. Validation Findings
+
+The following command was run:
+- python validate_dataset.py
+
+Key results:
+- Total requests: 60,551
+- Unique sessions: 26,780
+- Date range: 2026-01-01 to 2026-06-30
+- Botswana share: 31.79%
+- Bot request ratio: 9.91%
+- Segment distribution:
+  - General browser: 61.42%
+  - Product-curious: 24.10%
+  - Bot: 9.72%
+  - High-intent: 4.76%
+- Warm lead events: 3,694
+- Warm lead rate per human session: 15.28%
+
+Validator warning:
+- Warm lead rate may be too high for a B2B SaaS-style website. The validator itself suggests adjusting demo probabilities in config.yaml.
+
+Compilation check:
+- python -m py_compile cybernovaapp.py sales_views.py marketing_views.py executive_views.py exports.py live_feed.py generate_logs.py validate_dataset.py
+- Result: Passed. No syntax errors were detected in those modules.
+
+
+6. Main Issues to Fix Before Final Submission
+
+1. Apply all global filters properly.
+   Current app applies date and market, but service, segment, outcome, and HTTP status need to filter the DataFrame before every tab renders.
+
+2. Add an explicit HTTP status filter.
+   The SRS specifically requires HTTP status filtering.
+
+3. Make real-time refresh evidence stronger.
+   Connect live_feed.py or a polling file source to the dashboard so new rows update metrics and visuals from data, not only animated counters.
+
+4. Replace or clearly label hardcoded/mock dashboard content.
+   Several maps, forecasts, insight cards, rankings, and KPI values use fixed values or seeded random data. For final SRS compliance, key visuals should be data-driven from the filtered enriched dataset.
+
+5. Add a formal statistics/correlation tab section.
+   Include mean, median, standard deviation, totals by country/service/time period, plus time-of-day vs service-type analysis.
+
+6. Separate warm lead reporting for /scheduledemo.php and /event.php.
+   The app should show count, country split, time trend, and rate as percentage of total traffic for each route separately.
+
+7. Add ETL quality reporting.
+   Show records processed, cleaned, dropped, invalid rows, missing fields, duplicate sessions, and quality score in a visible dashboard/export section.
+
+8. Fix encoding corruption.
+   Many files display mojibake such as "â€¢", "âš", and "ðŸ". This can make the dashboard and documentation look broken.
+
+9. Validate performance.
+   Time first load and filter interactions. The 70 MB enriched CSV may be acceptable locally but should be measured against NFR1.
+
+10. Resolve SRS wording mismatch.
+   The SRS says "three-tab dashboard", but the current app has four tabs per role. Either change the SRS to four tabs or explain the fourth tab as an enhancement.
+
+
+7. Overall Verdict
+
+Overall status: PARTIAL PASS
+
+The project is strong and already demonstrates the main CyberNova BI concept: synthetic IIS web traffic, enriched analytics data, three role-based dashboards, four tabs per role, many visualisations, exports, and a polished Streamlit interface.
+
+However, the project should not yet be described as fully SRS-compliant because some requirements are only visually represented or partially wired. The most important compliance gaps are global filtering, real-time data refresh, explicit ETL quality reporting, descriptive statistics/correlation analysis, and replacing hardcoded/mock visuals with filtered dataset-driven results.
+
+Priority for final improvement:
+1. Fix global filters.
+2. Add HTTP status filter.
+3. Add stats/correlation section.
+4. Make warm lead tracking separate for demo and event pages.
+5. Strengthen real-time refresh from actual appended data.
+6. Reduce hardcoded/mock values in core evidence charts.
+7. Fix encoding issues.
+

@@ -1,0 +1,1888 @@
+"""
+sales_views.py — CyberNova BI Portal · Sales Dashboard
+Imported by cybernovaapp.py. Provides 4 tab renderers + CSS injection.
+"""
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+
+try:
+    from exports import (
+        build_weekly_report_pdf,
+        build_monthly_report_pdf,
+        build_methodology_pdf,
+        build_kpi_summary,
+        dataframe_to_csv_bytes,
+        filter_last_n_days,
+        period_label,
+    )
+    _EXPORTS_OK = True
+except Exception:
+    _EXPORTS_OK = False
+
+# ── COLOR CONSTANTS ──────────────────────────────────────────────────────────
+_CYAN   = "#22D3EE"
+_TEAL   = "#14B8A6"
+_GREEN  = "#7CFF4F"
+_YELLOW = "#FFD84A"
+_ORANGE = "#F59E0B"
+_RED    = "#F87171"
+_PURPLE = "#A855F7"
+_GRAY   = "#8A98A6"
+_WHITE  = "#F8FAFC"
+
+_BG_PANEL     = "#071820"
+_BG_CARD      = "rgba(8,22,28,0.78)"
+_BG_CARD_STR  = "rgba(10,28,36,0.92)"
+_BORDER_SOFT  = "rgba(77,255,225,0.14)"
+_BORDER_ACT   = "rgba(0,255,209,0.55)"
+
+_COLOR_MAP = {
+    "Core Market":  _CYAN,
+    "Strategic Hub": _TEAL,
+    "High Growth":  _YELLOW,
+    "Emerging":     _GREEN,
+    "Stable":       _GRAY,
+}
+
+_STAGE_COLORS = {
+    "Engaged":  _TEAL,
+    "Qualified": _GREEN,
+    "Proposal": _ORANGE,
+    "Won":      _CYAN,
+    "Risk":     _RED,
+}
+
+MAP_NODES = [
+    {"city":"Cape Town",  "country":"South Africa", "lat":-33.9, "lon":18.4,  "status":"Core Market",   "customers":450, "demos":98,  "conv":"21.8%","revenue":"$18.2M","ai":34,"risk":"Low"},
+    {"city":"Durban",     "country":"South Africa", "lat":-29.9, "lon":30.9,  "status":"High Growth",   "customers":112, "demos":28,  "conv":"25%",  "revenue":"$6.1M", "ai":28,"risk":"Low"},
+    {"city":"Lusaka",     "country":"Zambia",        "lat":-15.4, "lon":28.3,  "status":"Strategic Hub", "customers":180, "demos":41,  "conv":"22.8%","revenue":"$9.5M", "ai":41,"risk":"Low"},
+    {"city":"Maputo",     "country":"Mozambique",    "lat":-25.9, "lon":32.6,  "status":"Strategic Hub", "customers":140, "demos":29,  "conv":"20.7%","revenue":"$7.2M", "ai":37,"risk":"Medium"},
+    {"city":"Gaborone",   "country":"Botswana",      "lat":-24.7, "lon":25.9,  "status":"Stable",        "customers":95,  "demos":18,  "conv":"18.9%","revenue":"$4.8M", "ai":22,"risk":"Low"},
+    {"city":"Harare",     "country":"Zimbabwe",      "lat":-17.8, "lon":31.0,  "status":"High Growth",   "customers":120, "demos":31,  "conv":"25.8%","revenue":"$6.8M", "ai":31,"risk":"Medium"},
+    {"city":"Luanda",     "country":"Angola",        "lat":-8.8,  "lon":13.2,  "status":"Emerging",      "customers":72,  "demos":14,  "conv":"19.4%","revenue":"$3.1M", "ai":18,"risk":"Medium"},
+    {"city":"Windhoek",   "country":"Namibia",       "lat":-22.6, "lon":17.1,  "status":"Emerging",      "customers":55,  "demos":11,  "conv":"20%",  "revenue":"$2.3M", "ai":15,"risk":"Low"},
+    {"city":"Lilongwe",   "country":"Malawi",        "lat":-13.9, "lon":33.8,  "status":"Emerging",      "customers":48,  "demos":8,   "conv":"16.7%","revenue":"$1.6M", "ai":12,"risk":"Low"},
+]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 1. CSS INJECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+def inject_sales_css():
+    st.markdown("""
+<style>
+/* ── Base cyber card ─────────────────────────────────────────────────────── */
+.cyber-card {
+  background: rgba(8,22,28,0.78);
+  border: 1px solid rgba(77,255,225,0.14);
+  border-radius: 18px;
+  padding: 20px 22px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform .22s, border-color .22s, box-shadow .22s;
+  position: relative;
+  overflow: hidden;
+}
+.cyber-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,209,0.18), transparent);
+}
+.cyber-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0,255,209,0.55);
+  box-shadow: 0 0 28px rgba(34,211,238,0.13);
+}
+.cyber-card.anchor {
+  border-color: rgba(0,255,209,0.42);
+  box-shadow: 0 0 32px rgba(34,211,238,0.18), inset 0 0 20px rgba(34,211,238,0.04);
+}
+.cyber-card.anchor::before {
+  background: linear-gradient(90deg, transparent, rgba(0,255,209,0.35), transparent);
+}
+/* ── Section title ───────────────────────────────────────────────────────── */
+.sv-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #22D3EE;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(77,255,225,0.12);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* ── KPI grid ────────────────────────────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.sv-kpi-card {
+  min-height: 132px;
+  background: rgba(8,22,28,0.78);
+  border: 1px solid rgba(77,255,225,0.14);
+  border-radius: 16px;
+  padding: 18px 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform .2s, border-color .2s;
+  cursor: default;
+}
+.sv-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0,255,209,0.45);
+}
+.kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8A98A6;
+  margin-bottom: 8px;
+}
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.kpi-delta-up {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(124,255,79,0.12);
+  color: #7CFF4F;
+  border: 1px solid rgba(124,255,79,0.22);
+}
+.kpi-delta-watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(255,216,74,0.12);
+  color: #FFD84A;
+  border: 1px solid rgba(255,216,74,0.22);
+}
+.kpi-delta-down {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(248,113,113,0.12);
+  color: #F87171;
+  border: 1px solid rgba(248,113,113,0.22);
+}
+/* ── Live pulse strip ────────────────────────────────────────────────────── */
+.live-pulse-strip {
+  width: 100%;
+  background: linear-gradient(90deg, rgba(34,211,238,0.06), rgba(20,184,166,0.04), rgba(34,211,238,0.03));
+  border: 1px solid rgba(77,255,225,0.14);
+  border-radius: 10px;
+  padding: 9px 16px;
+  display: flex;
+  gap: 0;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.live-pulse-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  border-right: 1px solid rgba(77,255,225,0.1);
+}
+.live-pulse-item:last-child { border-right: none; }
+.pl { font-size: 9px; color: #8A98A6; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 3px; }
+.pv { font-size: 16px; font-weight: 700; color: #22D3EE; }
+/* ── Stage pills ─────────────────────────────────────────────────────────── */
+.stage-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.stage-pill-engaged   { background: rgba(20,184,166,0.15);  color: #14B8A6; border: 1px solid rgba(20,184,166,0.3); }
+.stage-pill-qualified { background: rgba(124,255,79,0.12);  color: #7CFF4F; border: 1px solid rgba(124,255,79,0.25); }
+.stage-pill-proposal  { background: rgba(245,158,11,0.12);  color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
+.stage-pill-won       { background: rgba(34,211,238,0.12);  color: #22D3EE; border: 1px solid rgba(34,211,238,0.25); }
+.stage-pill-risk      { background: rgba(248,113,113,0.12); color: #F87171; border: 1px solid rgba(248,113,113,0.25); }
+/* ── Country table ───────────────────────────────────────────────────────── */
+.country-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.country-table th {
+  font-size: 9px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: #8A98A6; padding: 8px 10px;
+  border-bottom: 1px solid rgba(77,255,225,0.12);
+  position: sticky; top: 0;
+  background: rgba(8,22,28,0.95);
+  z-index: 2;
+}
+.country-row {
+  display: flex;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(77,255,225,0.06);
+  align-items: center;
+  transition: background .15s;
+}
+.country-row:hover { background: rgba(20,184,166,0.07); border-radius: 8px; }
+/* ── Insight card ────────────────────────────────────────────────────────── */
+.insight-card {
+  background: rgba(8,22,28,0.78);
+  border: 1px solid rgba(77,255,225,0.14);
+  border-left: 3px solid #22D3EE;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 8px;
+  backdrop-filter: blur(12px);
+}
+/* ── Export button card ──────────────────────────────────────────────────── */
+.export-btn-card {
+  background: rgba(8,22,28,0.78);
+  border: 1px solid rgba(77,255,225,0.14);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color .2s, transform .15s;
+}
+.export-btn-card:hover {
+  border-color: rgba(0,255,209,0.45);
+  transform: translateY(-1px);
+}
+/* ── Quality bar ─────────────────────────────────────────────────────────── */
+.quality-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.quality-bar-track {
+  flex: 1; height: 6px;
+  background: rgba(77,255,225,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.quality-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .4s;
+}
+/* ── Forecast signal card ────────────────────────────────────────────────── */
+.forecast-signal-card {
+  background: rgba(8,22,28,0.78);
+  border: 1px solid rgba(77,255,225,0.14);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* ── Alert item ──────────────────────────────────────────────────────────── */
+.alert-item {
+  background: rgba(248,113,113,0.05);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #F8FAFC;
+}
+.alert-item.warn {
+  background: rgba(255,216,74,0.05);
+  border-color: rgba(255,216,74,0.2);
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTERNAL HELPERS
+# ═══════════════════════════════════════════════════════════════════════════════
+def _chart_layout(fig, h=260):
+    """Apply consistent dark chart layout."""
+    fig.update_layout(
+        height=h,
+        margin=dict(l=0, r=0, t=10, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(7,16,28,0.6)",
+        font=dict(color="#8A98A6", size=10, family="Inter"),
+        xaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#8A98A6", showgrid=True, zeroline=False),
+        yaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#8A98A6", showgrid=True, zeroline=False),
+        legend=dict(
+            bgcolor="rgba(7,16,28,0.82)",
+            bordercolor="rgba(77,255,225,0.14)",
+            borderwidth=1,
+            font=dict(color="#8A98A6", size=9),
+            orientation="h",
+            y=-0.25,
+            x=0,
+        ),
+    )
+
+
+def _card_start(title, icon=""):
+    prefix = f"{icon} " if icon else ""
+    st.markdown(
+        f'<div class="cyber-card"><div class="sv-title">{prefix}{title}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _card_end():
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def _pill(stage):
+    cls_map = {
+        "Engaged":  "stage-pill-engaged",
+        "Qualified": "stage-pill-qualified",
+        "Proposal": "stage-pill-proposal",
+        "Won":      "stage-pill-won",
+        "Risk":     "stage-pill-risk",
+    }
+    cls = cls_map.get(stage, "stage-pill-engaged")
+    return f'<span class="stage-pill {cls}">{stage}</span>'
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 2. SALES DRAWER CONTENT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def build_sales_insights(df):
+    """Derive insight values from filtered df."""
+    try:
+        if df is not None and len(df) > 0:
+            human = df[~df["is_bot"]].copy() if "is_bot" in df.columns else df.copy()
+        else:
+            human = pd.DataFrame()
+
+        # Priority market
+        if "country" in human.columns and len(human) > 0:
+            if "potential_customer_signal" in human.columns:
+                priority_market = human.groupby("country")["potential_customer_signal"].sum().idxmax()
+            else:
+                priority_market = human["country"].value_counts().index[0]
+        else:
+            priority_market = "South Africa"
+
+        # Risk level
+        if "risk_level" in human.columns and len(human) > 0:
+            risk_counts = human["risk_level"].value_counts()
+            high_pct = risk_counts.get("High", 0) / len(human)
+            risk_level = "High" if high_pct > 0.15 else "Medium" if high_pct > 0.05 else "Low"
+        else:
+            risk_level = "Low"
+
+        risk_color = {"Low":"#76FF36","Medium":"#FFD84A","High":"#F87171"}.get(risk_level, "#76FF36")
+
+        # Top service
+        if "service_name" in human.columns and len(human) > 0:
+            top_service = human["service_name"].value_counts().index[0]
+        else:
+            top_service = "AI Solutions"
+
+        # Conversion rate
+        if "potential_customer_signal" in human.columns and len(human) > 0:
+            conv = round(float(human["potential_customer_signal"].mean()) * 100, 1)
+        else:
+            conv = 24.9
+
+        return {
+            "priority_market": priority_market,
+            "top_service": top_service,
+            "risk_level": risk_level,
+            "risk_color": risk_color,
+            "conv_rate": conv,
+            "action": f"Focus on {top_service} in {priority_market} — highest conversion opportunity."
+        }
+    except Exception:
+        return {"priority_market":"South Africa","top_service":"AI Solutions",
+                "risk_level":"Low","risk_color":"#76FF36","conv_rate":24.9,
+                "action":"Scale outreach in South Africa and Zambia."}
+
+
+def render_sales_drawer() -> str:
+    """Returns HTML string for the 3 insight cards. Reads df from session state."""
+    df = st.session_state.get("_sales_df_cache")
+    ins = build_sales_insights(df) if df is not None else build_sales_insights(None)
+
+    _ISO = {"South Africa":"za","Zambia":"zm","Mozambique":"mz","Botswana":"bw","Angola":"ao",
+            "Zimbabwe":"zw","Namibia":"na","Malawi":"mw","Democratic Republic of the Congo":"cd"}
+    iso = _ISO.get(ins["priority_market"], "za")
+    flag_html = f'<img src="https://flagcdn.com/20x15/{iso}.png" style="height:13px;border-radius:1px;margin-right:4px;vertical-align:middle;" />'
+
+    return f"""
+<div class="cn-card" style="margin-bottom:10px;">
+  <div class="sec-label">Regional Priority</div>
+  <div style="font-size:18px;font-weight:800;color:#22D3EE;margin-bottom:4px;">{flag_html}{ins["priority_market"]}</div>
+  <div style="font-size:10px;color:#6B7FA3;">Largest opportunity pool</div>
+  <div style="font-size:11px;color:#4ADE80;font-weight:600;margin-top:6px;">{ins["action"]}</div>
+</div>
+
+<div class="cn-card" style="margin-bottom:10px;">
+  <div class="sec-label">Strategic Signals</div>
+  <div style="font-size:11px;margin-bottom:5px;color:#F5F7FA;"><span style="color:#76FF36;">●</span> {ins["top_service"]} — <b>High Intent</b></div>
+  <div style="font-size:11px;margin-bottom:5px;color:#F5F7FA;"><span style="color:#00F5D4;">●</span> Digital Transformation — <b>Accelerating</b></div>
+  <div style="font-size:11px;color:#F5F7FA;"><span style="color:#FFD84A;">●</span> Budget Confidence — <b>Positive</b></div>
+</div>
+
+<div class="cn-card">
+  <div class="sec-label">Sales Risk Outlook</div>
+  <div style="font-size:28px;font-weight:800;color:{ins["risk_color"]};text-align:center;padding:6px 0;
+    text-shadow:0 0 20px {ins["risk_color"]}44;">{ins["risk_level"].upper()}</div>
+  <div style="font-size:10px;color:#6B7FA3;text-align:center;">Conversion rate: {ins["conv_rate"]}%</div>
+</div>"""
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 3. ANALYTICS TAB
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── A. Funnel by Market ──────────────────────────────────────────────────────
+def _funnel_by_market():
+    countries = ["South Africa", "Zambia", "Mozambique", "Botswana", "Angola", "DRC"]
+    awareness = [7600, 3000, 2400, 1600, 1200, 640]
+    engaged   = [3200, 1260, 1010, 670, 504, 269]
+    qualified = [1248, 491, 394, 261, 196, 104]
+    proposal  = [512,  201, 161, 107, 80,  42]
+    won       = [198,   78,  63,  42, 32,  16]
+
+    stages = [
+        ("Awareness", awareness, _CYAN,   "rgba(34,211,238,0.7)"),
+        ("Engaged",   engaged,   _TEAL,   "rgba(20,184,166,0.7)"),
+        ("Qualified", qualified, _YELLOW, "rgba(255,216,74,0.7)"),
+        ("Proposal",  proposal,  _ORANGE, "rgba(245,158,11,0.7)"),
+        ("Won",       won,       _GREEN,  "rgba(124,255,79,0.7)"),
+    ]
+    conv_rates = [w / a * 100 for w, a in zip(won, awareness)]
+    target = 3.0
+
+    fig = go.Figure()
+    for name, vals, color, fill_color in stages:
+        fig.add_trace(go.Bar(
+            name=name,
+            y=countries,
+            x=vals,
+            orientation="h",
+            marker_color=fill_color,
+            hovertemplate=(
+                "<b>%{y}</b><br>"
+                f"Stage: {name}<br>"
+                "Count: %{x:,}<extra></extra>"
+            ),
+        ))
+
+    fig.update_layout(
+        barmode="stack",
+        height=260,
+        margin=dict(l=0, r=0, t=10, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(7,16,28,0.6)",
+        font=dict(color="#8A98A6", size=9),
+        xaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#8A98A6"),
+        yaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#F8FAFC", tickfont=dict(size=9)),
+        legend=dict(bgcolor="rgba(7,16,28,0.82)", bordercolor="rgba(77,255,225,0.14)",
+                    borderwidth=1, font=dict(color="#8A98A6", size=8),
+                    orientation="h", y=-0.28, x=0),
+    )
+
+    _card_start("Funnel by Market", "📊")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    avg_conv = sum(conv_rates) / len(conv_rates)
+    gap = avg_conv - target
+    gap_color = _GREEN if gap >= 0 else _RED
+    gap_sign = "+" if gap >= 0 else ""
+    st.markdown(
+        f'<div style="font-size:10px;color:#8A98A6;margin-top:4px;">'
+        f'Overall Conv: <b style="color:{_CYAN};">{avg_conv:.1f}%</b> &nbsp;·&nbsp; '
+        f'Target: <b style="color:{_PURPLE};">3.0%</b> &nbsp;·&nbsp; '
+        f'Gap: <b style="color:{gap_color};">{gap_sign}{gap:.1f} pts</b></div>',
+        unsafe_allow_html=True,
+    )
+    _card_end()
+
+
+# ── B. Funnel by Service ─────────────────────────────────────────────────────
+def _funnel_by_service():
+    services = ["Strategic Hub", "High Growth", "Emerging", "Core Market", "Stable"]
+    conv     = [3.8, 3.2, 2.4, 2.1, 1.8]
+    colors   = ["rgba(20,184,166,0.75)", "rgba(255,216,74,0.75)",
+                "rgba(124,255,79,0.75)", "rgba(34,211,238,0.75)", "rgba(138,152,166,0.75)"]
+    target   = 3.0
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        y=services,
+        x=conv,
+        orientation="h",
+        marker_color=colors,
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "Conv Rate: %{x:.1f}%<br>"
+            f"Target: {target}%<br>"
+            "vs Target: %{{customdata:.1f}} pts<extra></extra>"
+        ),
+        customdata=[c - target for c in conv],
+    ))
+    fig.add_vline(x=target, line_dash="dash", line_color=_PURPLE, line_width=1.5,
+                  annotation_text="Target 3.0%", annotation_font_color=_PURPLE,
+                  annotation_font_size=9)
+    fig.update_layout(
+        height=260,
+        margin=dict(l=0, r=0, t=10, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(7,16,28,0.6)",
+        font=dict(color="#8A98A6", size=9),
+        xaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#8A98A6", title="Conversion Rate %"),
+        yaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#F8FAFC", tickfont=dict(size=10)),
+        showlegend=False,
+    )
+    fig.add_annotation(x=conv[0], y=services[0], text="Best ★", showarrow=False,
+                       font=dict(color=_GREEN, size=9), xanchor="left", xshift=6)
+
+    _card_start("Funnel by Service", "📊")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+# ── C. Repeat Visitor Conversion ─────────────────────────────────────────────
+def _repeat_visitor_conv():
+    months = ["Jan", "Feb", "Mar", "Apr"]
+    new_vis    = [2.0, 2.2, 2.1, 2.4]
+    repeat_vis = [3.8, 4.2, 4.5, 4.8]
+    target     = [3.5, 3.5, 3.5, 3.5]
+    prev_month = [3.4, 3.9, 4.1, 4.4]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=months, y=new_vis, name="New Visitors",
+        line=dict(color=_GRAY, width=2), mode="lines+markers",
+        marker=dict(size=5, color=_GRAY),
+        hovertemplate="<b>%{x}</b><br>New: %{y:.1f}%<extra></extra>"))
+    fig.add_trace(go.Scatter(x=months, y=repeat_vis, name="Repeat Visitors",
+        line=dict(color=_CYAN, width=2.5), mode="lines+markers",
+        marker=dict(size=6, color=_CYAN),
+        hovertemplate="<b>%{x}</b><br>Repeat: %{y:.1f}%<extra></extra>"))
+    fig.add_trace(go.Scatter(x=months, y=target, name="Target",
+        line=dict(color=_PURPLE, width=1.5, dash="dash"), mode="lines",
+        hovertemplate="<b>%{x}</b><br>Target: %{y:.1f}%<extra></extra>"))
+    fig.add_trace(go.Scatter(x=months, y=prev_month, name="Prev Month",
+        line=dict(color="#3A4A5E", width=1.5, dash="dot"), mode="lines",
+        hovertemplate="<b>%{x}</b><br>Prev: %{y:.1f}%<extra></extra>"))
+
+    _chart_layout(fig, h=230)
+    fig.update_layout(yaxis_title="Conv Rate %")
+
+    _card_start("Repeat Visitor Conversion", "🔄")
+    st.markdown(
+        '<span style="background:rgba(34,211,238,0.12);color:#22D3EE;border:1px solid '
+        'rgba(34,211,238,0.25);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700;">'
+        'Repeat: 4.8% · Lift 2.4x</span>',
+        unsafe_allow_html=True,
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+# ── D. Segment Quality Bubble ─────────────────────────────────────────────────
+def _segment_quality_bubble():
+    segments  = ["Strategic Hub", "High Growth", "Emerging", "Core Market", "Stable"]
+    volumes   = [180, 232, 175, 450, 95]
+    conv_r    = [22.8, 24.0, 19.0, 21.8, 18.9]
+    quality   = [92, 78, 61, 47, 32]
+    colors    = [_TEAL, _YELLOW, _GREEN, _CYAN, _GRAY]
+    fill_c    = ["rgba(20,184,166,0.7)", "rgba(255,216,74,0.7)",
+                 "rgba(124,255,79,0.7)", "rgba(34,211,238,0.7)", "rgba(138,152,166,0.7)"]
+
+    fig = go.Figure()
+    for i, (seg, vol, cr, qs, fc) in enumerate(zip(segments, volumes, conv_r, quality, fill_c)):
+        fig.add_trace(go.Scatter(
+            x=[vol], y=[cr],
+            mode="markers+text",
+            name=seg,
+            text=[seg],
+            textposition="top center",
+            textfont=dict(color="#F8FAFC", size=8),
+            marker=dict(size=qs / 2.2, color=fc, line=dict(color="rgba(0,0,0,0.3)", width=1)),
+            hovertemplate=(
+                f"<b>{seg}</b><br>"
+                f"Volume: {vol}<br>"
+                f"Conv Rate: {cr}%<br>"
+                f"Quality Score: {qs}<extra></extra>"
+            ),
+        ))
+
+    _chart_layout(fig, h=230)
+    fig.update_layout(xaxis_title="Potential Customers", yaxis_title="Conversion Rate %", showlegend=False)
+
+    _card_start("Segment Quality Bubble", "💎")
+    c_left, c_right = st.columns([3, 1])
+    with c_left:
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    with c_right:
+        st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
+        for seg, qs, col in zip(segments, quality, colors):
+            bar_pct = int(qs)
+            st.markdown(
+                f'<div style="margin-bottom:6px;">'
+                f'<div style="font-size:9px;color:#8A98A6;margin-bottom:2px;">{seg}</div>'
+                f'<div style="display:flex;align-items:center;gap:6px;">'
+                f'<div style="flex:1;height:5px;background:rgba(77,255,225,0.08);border-radius:3px;">'
+                f'<div style="width:{bar_pct}%;height:100%;background:{col};border-radius:3px;"></div></div>'
+                f'<span style="font-size:10px;color:{col};font-weight:700;width:22px;">{qs}</span>'
+                f'</div></div>',
+                unsafe_allow_html=True,
+            )
+    _card_end()
+
+
+# ── E. Sales Insight Assistant ────────────────────────────────────────────────
+def _sales_insight_assistant():
+    insights = [
+        ("🟢", "South Africa is the largest opportunity pool — 450 potential customers, $18.2M pipeline.", _GREEN),
+        ("🟡", "Zambia shows strong growth momentum (+31% MoM) — high-priority emerging hub.", _YELLOW),
+        ("🔴", "Biggest funnel drop-off: Qualified → Proposal stage (−59% fallthrough rate).", _RED),
+        ("🟢", "Repeat visitors convert 2.4× higher than new visitors — prioritise returning traffic.", _GREEN),
+        ("💡", "Recommended: Prioritise high-intent repeat visitors and accelerate proposal-stage follow-ups.", _CYAN),
+    ]
+    rows_html = "".join(
+        f'<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;'
+        f'border-bottom:1px solid rgba(77,255,225,0.06);">'
+        f'<span style="font-size:14px;flex-shrink:0;">{icon}</span>'
+        f'<span style="font-size:12px;color:#F8FAFC;line-height:1.5;">{text}</span>'
+        f'</div>'
+        for icon, text, _ in insights
+    )
+
+    st.markdown(
+        f"""
+<div class="insight-card">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+    <div style="font-size:16px;">🤖</div>
+    <div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#22D3EE;">
+        CyberNova Intelligence · Sales Insights
+      </div>
+      <div style="font-size:9px;color:#8A98A6;">AI-generated intelligence summary · Updated live</div>
+    </div>
+  </div>
+  {rows_html}
+  <div style="margin-top:12px;">
+    <button style="background:linear-gradient(135deg,rgba(20,184,166,0.25),rgba(34,211,238,0.15));
+      border:1px solid rgba(34,211,238,0.35);color:#22D3EE;border-radius:8px;padding:6px 16px;
+      font-size:11px;font-weight:600;cursor:pointer;">Ask CyberNova →</button>
+  </div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+
+# ── F. Mini Hotzones Map ──────────────────────────────────────────────────────
+def _mini_hotzones_map():
+    df_m = pd.DataFrame(MAP_NODES)
+    df_m["sz"] = df_m["customers"] / 6.5
+
+    fig = go.Figure()
+    for status, grp in df_m.groupby("status"):
+        hover = [
+            f"<b>{r['city']}, {r['country']}</b><br>"
+            f"Status: {r['status']}<br>"
+            f"Potential Customers: {r['customers']}<br>"
+            f"Demo Requests: {r['demos']}<br>"
+            f"Conversion: {r['conv']}<br>"
+            f"Revenue: {r['revenue']}"
+            for _, r in grp.iterrows()
+        ]
+        fig.add_trace(go.Scattermap(
+            lat=grp.lat, lon=grp.lon, mode="markers", name=status,
+            marker=dict(size=grp["sz"], color=_COLOR_MAP[status], opacity=0.88, sizemode="area"),
+            text=hover, hoverinfo="text",
+        ))
+
+    fig.update_layout(
+        map=dict(style="carto-darkmatter", center=dict(lat=-20, lon=26), zoom=2.5),
+        height=280,
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        legend=dict(bgcolor="rgba(9,20,36,0.85)", bordercolor="rgba(77,255,225,0.18)",
+                    borderwidth=1, font=dict(color="#F8FAFC", size=9), orientation="v", x=0.01, y=0.98),
+    )
+
+    _card_start("Sales Hotzones Map", "🗺️")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+# ── G. Top Service Demand ─────────────────────────────────────────────────────
+def _top_service_demand():
+    services = ["Strategic Hub", "High Growth", "Emerging", "Core Market", "Stable"]
+    counts   = [180, 232, 175, 450, 95]
+    changes  = ["+18%", "+22%", "+14%", "+22%", "+8%"]
+    colors   = ["rgba(20,184,166,0.75)", "rgba(255,216,74,0.75)",
+                "rgba(124,255,79,0.75)", "rgba(34,211,238,0.75)", "rgba(138,152,166,0.75)"]
+    change_colors = [_GREEN, _GREEN, _GREEN, _GREEN, _YELLOW]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        y=services,
+        x=counts,
+        orientation="h",
+        marker_color=colors,
+        text=changes,
+        textposition="outside",
+        textfont=dict(color="#7CFF4F", size=9),
+        hovertemplate="<b>%{y}</b><br>Potential Customers: %{x}<extra></extra>",
+    ))
+
+    fig.update_layout(
+        height=260,
+        margin=dict(l=0, r=0, t=10, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(7,16,28,0.6)",
+        font=dict(color="#8A98A6", size=9),
+        xaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#8A98A6", title="Potential Customers"),
+        yaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#F8FAFC", tickfont=dict(size=10)),
+        showlegend=False,
+    )
+
+    _card_start("Top Service Demand", "📈")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+# ── H. Customers by Country ───────────────────────────────────────────────────
+def _customers_by_country():
+    rows_data = [
+        ("🇿🇦", "South Africa", 450, "▲22%", "21.8%", "$18.2M", _GREEN),
+        ("🇿🇲", "Zambia",        180, "▲14%", "22.8%", "$9.5M",  _GREEN),
+        ("🇲🇿", "Mozambique",    140, "▲18%", "20.7%", "$7.2M",  _GREEN),
+        ("🇧🇼", "Botswana",       95, "▲8%",  "18.9%", "$4.8M",  _YELLOW),
+        ("🇦🇴", "Angola",          72, "▲31%", "19.4%", "$3.1M",  _GREEN),
+        ("🇨🇩", "DRC",             38, "▲9%",  "15.2%", "$1.4M",  _YELLOW),
+    ]
+
+    header = (
+        '<div style="display:flex;padding:6px 10px;border-bottom:1px solid rgba(77,255,225,0.14);">'
+        '<span style="flex:2;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A98A6;">Country</span>'
+        '<span style="flex:1;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A98A6;text-align:right;">Customers</span>'
+        '<span style="flex:1;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A98A6;text-align:right;">vs 30d</span>'
+        '<span style="flex:1;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A98A6;text-align:right;">Conv Rate</span>'
+        '<span style="flex:1;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A98A6;text-align:right;">Revenue</span>'
+        '</div>'
+    )
+    rows_html = "".join(
+        f'<div class="country-row" style="padding:8px 10px;">'
+        f'<span style="flex:2;font-size:12px;color:#F8FAFC;font-weight:500;">{flag} {country}</span>'
+        f'<span style="flex:1;font-size:12px;color:#22D3EE;text-align:right;font-weight:600;">{cust:,}</span>'
+        f'<span style="flex:1;font-size:11px;color:{chg_col};text-align:right;font-weight:600;">{chg}</span>'
+        f'<span style="flex:1;font-size:12px;color:#F8FAFC;text-align:right;">{conv}</span>'
+        f'<span style="flex:1;font-size:12px;color:#7CFF4F;text-align:right;font-weight:600;">{rev}</span>'
+        f'</div>'
+        for flag, country, cust, chg, conv, rev, chg_col in rows_data
+    )
+
+    _card_start("Potential Customers by Country", "🌍")
+    st.markdown(
+        f'<div style="overflow-y:auto;max-height:280px;">{header}{rows_html}</div>',
+        unsafe_allow_html=True,
+    )
+    _card_end()
+
+
+# ── I. Demo Intent Heatmap ────────────────────────────────────────────────────
+def _demo_intent_heatmap():
+    np.random.seed(12)
+    days  = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    hours = [f"{h:02d}:00" for h in range(0, 23, 2)]
+    z = np.random.randint(5, 60, (7, len(hours)))
+    # Peak: Tue–Thu (indices 1,2,3), 9:00–17:00 (indices 4–8)
+    z[1:4, 4:9] += np.random.randint(60, 120, (3, 5))
+
+    rev_est  = z * 0.85 + np.random.uniform(0, 5, z.shape)
+    follow_up = "09:00–11:00 next business day"
+
+    fig = go.Figure(go.Heatmap(
+        z=z,
+        x=hours,
+        y=days,
+        colorscale=[[0, "rgba(7,16,28,0.9)"], [0.4, "rgba(20,184,166,0.3)"], [1, _CYAN]],
+        hovertemplate=(
+            "<b>%{y} %{x}</b><br>"
+            "Demo Intent Count: %{z}<br>"
+            f"Recommended Follow-Up: {follow_up}<extra></extra>"
+        ),
+        showscale=False,
+    ))
+
+    fig.update_layout(
+        height=260,
+        margin=dict(l=0, r=0, t=10, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(7,16,28,0.6)",
+        font=dict(color="#8A98A6", size=9),
+        xaxis=dict(tickangle=-45, color="#8A98A6", tickfont=dict(size=8)),
+        yaxis=dict(color="#F8FAFC", tickfont=dict(size=9)),
+    )
+
+    _card_start("Demo Intent by Hour", "⏰")
+    st.markdown(
+        '<div style="font-size:9px;color:#8A98A6;margin-bottom:6px;">Peak: Tue–Thu, 09:00–17:00 &nbsp;·&nbsp; '
+        'High-intent windows highlighted</div>',
+        unsafe_allow_html=True,
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+# ── J. Conversion Rate by Stage ───────────────────────────────────────────────
+def _conversion_by_stage():
+    stages   = ["Awareness", "Engaged", "Qualified", "Proposal", "Won"]
+    cum_conv = [100.0, 42.1, 16.4, 6.7, 2.6]
+    drops    = [0, 42.1-16.4, 16.4-6.7, 6.7-2.6]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=stages, y=cum_conv,
+        mode="lines+markers",
+        line=dict(color=_CYAN, width=2.5),
+        marker=dict(size=8, color=_CYAN, line=dict(color="#071820", width=2)),
+        fill="tozeroy",
+        fillcolor="rgba(34,211,238,0.06)",
+        hovertemplate="<b>%{x}</b><br>Cumulative Conv: %{y:.1f}%<extra></extra>",
+    ))
+    # Largest drop-off annotation
+    fig.add_annotation(
+        x="Qualified", y=16.4,
+        text="Largest Drop-Off ▼ 60%",
+        showarrow=True, arrowhead=2, arrowcolor=_RED,
+        font=dict(color=_RED, size=9, family="Inter"),
+        ax=60, ay=-30,
+    )
+
+    _chart_layout(fig, h=240)
+    fig.update_layout(yaxis_title="Cumulative Conversion %", showlegend=False)
+
+    _card_start("Conversion Rate by Stage", "🎯")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.markdown(
+        '<div style="font-size:10px;color:#8A98A6;margin-top:4px;">'
+        '💡 Opportunity: Improving Qualified→Proposal by 10% could add ~50 additional won deals per cycle.</div>',
+        unsafe_allow_html=True,
+    )
+    _card_end()
+
+
+# ── Main analytics renderer ───────────────────────────────────────────────────
+def render_sales_analytics(df):
+    inject_sales_css()
+
+    # Row 1
+    c1, c2, c3, c4 = st.columns(4, gap="small")
+    with c1: _funnel_by_market()
+    with c2: _funnel_by_service()
+    with c3: _repeat_visitor_conv()
+    with c4: _segment_quality_bubble()
+
+    # Row 2
+    c1, c2, c3 = st.columns([1.3, 1, 1], gap="small")
+    with c1: _sales_insight_assistant()
+    with c2: _mini_hotzones_map()
+    with c3: _top_service_demand()
+
+    # Row 3
+    c1, c2, c3 = st.columns([1.3, 1, 1], gap="small")
+    with c1: _customers_by_country()
+    with c2: _demo_intent_heatmap()
+    with c3: _conversion_by_stage()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 4. FORECASTING TAB
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _forecast_kpis():
+    kpis = [
+        ("Customers Forecast", "1,642", "vs current 1,248", "▲ 31.6%", "up", _PURPLE),
+        ("Demo Requests Forecast", "412", "vs current 312", "▲ 32.1%", "up", _CYAN),
+        ("Expected Conversions", "98", "next 30 days", "▲ 28.9%", "up", _GREEN),
+        ("Forecasted Revenue", "$2.86M", "vs current $2.24M", "▲ 27.7%", "up", _TEAL),
+        ("Confidence Level", "76%", "medium-high accuracy", "Medium-High", "watch", _YELLOW),
+    ]
+    delta_cls = {"up": "kpi-delta-up", "watch": "kpi-delta-watch", "down": "kpi-delta-down"}
+    cols = st.columns(5, gap="small")
+    for col, (lbl, val, sub, chg, cls, accent) in zip(cols, kpis):
+        with col:
+            _delta_cls = delta_cls.get(cls, "kpi-delta-up")
+            delta = (
+                f'<div class="{_delta_cls}" style="margin-bottom:6px;">{chg}</div>'
+                if chg else ""
+            )
+            st.markdown(
+                f'<div class="sv-kpi-card">'
+                f'<div class="kpi-label">{lbl}</div>'
+                f'<div class="kpi-value" style="color:{accent};font-size:1.7rem;">{val}</div>'
+                f'{delta}'
+                f'<div style="font-size:10px;color:#8A98A6;">{sub}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+
+def _customer_forecast_30d():
+    np.random.seed(9)
+    days_hist = list(range(-30, 1))
+    days_fwd  = list(range(0, 31))
+
+    act_vals  = [1100 + i * 4.9 + np.random.randint(-15, 15) for i in range(31)]
+    fwd_base  = act_vals[-1]
+    fwd_vals  = [fwd_base + i * 5.2 for i in range(31)]
+    upper_b   = [v + 55 + i * 0.8 for i, v in enumerate(fwd_vals)]
+    lower_b   = [v - 55 - i * 0.8 for i, v in enumerate(fwd_vals)]
+    target_v  = [1350 + i * 4 for i in range(31)]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=days_hist, y=act_vals, name="Actual",
+        line=dict(color=_CYAN, width=2.5), mode="lines",
+        hovertemplate="Day %{x}<br>Actual: %{y:,}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=days_fwd, y=fwd_vals, name="Forecast",
+        line=dict(color=_CYAN, width=2, dash="dash"), mode="lines",
+        hovertemplate="Day %{x}<br>Forecast: %{y:,}<extra></extra>"))
+    fig.add_trace(go.Scatter(
+        x=days_fwd + days_fwd[::-1],
+        y=upper_b + lower_b[::-1],
+        fill="toself", fillcolor="rgba(20,184,166,0.08)",
+        line=dict(width=0), name="Confidence Band",
+    ))
+    fig.add_trace(go.Scatter(x=days_fwd, y=target_v, name="Target",
+        line=dict(color=_PURPLE, width=1.5, dash="dash"), mode="lines",
+        hovertemplate="Day %{x}<br>Target: %{y:,}<extra></extra>"))
+    fig.add_vline(x=0, line_color=_ORANGE, line_width=1.5,
+                  annotation_text="Today", annotation_font_color=_ORANGE, annotation_font_size=9)
+
+    _chart_layout(fig, h=260)
+    fig.update_layout(yaxis_title="Potential Customers")
+
+    _card_start("30-Day Customer Forecast", "📈")
+    st.markdown(
+        '<div style="font-size:9px;color:#FFD84A;margin-bottom:6px;">'
+        '⚠ Rule-based linear forecast, not predictive AI.</div>',
+        unsafe_allow_html=True,
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+def _demo_request_forecast():
+    np.random.seed(7)
+    days_hist = list(range(-30, 1))
+    days_fwd  = list(range(0, 31))
+
+    act_vals  = [240 + i * 2.4 + np.random.randint(-8, 8) for i in range(31)]
+    fwd_base  = act_vals[-1]
+    fwd_vals  = [fwd_base + i * 2.6 for i in range(31)]
+    upper_b   = [v + 22 + i * 0.3 for i, v in enumerate(fwd_vals)]
+    lower_b   = [v - 22 - i * 0.3 for i, v in enumerate(fwd_vals)]
+    target_v  = [290 + i * 2.8 for i in range(31)]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=days_hist, y=act_vals, name="Actual",
+        line=dict(color=_TEAL, width=2.5), mode="lines",
+        hovertemplate="Day %{x}<br>Actual Demos: %{y:,}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=days_fwd, y=fwd_vals, name="Forecast",
+        line=dict(color=_TEAL, width=2, dash="dash"), mode="lines",
+        hovertemplate="Day %{x}<br>Forecast Demos: %{y:,}<extra></extra>"))
+    fig.add_trace(go.Scatter(
+        x=days_fwd + days_fwd[::-1],
+        y=upper_b + lower_b[::-1],
+        fill="toself", fillcolor="rgba(20,184,166,0.08)",
+        line=dict(width=0), name="Confidence Band",
+    ))
+    fig.add_trace(go.Scatter(x=days_fwd, y=target_v, name="Target",
+        line=dict(color=_PURPLE, width=1.5, dash="dash"), mode="lines",
+        hovertemplate="Day %{x}<br>Target: %{y:,}<extra></extra>"))
+    fig.add_vline(x=0, line_color=_ORANGE, line_width=1.5,
+                  annotation_text="Today", annotation_font_color=_ORANGE, annotation_font_size=9)
+
+    _chart_layout(fig, h=260)
+    fig.update_layout(yaxis_title="Demo Requests")
+
+    _card_start("Demo Request Forecast", "📊")
+    st.markdown(
+        '<div style="font-size:9px;color:#FFD84A;margin-bottom:6px;">'
+        '⚠ Rule-based linear forecast, not predictive AI.</div>',
+        unsafe_allow_html=True,
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+def _forecast_vs_target():
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+    fcast  = [1.82, 2.10, 2.38, 2.62, 2.86, 3.10]
+    target = [2.00, 2.20, 2.50, 2.80, 3.20, 3.50]
+    upper  = [f + 0.18 for f in fcast]
+    lower  = [f - 0.18 for f in fcast]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=months + months[::-1], y=upper + lower[::-1],
+        fill="toself", fillcolor="rgba(20,184,166,0.08)",
+        line=dict(width=0), name="Confidence Band",
+    ))
+    fig.add_trace(go.Scatter(x=months, y=fcast, name="Forecast",
+        line=dict(color=_CYAN, width=2.5), mode="lines+markers",
+        marker=dict(size=6, color=_CYAN),
+        hovertemplate="<b>%{x}</b><br>Forecast: $%{y:.2f}M<extra></extra>"))
+    fig.add_trace(go.Scatter(x=months, y=target, name="Target",
+        line=dict(color=_PURPLE, width=1.5, dash="dash"), mode="lines",
+        hovertemplate="<b>%{x}</b><br>Target: $%{y:.2f}M<extra></extra>"))
+
+    _chart_layout(fig, h=240)
+    fig.update_layout(yaxis_title="Revenue ($M)")
+
+    _card_start("Forecast vs Target", "🏁")
+    st.markdown(
+        '<div style="font-size:9px;color:#FFD84A;margin-bottom:4px;">'
+        '⚠ Rule-based linear forecast, not predictive AI.</div>',
+        unsafe_allow_html=True,
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: st.markdown(f'<div style="font-size:10px;color:#8A98A6;">Forecast <b style="color:{_CYAN};">$2.86M</b></div>', unsafe_allow_html=True)
+    with c2: st.markdown(f'<div style="font-size:10px;color:#8A98A6;">Target <b style="color:{_PURPLE};">$3.20M</b></div>', unsafe_allow_html=True)
+    with c3: st.markdown(f'<div style="font-size:10px;color:#8A98A6;">Gap <b style="color:{_RED};">−$340K</b></div>', unsafe_allow_html=True)
+    with c4: st.markdown(f'<div style="font-size:10px;color:#8A98A6;">Confidence <b style="color:{_YELLOW};">76%</b></div>', unsafe_allow_html=True)
+    _card_end()
+
+
+def _whatif_analysis():
+    _card_start("AI-to-Demo What-If Analysis", "🤖")
+    slider_pct = st.slider(
+        "AI-to-Demo Conversion Rate (%)",
+        min_value=15, max_value=35, value=25, step=1,
+        key="whatif_slider",
+    )
+    total_visitors = 1642
+    current_demos  = int(total_visitors * slider_pct / 100)
+    conv_rate_won  = 0.238
+    revenue_per    = 29285
+    current_conv   = int(current_demos * conv_rate_won)
+    current_rev    = current_conv * revenue_per / 1_000_000
+
+    scenarios = [
+        ("Low",     20,  "rgba(248,113,113,0.08)",  "rgba(248,113,113,0.25)", _RED),
+        ("Current", slider_pct, "rgba(34,211,238,0.08)", "rgba(34,211,238,0.3)",  _CYAN),
+        ("High",    30,  "rgba(124,255,79,0.08)",   "rgba(124,255,79,0.25)",  _GREEN),
+    ]
+
+    cols = st.columns(3)
+    for col, (label, pct, bg, border, color) in zip(cols, scenarios):
+        demos  = int(total_visitors * pct / 100)
+        convs  = int(demos * conv_rate_won)
+        rev    = convs * revenue_per / 1_000_000
+        gap    = rev - 3.20
+        gap_s  = f"{'+'if gap>=0 else ''}{gap:.2f}M"
+        gap_c  = _GREEN if gap >= 0 else _RED
+        with col:
+            st.markdown(
+                f'<div style="background:{bg};border:1px solid {border};border-radius:12px;'
+                f'padding:14px;margin-bottom:8px;">'
+                f'<div style="font-size:10px;font-weight:700;color:{color};text-transform:uppercase;'
+                f'letter-spacing:.1em;margin-bottom:8px;">{label} ({pct}%)</div>'
+                f'<div style="font-size:13px;font-weight:700;color:#F8FAFC;margin-bottom:4px;">'
+                f'Demos: {demos:,}</div>'
+                f'<div style="font-size:13px;font-weight:700;color:#F8FAFC;margin-bottom:4px;">'
+                f'Conversions: {convs}</div>'
+                f'<div style="font-size:14px;font-weight:800;color:{color};margin-bottom:4px;">'
+                f'Revenue: ${rev:.2f}M</div>'
+                f'<div style="font-size:10px;color:{gap_c};">Gap to Target: {gap_s}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+    _card_end()
+
+
+def _readiness_checklist():
+    items = [
+        ("✓", "Increase follow-up cadence", "done",        _GREEN),
+        ("✓", "Enable industry-specific playbooks", "done", _GREEN),
+        ("○", "Prioritise enterprise accounts", "in-progress", _YELLOW),
+        ("○", "Upskill SDRs on demo conversion", "in-progress", _YELLOW),
+        ("○", "Launch Zambia expansion campaign", "planned",  _GRAY),
+    ]
+    badge_map = {
+        "done":        (f"background:rgba(124,255,79,0.12);color:{_GREEN};border:1px solid rgba(124,255,79,0.25);", "Done"),
+        "in-progress": (f"background:rgba(255,216,74,0.12);color:{_YELLOW};border:1px solid rgba(255,216,74,0.25);", "In Progress"),
+        "planned":     (f"background:rgba(138,152,166,0.12);color:{_GRAY};border:1px solid rgba(138,152,166,0.2);", "Planned"),
+    }
+
+    rows_html = ""
+    for icon, text, status, color in items:
+        badge_style, badge_label = badge_map[status]
+        rows_html += (
+            f'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;'
+            f'border-bottom:1px solid rgba(77,255,225,0.06);">'
+            f'<span style="font-size:14px;color:{color};font-weight:700;flex-shrink:0;">{icon}</span>'
+            f'<span style="flex:1;font-size:12px;color:#F8FAFC;">{text}</span>'
+            f'<span style="font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;{badge_style}">{badge_label}</span>'
+            f'</div>'
+        )
+
+    _card_start("Sales Readiness Recommendations", "💡")
+    st.markdown(rows_html, unsafe_allow_html=True)
+    _card_end()
+
+
+def _forecast_confidence_gauge():
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=76,
+        title={"text": "Confidence Level", "font": {"color": "#8A98A6", "size": 11}},
+        number={"suffix": "%", "font": {"color": _YELLOW, "size": 28}},
+        gauge={
+            "axis": {"range": [0, 100], "tickcolor": "#8A98A6", "tickfont": {"size": 9}},
+            "bar": {"color": _CYAN, "thickness": 0.28},
+            "bgcolor": "rgba(7,16,28,0.6)",
+            "bordercolor": "rgba(77,255,225,0.14)",
+            "steps": [
+                {"range": [0, 40],  "color": "rgba(248,113,113,0.15)"},
+                {"range": [40, 70], "color": "rgba(255,216,74,0.12)"},
+                {"range": [70, 100],"color": "rgba(124,255,79,0.10)"},
+            ],
+            "threshold": {"line": {"color": _PURPLE, "width": 2}, "thickness": 0.75, "value": 80},
+        },
+    ))
+    fig.update_layout(
+        height=220,
+        margin=dict(l=10, r=10, t=30, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#8A98A6", size=10),
+    )
+
+    _card_start("Forecast Confidence", "🎯")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.markdown(
+        f'<div style="text-align:center;font-size:11px;color:{_YELLOW};font-weight:600;">Medium-High</div>'
+        f'<div style="text-align:center;font-size:10px;color:#8A98A6;">Based on historical accuracy</div>',
+        unsafe_allow_html=True,
+    )
+    _card_end()
+
+
+def _market_outlook():
+    markets = [
+        ("🇿🇦", "South Africa", "High Growth",  "Invest",  _GREEN),
+        ("🇿🇲", "Zambia",        "High Growth",  "Invest",  _GREEN),
+        ("🇧🇼", "Botswana",       "Stable",       "Monitor", _YELLOW),
+        ("🇲🇿", "Mozambique",    "Emerging",     "Watch",   _ORANGE),
+    ]
+    status_bg = {"Invest": "rgba(124,255,79,0.08)", "Monitor": "rgba(255,216,74,0.08)", "Watch": "rgba(245,158,11,0.08)"}
+
+    _card_start("Market Outlook", "🗺️")
+    for flag, country, status, action, color in markets:
+        _bg = status_bg.get(action, "rgba(8,22,28,0.5)")
+        st.markdown(
+            f'<div style="background:{_bg};'
+            f'border:1px solid rgba(77,255,225,0.1);border-left:3px solid {color};'
+            f'border-radius:10px;padding:10px 14px;margin-bottom:8px;'
+            f'display:flex;align-items:center;justify-content:space-between;">'
+            f'<div style="display:flex;align-items:center;gap:8px;">'
+            f'<span style="font-size:16px;">{flag}</span>'
+            f'<div><div style="font-size:12px;font-weight:600;color:#F8FAFC;">{country}</div>'
+            f'<div style="font-size:10px;color:#8A98A6;">{status}</div></div>'
+            f'</div>'
+            f'<span style="font-size:10px;font-weight:700;color:{color};padding:2px 8px;'
+            f'background:rgba(0,0,0,0.2);border-radius:20px;">{action}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    _card_end()
+
+
+def _forecast_signals():
+    signals = [
+        ("📈", "Rising website visits",       "Positive",    _GREEN),
+        ("🎯", "Product page engagement",      "Positive",    _GREEN),
+        ("🔥", "Intent signals increasing",    "Positive",    _GREEN),
+        ("💬", "Competitive mentions",         "Low & Stable", _YELLOW),
+    ]
+
+    _card_start("Forecast Signals", "📡")
+    for icon, label, status, color in signals:
+        st.markdown(
+            f'<div class="forecast-signal-card">'
+            f'<span style="font-size:16px;">{icon}</span>'
+            f'<div style="flex:1;"><div style="font-size:12px;color:#F8FAFC;">{label}</div></div>'
+            f'<span style="font-size:10px;font-weight:700;color:{color};padding:2px 8px;'
+            f'background:rgba(0,0,0,0.2);border-radius:20px;">{status}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    _card_end()
+
+
+def _alert_center_risk():
+    alerts = [
+        ("⚠️", "Zambia demo conversion below forecast",     "High priority",   "high"),
+        ("⚠️", "Large opportunity aging (>21 days unactioned)", "Medium priority", "warn"),
+    ]
+
+    _card_start("Alert Center + Risk Gauge", "🔔")
+    for icon, msg, priority, cls in alerts:
+        p_color = _RED if cls == "high" else _YELLOW
+        st.markdown(
+            f'<div class="alert-item {"" if cls=="high" else "warn"}">'
+            f'<div style="display:flex;align-items:center;gap:8px;">'
+            f'<span>{icon}</span>'
+            f'<span style="flex:1;font-size:12px;">{msg}</span>'
+            f'<span style="font-size:9px;font-weight:700;color:{p_color};'
+            f'padding:2px 7px;border-radius:20px;background:rgba(0,0,0,0.2);">{priority}</span>'
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )
+
+    # Risk gauge
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=22,
+        title={"text": "Risk Score", "font": {"color": "#8A98A6", "size": 10}},
+        number={"font": {"color": _GREEN, "size": 24}},
+        gauge={
+            "axis": {"range": [0, 100], "tickfont": {"size": 8}, "tickcolor": "#8A98A6"},
+            "bar": {"color": _GREEN, "thickness": 0.28},
+            "bgcolor": "rgba(7,16,28,0.6)",
+            "bordercolor": "rgba(77,255,225,0.14)",
+            "steps": [
+                {"range": [0, 33],  "color": "rgba(124,255,79,0.12)"},
+                {"range": [33, 66], "color": "rgba(255,216,74,0.1)"},
+                {"range": [66, 100],"color": "rgba(248,113,113,0.1)"},
+            ],
+        },
+    ))
+    fig.update_layout(
+        height=160,
+        margin=dict(l=10, r=10, t=20, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#8A98A6", size=9),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.markdown(
+        f'<div style="text-align:center;font-size:11px;color:{_GREEN};font-weight:700;">LOW RISK</div>',
+        unsafe_allow_html=True,
+    )
+    _card_end()
+
+
+def render_sales_forecasting(df):
+    inject_sales_css()
+
+    # Forecast KPI row
+    _forecast_kpis()
+    st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
+
+    # Row 1
+    c1, c2, c3 = st.columns(3, gap="small")
+    with c1: _customer_forecast_30d()
+    with c2: _demo_request_forecast()
+    with c3: _forecast_vs_target()
+
+    # Row 2
+    c1, c2, c3 = st.columns([1.4, 1, 0.8], gap="small")
+    with c1: _whatif_analysis()
+    with c2: _readiness_checklist()
+    with c3: _forecast_confidence_gauge()
+
+    # Row 3
+    c1, c2, c3 = st.columns(3, gap="small")
+    with c1: _market_outlook()
+    with c2: _forecast_signals()
+    with c3: _alert_center_risk()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. DATA & EXPORT TAB
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _action_queue():
+    actions = [
+        ("🔔", "Follow up",       "🇦🇴 Luanda, Angola",      "High",   "Today",     "Alex M.",   "$85K"),
+        ("📋", "Qualify",         "🇿🇲 Lusaka, Zambia",       "High",   "Tomorrow",  "Sarah K.",  "$120K"),
+        ("🔄", "Re-engage",       "🇳🇦 Windhoek, Namibia",    "Med",    "May 30",    "Alex M.",   "$42K"),
+        ("📄", "Prepare proposal","🇿🇦 Durban, S. Africa",     "High",   "May 31",    "James O.",  "$200K"),
+        ("📞", "Intro call",      "🇿🇦 Cape Town, S. Africa",  "Med",    "Jun 1",     "Alex M.",   "$95K"),
+    ]
+    priority_html = {
+        "High": f'<span style="background:rgba(248,113,113,0.12);color:{_RED};border:1px solid rgba(248,113,113,0.25);border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700;">High</span>',
+        "Med":  f'<span style="background:rgba(255,216,74,0.12);color:{_YELLOW};border:1px solid rgba(255,216,74,0.25);border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700;">Med</span>',
+    }
+
+    header = (
+        '<div style="display:flex;padding:6px 4px;border-bottom:1px solid rgba(77,255,225,0.12);margin-bottom:4px;">'
+        '<span style="flex:0.4;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Icon</span>'
+        '<span style="flex:1.2;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Action</span>'
+        '<span style="flex:1.4;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Market</span>'
+        '<span style="flex:0.7;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Priority</span>'
+        '<span style="flex:0.8;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Due</span>'
+        '<span style="flex:0.8;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Owner</span>'
+        '<span style="flex:0.8;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;text-align:right;">Value</span>'
+        '</div>'
+    )
+    rows_html = "".join(
+        f'<div style="display:flex;align-items:center;padding:8px 4px;'
+        f'border-bottom:1px solid rgba(77,255,225,0.05);">'
+        f'<span style="flex:0.4;font-size:14px;">{icon}</span>'
+        f'<span style="flex:1.2;font-size:11px;color:#F8FAFC;font-weight:500;">{action}</span>'
+        f'<span style="flex:1.4;font-size:11px;color:#8A98A6;">{market}</span>'
+        f'<span style="flex:0.7;">{priority_html.get(prio, prio)}</span>'
+        f'<span style="flex:0.8;font-size:11px;color:#8A98A6;">{due}</span>'
+        f'<span style="flex:0.8;font-size:11px;color:#22D3EE;">{owner}</span>'
+        f'<span style="flex:0.8;font-size:11px;color:{_GREEN};font-weight:600;text-align:right;">{val}</span>'
+        f'</div>'
+        for icon, action, market, prio, due, owner, val in actions
+    )
+
+    _card_start("Sales Action Queue", "✅")
+    st.markdown(f"<div>{header}{rows_html}</div>", unsafe_allow_html=True)
+    _card_end()
+
+
+def _customers_table():
+    customers = [
+        ("Lusaka Telecom Ltd",         "Zambia",       "Strategic Hub",  "Qualified", 88, "$142K", "2h ago",  "Sarah K."),
+        ("Cape Town Digital Co.",      "South Africa", "Core Market",    "Proposal",  82, "$210K", "1d ago",  "James O."),
+        ("Maputo Industries",          "Mozambique",   "Strategic Hub",  "Engaged",   74, "$95K",  "3h ago",  "Alex M."),
+        ("Gaborone FinServ",           "Botswana",     "Stable",         "Qualified", 71, "$88K",  "2d ago",  "Sarah K."),
+        ("Luanda Solutions Ltd",       "Angola",       "Emerging",       "Proposal",  79, "$175K", "5h ago",  "James O."),
+        ("Harare Cloud Systems",       "Zimbabwe",     "High Growth",    "Risk",      45, "$62K",  "7d ago",  "Alex M."),
+        ("Windhoek Data Group",        "Namibia",      "Emerging",       "Engaged",   66, "$54K",  "4h ago",  "Sarah K."),
+        ("Durban Enterprise Hub",      "South Africa", "Core Market",    "Won",       95, "$320K", "1d ago",  "James O."),
+        ("Lilongwe Agri Connect",      "Malawi",       "Emerging",       "Engaged",   58, "$41K",  "6h ago",  "Alex M."),
+        ("Johannesburg AI Ventures",   "South Africa", "High Growth",    "Proposal",  86, "$265K", "2d ago",  "Sarah K."),
+    ]
+
+    header = (
+        '<div style="display:flex;padding:6px 8px;border-bottom:1px solid rgba(77,255,225,0.12);">'
+        '<span style="flex:1.8;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Customer</span>'
+        '<span style="flex:1;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Region</span>'
+        '<span style="flex:0.9;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Hub</span>'
+        '<span style="flex:0.9;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Stage</span>'
+        '<span style="flex:0.5;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;text-align:right;">Score</span>'
+        '<span style="flex:0.7;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;text-align:right;">Revenue</span>'
+        '<span style="flex:0.7;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Activity</span>'
+        '<span style="flex:0.7;font-size:8px;color:#8A98A6;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Owner</span>'
+        '</div>'
+    )
+    rows_html = "".join(
+        f'<div style="display:flex;align-items:center;padding:8px 8px;'
+        f'border-bottom:1px solid rgba(77,255,225,0.05);transition:background .15s;" '
+        f'onmouseover="this.style.background=\'rgba(20,184,166,0.06)\'" '
+        f'onmouseout="this.style.background=\'transparent\'">'
+        f'<span style="flex:1.8;font-size:11px;color:#F8FAFC;font-weight:500;">{name}</span>'
+        f'<span style="flex:1;font-size:11px;color:#8A98A6;">{region}</span>'
+        f'<span style="flex:0.9;font-size:11px;color:#8A98A6;">{hub}</span>'
+        f'<span style="flex:0.9;">{_pill(stage)}</span>'
+        f'<span style="flex:0.5;font-size:11px;color:{_score_color(score)};font-weight:600;text-align:right;">{score}</span>'
+        f'<span style="flex:0.7;font-size:11px;color:{_GREEN};font-weight:600;text-align:right;">{rev}</span>'
+        f'<span style="flex:0.7;font-size:10px;color:#8A98A6;">{activity}</span>'
+        f'<span style="flex:0.7;font-size:11px;color:{_CYAN};">{owner}</span>'
+        f'</div>'
+        for name, region, hub, stage, score, rev, activity, owner in customers
+    )
+
+    _card_start("Potential Customers Table", "📋")
+    st.markdown(
+        f'<div style="font-size:10px;color:#8A98A6;margin-bottom:8px;">'
+        f'Use market filter (right panel) to narrow results. Showing top 10 of 1,248 records.</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f'<div style="overflow-x:auto;overflow-y:auto;max-height:320px;border:1px solid rgba(77,255,225,0.08);border-radius:10px;">'
+        f'{header}{rows_html}</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div style="font-size:10px;color:#8A98A6;margin-top:6px;text-align:right;">'
+        'Page 1 of 5 · 1,248 records</div>',
+        unsafe_allow_html=True,
+    )
+    _card_end()
+
+
+def _score_color(score: int) -> str:
+    if score >= 80: return _GREEN
+    if score >= 60: return _YELLOW
+    return _RED
+
+
+def _evidence_snapshot():
+    metrics = [
+        ("💰", "Total Potential Revenue",   "$82.6M", _GREEN),
+        ("👥", "Potential Customers",       "1,248",  _CYAN),
+        ("🆕", "New Potential Customers",   "312",    _TEAL),
+        ("📊", "Avg Potential Revenue",     "$66.3K", _YELLOW),
+        ("⚡", "Avg Engagement Score",      "74/100", _PURPLE),
+    ]
+
+    rows_html = "".join(
+        f'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;'
+        f'border-bottom:1px solid rgba(77,255,225,0.06);">'
+        f'<span style="font-size:16px;">{icon}</span>'
+        f'<span style="flex:1;font-size:11px;color:#8A98A6;">{label}</span>'
+        f'<span style="font-size:14px;font-weight:700;color:{color};">{val}</span>'
+        f'</div>'
+        for icon, label, val, color in metrics
+    )
+
+    health_pct = 74
+    _card_start("Evidence Snapshot", "📂")
+    st.markdown(rows_html, unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="margin-top:12px;">'
+        f'<div style="font-size:10px;color:#8A98A6;margin-bottom:4px;">Pipeline Health</div>'
+        f'<div style="display:flex;align-items:center;gap:10px;">'
+        f'<div style="flex:1;height:8px;background:rgba(77,255,225,0.08);border-radius:4px;">'
+        f'<div style="width:{health_pct}%;height:100%;background:{_GREEN};border-radius:4px;"></div>'
+        f'</div>'
+        f'<span style="font-size:11px;font-weight:700;color:{_GREEN};">{health_pct}% Healthy</span>'
+        f'</div></div>',
+        unsafe_allow_html=True,
+    )
+    _card_end()
+
+
+def _export_center(df):
+    _card_start("Export Center", "💾")
+    c1, c2 = st.columns(2)
+
+    with c1:
+        st.markdown(
+            f'<div class="export-btn-card">'
+            f'<div style="font-size:14px;margin-bottom:6px;">📄</div>'
+            f'<div style="font-size:11px;font-weight:600;color:#F8FAFC;margin-bottom:4px;">Weekly PDF Report</div>'
+            f'<div style="font-size:10px;color:#8A98A6;margin-bottom:8px;">Sales summary · Current week</div>'
+            f'<button style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);'
+            f'color:{_CYAN};border-radius:6px;padding:4px 12px;font-size:10px;cursor:pointer;">Generate PDF</button>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="export-btn-card">'
+            f'<div style="font-size:14px;margin-bottom:6px;">📅</div>'
+            f'<div style="font-size:11px;font-weight:600;color:#F8FAFC;margin-bottom:4px;">Monthly PDF Report</div>'
+            f'<div style="font-size:10px;color:#8A98A6;margin-bottom:8px;">Full monthly intelligence briefing</div>'
+            f'<button style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);'
+            f'color:{_CYAN};border-radius:6px;padding:4px 12px;font-size:10px;cursor:pointer;">Generate PDF</button>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="export-btn-card">'
+            f'<div style="font-size:14px;margin-bottom:6px;">📑</div>'
+            f'<div style="font-size:11px;font-weight:600;color:#F8FAFC;margin-bottom:4px;">Pipeline Snapshot PDF</div>'
+            f'<div style="font-size:10px;color:#8A98A6;margin-bottom:8px;">Current pipeline status</div>'
+            f'<button style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);'
+            f'color:{_CYAN};border-radius:6px;padding:4px 12px;font-size:10px;cursor:pointer;">Generate PDF</button>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    with c2:
+        # Real CSV downloads
+        if df is not None:
+            pc_df = df[~df["is_bot"]] if "is_bot" in df.columns else df
+            st.download_button(
+                label="⬇ Potential Customers CSV",
+                data=pc_df.head(5000).to_csv(index=False).encode(),
+                file_name="cybernova_potential_customers.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="dl_pc_csv",
+            )
+            mkt = st.session_state.get("selected_market", "All")
+            filtered = pc_df[pc_df["country"] == mkt] if (mkt != "All" and "country" in pc_df.columns) else pc_df
+            if filtered.empty:
+                filtered = pc_df
+            st.download_button(
+                label="⬇ Filtered Data CSV",
+                data=filtered.head(5000).to_csv(index=False).encode(),
+                file_name="cybernova_filtered.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="dl_filtered_csv",
+            )
+        else:
+            st.markdown(
+                f'<div style="font-size:10px;color:{_YELLOW};padding:8px 0;">CSV export unavailable — data not loaded.</div>',
+                unsafe_allow_html=True,
+            )
+
+        st.markdown(
+            f'<div class="export-btn-card">'
+            f'<div style="font-size:14px;margin-bottom:6px;">📖</div>'
+            f'<div style="font-size:11px;font-weight:600;color:#F8FAFC;margin-bottom:4px;">Data Dictionary</div>'
+            f'<div style="font-size:10px;color:#8A98A6;margin-bottom:8px;">Field definitions & methodology</div>'
+            f'<button style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);'
+            f'color:{_CYAN};border-radius:6px;padding:4px 12px;font-size:10px;cursor:pointer;">View Dictionary</button>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    _card_end()
+
+
+def _data_quality_summary():
+    metrics = [
+        ("Data Completeness",    95,  _GREEN,  False),
+        ("Duplicate Rate",       2,   _RED,    True),
+        ("Data Freshness",       98,  _GREEN,  False),
+        ("Valid Emails",         96,  _GREEN,  False),
+        ("Phone Verified",       89,  _YELLOW, False),
+        ("Firmographic",         93,  _GREEN,  False),
+        ("Engagement Coverage",  74,  _YELLOW, False),
+    ]
+
+    _card_start("Data Quality Summary", "🔍")
+    for label, pct, color, inverse in metrics:
+        disp_pct = pct if not inverse else 100 - pct
+        bar_color = (_RED if inverse else color)
+        # For duplicate rate: lower is better — show visually inverted
+        fill = 100 - pct if inverse else pct
+        note = " (lower is better)" if inverse else ""
+        st.markdown(
+            f'<div class="quality-bar-row">'
+            f'<span style="font-size:10px;color:#8A98A6;width:160px;flex-shrink:0;">{label}{note}</span>'
+            f'<div class="quality-bar-track">'
+            f'<div class="quality-bar-fill" style="width:{fill}%;background:{bar_color};"></div></div>'
+            f'<span style="font-size:10px;font-weight:700;color:{color};width:40px;text-align:right;">'
+            f'{pct}{"%" if not inverse else "%"}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    _card_end()
+
+
+def _methodology():
+    _card_start("Methodology & Assumptions", "📖")
+    st.markdown(
+        """
+<div style="font-size:12px;color:#F8FAFC;line-height:1.7;">
+  <div style="margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;color:#22D3EE;text-transform:uppercase;
+      letter-spacing:.1em;margin-bottom:4px;">Potential Customer Scoring</div>
+    <div style="color:#8A98A6;">Visitors are classified as potential customers when engagement score ≥ 60,
+      3+ pages visited, and at least one intent page (AI Solutions, Cybersecurity, or demo request) is included in the session.</div>
+  </div>
+  <div style="margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;color:#22D3EE;text-transform:uppercase;
+      letter-spacing:.1em;margin-bottom:4px;">Revenue Assumptions</div>
+    <div style="color:#8A98A6;">Average deal value of $66.3K is based on segment analysis of the SADC enterprise software market. Values are indicative estimates.</div>
+  </div>
+  <div style="margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;color:#FFD84A;text-transform:uppercase;
+      letter-spacing:.1em;margin-bottom:4px;">Data Limitation</div>
+    <div style="color:#8A98A6;">This prototype uses synthetic IIS log data generated for evaluation purposes only. Not for production use.</div>
+  </div>
+  <div style="margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;color:#22D3EE;text-transform:uppercase;
+      letter-spacing:.1em;margin-bottom:4px;">Currency</div>
+    <div style="color:#8A98A6;">All revenue values are denominated in USD.</div>
+  </div>
+  <div>
+    <div style="font-size:10px;font-weight:700;color:#22D3EE;text-transform:uppercase;
+      letter-spacing:.1em;margin-bottom:4px;">Data Refresh</div>
+    <div style="color:#8A98A6;">Live pulse updates every second. Full data refresh every 2 hours.</div>
+  </div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+    _card_end()
+
+
+def _revenue_by_region():
+    labels = ["South Africa", "Zambia", "Mozambique", "Botswana", "Angola", "Other"]
+    values = [18.2, 9.5, 7.2, 4.8, 3.1, 5.8]
+    colors = [_CYAN, _TEAL, _GREEN, _YELLOW, _ORANGE, _GRAY]
+
+    fig = go.Figure(go.Pie(
+        labels=labels,
+        values=values,
+        hole=0.62,
+        marker=dict(
+            colors=[c.replace("#", "rgba(") + "0.8)" if c.startswith("#") else c for c in [
+                "rgba(34,211,238,0.8)", "rgba(20,184,166,0.8)", "rgba(124,255,79,0.8)",
+                "rgba(255,216,74,0.8)", "rgba(245,158,11,0.8)", "rgba(138,152,166,0.7)"]],
+            line=dict(color="rgba(0,0,0,0.3)", width=1),
+        ),
+        textfont=dict(color="#F8FAFC", size=9),
+        hovertemplate="<b>%{label}</b><br>Revenue: $%{value:.1f}M<br>Share: %{percent}<extra></extra>",
+    ))
+    fig.add_annotation(text="$82.6M", x=0.5, y=0.58,
+                       font=dict(size=14, color="#FFFFFF", family="Inter"), showarrow=False)
+    fig.add_annotation(text="Total", x=0.5, y=0.42,
+                       font=dict(size=9, color="#8A98A6", family="Inter"), showarrow=False)
+    fig.update_layout(
+        height=260,
+        margin=dict(l=0, r=0, t=10, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        legend=dict(bgcolor="rgba(7,16,28,0.82)", bordercolor="rgba(77,255,225,0.14)", borderwidth=1,
+                    font=dict(color="#8A98A6", size=9), orientation="v", x=0.78),
+    )
+
+    _card_start("Revenue by Region", "💰")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+def _new_customers_trend():
+    np.random.seed(4)
+    months_hist = ["Jan", "Feb", "Mar", "Apr"]
+    months_fwd  = ["May", "Jun"]
+    months_all  = months_hist + months_fwd
+
+    actual  = [72, 88, 95, 110]
+    target  = [80, 88, 96, 104, 112, 120]
+    fcast   = [110, 128, 148]  # Apr onward
+    prev_m  = [68, 82, 90, 103]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=months_hist, y=actual, name="Actual",
+        line=dict(color=_CYAN, width=2.5), mode="lines+markers",
+        marker=dict(size=6, color=_CYAN),
+        hovertemplate="<b>%{x}</b><br>Actual: %{y}<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=["Apr", "May", "Jun"], y=fcast, name="Forecast",
+        line=dict(color=_CYAN, width=2, dash="dash"), mode="lines+markers",
+        marker=dict(size=6, color=_CYAN, symbol="diamond"),
+        hovertemplate="<b>%{x}</b><br>Forecast: %{y}<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=months_all, y=target, name="Target",
+        line=dict(color=_PURPLE, width=1.5, dash="dash"), mode="lines",
+        hovertemplate="<b>%{x}</b><br>Target: %{y}<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=months_hist, y=prev_m, name="Prev Month",
+        line=dict(color="#3A4A5E", width=1.5, dash="dot"), mode="lines",
+        hovertemplate="<b>%{x}</b><br>Prev: %{y}<extra></extra>",
+    ))
+    fig.add_vrect(x0="Apr", x1="Jun", fillcolor="rgba(34,211,238,0.03)",
+                  line_width=0, annotation_text="Forecast", annotation_position="top left",
+                  annotation_font_color=_YELLOW, annotation_font_size=8)
+
+    _chart_layout(fig, h=260)
+    fig.update_layout(yaxis_title="New Potential Customers", xaxis_title="Month")
+    st.markdown(
+        '<div style="font-size:9px;color:#FFD84A;margin-bottom:4px;">'
+        '⚠ Rule-based linear forecast, not predictive AI.</div>',
+        unsafe_allow_html=True,
+    )
+
+    _card_start("New Potential Customers Trend", "📈")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+def _top_customers_revenue():
+    companies = [
+        ("Durban Enterprise Hub",      320, "Won"),
+        ("Johannesburg AI Ventures",   265, "Proposal"),
+        ("Cape Town Digital Co.",      210, "Proposal"),
+        ("Lusaka Telecom Ltd",         142, "Qualified"),
+        ("Cape Town CyberGroup",       138, "Won"),
+        ("Luanda Solutions Ltd",       175, "Proposal"),
+        ("Maputo Industries",           95, "Engaged"),
+        ("Harare Cloud Systems",        62, "Risk"),
+    ]
+    stage_c = {
+        "Won":      "rgba(34,211,238,0.7)",
+        "Proposal": "rgba(245,158,11,0.7)",
+        "Qualified":"rgba(124,255,79,0.7)",
+        "Engaged":  "rgba(20,184,166,0.7)",
+        "Risk":     "rgba(248,113,113,0.7)",
+    }
+
+    names  = [c[0] for c in companies]
+    revs   = [c[1] for c in companies]
+    stages = [c[2] for c in companies]
+    colors = [stage_c.get(s, "rgba(138,152,166,0.7)") for s in stages]
+
+    fig = go.Figure(go.Bar(
+        y=names,
+        x=revs,
+        orientation="h",
+        marker_color=colors,
+        text=[f"${r}K" for r in revs],
+        textposition="outside",
+        textfont=dict(color="#F8FAFC", size=9),
+        hovertemplate="<b>%{y}</b><br>Revenue: $%{x}K<extra></extra>",
+    ))
+    fig.update_layout(
+        height=300,
+        margin=dict(l=0, r=60, t=10, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(7,16,28,0.6)",
+        font=dict(color="#8A98A6", size=9),
+        xaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#8A98A6", title="Revenue (USD thousands)"),
+        yaxis=dict(color="#F8FAFC", tickfont=dict(size=9)),
+        showlegend=False,
+    )
+
+    _card_start("Top Potential Customers by Revenue", "🏆")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    _card_end()
+
+
+def _export_center(df):
+    _card_start("Export Center", "PDF")
+    filters = {
+        "role": "Sales",
+        "market": st.session_state.get("selected_market", "All"),
+        "service": st.session_state.get("svc_filter", "All Services"),
+        "segment": st.session_state.get("seg_filter", "All Segments"),
+    }
+    today_label = period_label(7) if _EXPORTS_OK else "current 7 days"
+    month_label = period_label(30) if _EXPORTS_OK else "current 30 days"
+    row_count = len(df) if df is not None else 0
+    st.markdown(
+        f"""
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px;">
+  <div class="export-btn-card"><div style="font-size:10px;color:{_CYAN};font-weight:800;">Sales Pack</div><div style="font-size:18px;color:{_WHITE};font-weight:900;">{row_count:,}</div><div style="font-size:10px;color:{_GRAY};">filtered rows</div></div>
+  <div class="export-btn-card"><div style="font-size:10px;color:{_CYAN};font-weight:800;">Weekly</div><div style="font-size:11px;color:{_WHITE};font-weight:700;">Last 7 Days</div><div style="font-size:9px;color:{_GRAY};">{today_label}</div></div>
+  <div class="export-btn-card"><div style="font-size:10px;color:{_CYAN};font-weight:800;">Monthly</div><div style="font-size:11px;color:{_WHITE};font-weight:700;">Last 30 Days</div><div style="font-size:9px;color:{_GRAY};">{month_label}</div></div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    c1, c2 = st.columns(2)
+    with c1:
+        if _EXPORTS_OK:
+            weekly_pdf = build_weekly_report_pdf("CyberNova Pulse - Sales", df, filters)
+            monthly_pdf = build_monthly_report_pdf("CyberNova Pulse - Sales", df, filters)
+            method_pdf = build_methodology_pdf("CyberNova Pulse - Sales")
+            st.download_button(
+                "Weekly PDF Report (Last 7 Days)",
+                data=weekly_pdf,
+                file_name="cybernova_sales_weekly_last_7_days.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="sales_weekly_pdf_real",
+            )
+            st.download_button(
+                "Monthly PDF Report (Last 30 Days)",
+                data=monthly_pdf,
+                file_name="cybernova_sales_monthly_last_30_days.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="sales_monthly_pdf_real",
+            )
+            st.download_button(
+                "Methodology PDF",
+                data=method_pdf,
+                file_name="cybernova_sales_methodology.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="sales_methodology_pdf_real",
+            )
+        else:
+            st.markdown(
+                f'<div style="font-size:10px;color:{_YELLOW};padding:8px 0;">PDF export module unavailable.</div>',
+                unsafe_allow_html=True,
+            )
+
+    with c2:
+        if df is not None and not df.empty:
+            clean_df = df[~df["is_bot"]] if "is_bot" in df.columns else df
+            if "potential_customer_signal" in clean_df.columns:
+                signal = clean_df["potential_customer_signal"]
+                if signal.dtype == bool:
+                    pc_mask = signal
+                else:
+                    pc_mask = signal.astype(str).str.lower().isin(["1", "true", "yes", "y"])
+                pc_df = clean_df[pc_mask]
+            else:
+                pc_df = clean_df
+            mkt = st.session_state.get("selected_market", "All")
+            filtered = pc_df[pc_df["country"] == mkt] if (mkt != "All" and "country" in pc_df.columns) else pc_df
+            if filtered.empty:
+                filtered = pc_df
+            to_csv = dataframe_to_csv_bytes if _EXPORTS_OK else lambda frame: frame.to_csv(index=False).encode("utf-8")
+            weekly_filtered = filter_last_n_days(filtered, 7)[0] if _EXPORTS_OK else filtered
+            monthly_filtered = filter_last_n_days(filtered, 30)[0] if _EXPORTS_OK else filtered
+            st.download_button(
+                "Potential Customers CSV",
+                data=to_csv(pc_df.head(5000)),
+                file_name="cybernova_sales_potential_customers.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="sales_pc_csv_real",
+            )
+            st.download_button(
+                "Filtered Data CSV (Last 7 Days)",
+                data=to_csv(weekly_filtered.head(5000)),
+                file_name="cybernova_sales_filtered_data_last_7_days.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="sales_filtered_csv_real",
+            )
+            st.download_button(
+                "Filtered Data CSV (Last 30 Days)",
+                data=to_csv(monthly_filtered.head(5000)),
+                file_name="cybernova_sales_filtered_data_last_30_days.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="sales_filtered_csv_30d_real",
+            )
+        else:
+            st.markdown(
+                f'<div style="font-size:10px;color:{_YELLOW};padding:8px 0;">CSV export unavailable - data not loaded.</div>',
+                unsafe_allow_html=True,
+            )
+    _card_end()
+
+
+def render_sales_data(df):
+    inject_sales_css()
+
+    # Row 1
+    c1, c2, c3 = st.columns([0.9, 1.5, 0.9], gap="small")
+    with c1: _action_queue()
+    with c2: _customers_table()
+    with c3: _evidence_snapshot()
+
+    # Row 2
+    c1, c2, c3 = st.columns(3, gap="small")
+    with c1: _export_center(df)
+    with c2: _data_quality_summary()
+    with c3: _methodology()
+
+    # Row 3
+    c1, c2, c3 = st.columns(3, gap="small")
+    with c1: _revenue_by_region()
+    with c2: _new_customers_trend()
+    with c3: _top_customers_revenue()

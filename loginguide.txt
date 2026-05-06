@@ -1,0 +1,527 @@
+You are working on my Streamlit app: cybernovaapp.py.
+
+Build/refine the CyberNova login page only first. The goal is to make the login page look like a custom premium HTML/CSS web interface, not a default Streamlit form.
+
+This is still a Streamlit app.
+Do NOT use Next.js.
+Do NOT use React as the main app.
+Do NOT use Java.
+Use JavaScript only for optional password visibility toggle or subtle visual effects.
+Use SVG icons only.
+Do NOT use emojis.
+
+The login page must visually match the uploaded CyberNova login reference:
+- split-screen layout
+- left CyberNova brand/intelligence panel
+- right sign-in glass card
+- near-black background
+- neon cyan and lime-green accents
+- thin glowing borders
+- black glassmorphism panels
+- soft radial background glows
+- premium SaaS/dashboard style
+- same design language as CyberNova Pulse / CyberNova Horizon dashboards
+
+Use Streamlit for authentication logic and session state, but mask the UI heavily using:
+- st.markdown(..., unsafe_allow_html=True)
+- custom CSS
+- styled Streamlit widgets
+- optional st.components.v1.html for subtle JS effects only
+
+Do not show “Continue as Guest”.
+Remove guest login completely.
+
+====================================================
+1. COLOUR SYSTEM
+====================================================
+
+Use these exact CSS variables:
+
+:root {
+  --bg-black: #020509;
+  --bg-deep: #050B12;
+  --bg-deeper: #070E16;
+
+  --panel: rgba(7, 14, 22, 0.82);
+  --panel-strong: rgba(9, 18, 28, 0.94);
+
+  --border-soft: rgba(255, 255, 255, 0.10);
+  --border-cyan: rgba(0, 245, 212, 0.32);
+  --border-green: rgba(118, 255, 54, 0.35);
+
+  --cyan: #00F5D4;
+  --cyan-soft: #00CFEA;
+  --green: #76FF36;
+  --lime: #98FF2F;
+
+  --text-main: #F5F7FA;
+  --text-muted: rgba(245, 247, 250, 0.62);
+  --text-soft: rgba(245, 247, 250, 0.42);
+
+  --danger: #F87171;
+  --warning: #FFD84A;
+}
+
+Do not use blue/grey backgrounds.
+The page must feel near-black, premium, and cyber-intelligence focused.
+
+====================================================
+2. PAGE STRUCTURE
+====================================================
+
+Set:
+st.set_page_config(page_title="CyberNova BI Portal", layout="wide")
+
+Hide default Streamlit UI:
+- main menu
+- footer
+- default header
+- excessive top padding
+- default white widget feel
+
+The full login page should fill the viewport:
+min-height: 100vh
+
+Overall background:
+- layered radial gradients
+- near-black base
+- subtle cyan/green glows
+- optional faint world-map/grid texture using CSS only
+- no bright background blocks
+
+Use a central login wrapper:
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 48px;
+}
+
+Inside it:
+
+.login-grid {
+  width: min(1420px, 94vw);
+  min-height: 760px;
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 44px;
+  align-items: stretch;
+}
+
+On screens below 980px:
+- stack panels vertically
+- reduce padding to 24px
+- keep all text readable
+
+====================================================
+3. LEFT BRAND PANEL
+====================================================
+
+Create a large left glass panel.
+
+Class:
+.brand-panel
+
+CSS:
+.brand-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 56px 62px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 70% 40%, rgba(0, 245, 212, 0.10), transparent 32%),
+    radial-gradient(circle at 18% 58%, rgba(118, 255, 54, 0.12), transparent 24%),
+    var(--panel);
+  border: 1px solid var(--border-cyan);
+  box-shadow:
+    0 0 80px rgba(0, 245, 212, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(22px);
+}
+
+Top-left:
+- CyberNova SVG logo mark
+- CYBERNOVA
+- BI PORTAL
+
+Logo must be SVG only.
+Use cyan/green gradient strokes.
+Do not use emoji.
+
+Brand title text:
+Welcome to
+CyberNova
+Intelligence
+
+Typography:
+- “Welcome to”: 34px, weight 400, color var(--text-main)
+- “CyberNova”: 58px, weight 800, color var(--text-main)
+- “Intelligence”: 62px, weight 850, color var(--green)
+- line-height around 0.98
+- letter spacing slightly tight
+
+Subtext:
+Real-time intelligence for smarter decisions.
+Live data. Powerful insights. Strategic impact.
+
+Style:
+- 17px
+- line-height 1.6
+- color var(--text-muted)
+- max-width 560px
+
+Middle visual:
+Add a subtle dotted world map / network intelligence graphic using CSS or inline SVG.
+It must be very subtle, behind the text.
+Use dotted cyan map feel with glowing connection arcs.
+Keep it dark, not distracting.
+
+Feature list at bottom-left:
+Three feature items only:
+1. Live Pulse
+   Real-time dashboard refresh for active business signals and performance.
+2. Strategic Analytics
+   Funnels, trends, forecasts, and regional opportunity views.
+3. Role-Based Access
+   Each team opens the dashboard view that matches their decisions.
+
+Each feature item:
+- icon square 64x64
+- SVG icon only
+- icon border glow
+- title 18px white
+- description 15px muted
+- vertical gap 28px
+
+Feature icon colours:
+- Live Pulse: lime/green
+- Strategic Analytics: cyan
+- Role-Based Access: green
+
+Add a thin divider above the feature list:
+height 1px
+background linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)
+
+====================================================
+4. RIGHT SIGN-IN CARD
+====================================================
+
+Create a right glass login card.
+
+Class:
+.auth-panel
+
+CSS:
+.auth-panel {
+  position: relative;
+  padding: 56px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 70% 65%, rgba(118, 255, 54, 0.08), transparent 28%),
+    radial-gradient(circle at 40% 18%, rgba(0, 245, 212, 0.08), transparent 30%),
+    var(--panel);
+  border: 1px solid var(--border-soft);
+  box-shadow:
+    0 0 90px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(22px);
+}
+
+Top-right inside card:
+Status pill:
+All systems operational
+green dot
+shield/check SVG icon
+
+Status pill style:
+- position absolute top 28px right 34px
+- height 42px
+- border radius 12px
+- background rgba(255,255,255,0.045)
+- border 1px solid rgba(255,255,255,0.10)
+- text color var(--text-muted)
+- green dot with glow
+
+Card heading:
+Sign in to your
+intelligence workspace
+
+Style:
+- margin-top 72px
+- font-size 38px
+- line-height 1.12
+- font-weight 800
+- color var(--text-main)
+
+Subtitle:
+Select your role to access the right dashboard.
+
+Style:
+- 16px
+- color var(--text-muted)
+- margin-top 18px
+- margin-bottom 40px
+
+====================================================
+5. STREAMLIT LOGIN FORM LOGIC
+====================================================
+
+Use Streamlit widgets for real authentication:
+- role selectbox
+- password input
+- sign in button
+
+But style them heavily with CSS.
+
+Do not use a guest button.
+Do not show “Continue as Guest”.
+Do not show “Forgot password?” unless it is purely decorative and non-functional. Prefer removing it to keep the page minimal.
+
+Roles:
+Sales Team Lead
+Marketing Lead
+Executive Management
+Admin / Lecturer View
+
+Prototype passwords:
+Sales Team Lead: sales123
+Marketing Lead: marketing123
+Executive Management: executive123
+Admin / Lecturer View: admin123
+
+On successful login:
+st.session_state.authenticated = True
+st.session_state.current_role = selected_role
+st.session_state.active_dashboard = first allowed dashboard
+st.session_state.active_tab = "Overview"
+
+Role mapping:
+Sales Team Lead -> Sales only
+Marketing Lead -> Marketing only
+Executive Management -> Executive only
+Admin / Lecturer View -> Sales, Marketing, Executive
+
+On failed login:
+Show a styled error:
+Invalid password for selected role.
+Use red text and subtle red border card.
+Do not use ugly default Streamlit error if possible.
+
+Add “Remember me” checkbox visually if needed, but it can be non-functional.
+If keeping it, style it to match the page.
+No guest access.
+
+====================================================
+6. FORM WIDGET STYLING
+====================================================
+
+Style Streamlit selectbox and password input to match the reference.
+
+Labels:
+- Select your role
+- Password
+
+Label style:
+- color var(--text-muted)
+- font-size 15px
+- margin-bottom 10px
+
+Widget height:
+- 56px minimum
+- border radius 12px
+- dark background
+- white text
+- border 1px solid var(--border-soft)
+- focus border var(--border-green)
+- focus glow 0 0 0 2px rgba(118,255,54,0.12)
+
+Selectbox:
+- left user SVG icon can be placed with surrounding HTML label if direct icon inside widget is hard
+- dropdown arrow should feel clean
+- selected role text white
+
+Password input:
+- left lock SVG icon can be placed in label/wrapper if direct icon inside widget is hard
+- placeholder: Enter your password
+- type password
+- optional eye toggle using JS only if it does not break Streamlit.
+- If eye toggle cannot be implemented cleanly with Streamlit widget, keep password input secure and add a decorative SVG eye icon only.
+
+Use stable Streamlit selectors where possible, such as:
+div[data-testid="stSelectbox"]
+div[data-testid="stTextInput"]
+div[data-testid="stForm"]
+button[kind="primary"]
+
+Avoid brittle generated class names.
+
+Sign In button:
+Text:
+Sign In to Dashboard  →
+
+Button style:
+- full width
+- height 60px
+- margin-top 28px
+- border radius 12px
+- border none
+- font-size 18px
+- font-weight 800
+- color #02100D
+- background linear-gradient(90deg, var(--green), var(--cyan))
+- box-shadow 0 0 32px rgba(0,245,212,0.18), 0 0 32px rgba(118,255,54,0.15)
+- hover: brightness 1.08, translateY(-1px), stronger glow
+- active: translateY(0)
+
+====================================================
+7. PROTOTYPE SECURITY NOTE
+====================================================
+
+At the bottom of the auth panel add a subtle note card:
+
+Icon:
+lock SVG
+
+Text:
+Prototype access layer only. Production deployment would require secure authentication, password hashing, audit logging, and full role-based access control.
+
+Style:
+- margin-top 36px
+- padding 18px 20px
+- display flex
+- gap 16px
+- border radius 14px
+- background rgba(255,255,255,0.035)
+- border 1px solid var(--border-soft)
+- icon color green
+- text color var(--text-muted)
+- font size 14px
+- line-height 1.45
+
+====================================================
+8. MICROINTERACTIONS
+====================================================
+
+Use CSS animations carefully.
+
+Allowed animations:
+1. Soft pulsing green status dot.
+2. Subtle moving glow on the sign-in button.
+3. Faint network arc shimmer on the left panel.
+4. Card hover glow.
+
+Do not overanimate.
+
+CSS examples:
+@keyframes pulseDot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(118,255,54,0.35); }
+  50% { box-shadow: 0 0 0 8px rgba(118,255,54,0.00); }
+}
+
+@keyframes slowGlow {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 1; }
+}
+
+Hover effects:
+- brand panel and auth panel border glows slightly
+- feature item icons brighten
+- button lifts slightly
+- inputs glow on focus
+
+====================================================
+9. RESPONSIVE BEHAVIOUR
+====================================================
+
+Desktop:
+- split-screen two columns
+- left panel slightly wider than right
+- both panels same height
+
+Tablet/mobile:
+- stack left panel then auth panel
+- reduce title sizes
+- reduce panel padding
+- keep form full width
+- no horizontal scrolling
+
+Media query:
+@media (max-width: 980px) {
+  .login-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .brand-panel, .auth-panel {
+    padding: 34px;
+  }
+
+  .brand-title-main {
+    font-size: 44px;
+  }
+
+  .brand-title-accent {
+    font-size: 48px;
+  }
+}
+
+====================================================
+10. IMPORTANT STREAMLIT IMPLEMENTATION NOTE
+====================================================
+
+The login page must be visually custom, but authentication must remain reliable.
+
+Best approach:
+- Use HTML/CSS for the page shell, brand panel, headings, feature cards, security note, and visual wrappers.
+- Use Streamlit selectbox/password/button for real input values.
+- Style those widgets heavily through CSS.
+- Use st.form("login_form") so pressing Enter can submit.
+- Do not build a pure HTML form unless you also implement a proper Streamlit component to return values.
+
+Avoid default Streamlit layout appearance:
+- no default grey page
+- no standard st.title
+- no default st.button appearance
+- no visible Streamlit branding
+- no default st.error unless restyled
+
+====================================================
+11. ACCEPTANCE CHECKLIST
+====================================================
+
+After implementation, verify:
+
+Visual:
+- Login page matches uploaded CyberNova login image closely.
+- Background is near-black, not blue/grey.
+- Split-screen layout works.
+- Left brand panel looks premium.
+- Right sign-in card looks premium.
+- Neon cyan and lime accents are visible.
+- Thin glowing borders are visible.
+- SVG icons only.
+- No emojis.
+- No guest login.
+- No default Streamlit-looking widgets dominate.
+
+Function:
+- Role select works.
+- Password input works.
+- Sign in works.
+- Wrong password shows clean error.
+- Correct role maps to correct dashboard access.
+- st.session_state.authenticated is set.
+- st.session_state.current_role is set.
+- st.session_state.active_dashboard is set.
+- st.session_state.active_tab becomes Overview.
+
+Security note:
+- Prototype note appears at bottom.
+- It mentions production would require secure authentication, password hashing, audit logging, and full role-based access control.
+
+Return:
+1. changed file names
+2. short summary of what was implemented
+3. how to run
+4. any limitations, especially if password visibility toggle could not be safely implemented

@@ -1,0 +1,377 @@
+You are working in my CyberNova BI Project folder. I want to create a completely new Streamlit file called:
+
+cybernovaapp.py
+
+Do not modify my old app files unless necessary. Build a fresh Sales dashboard shell first.
+
+IMPORTANT:
+This is a Streamlit app, not React.
+However, you may use custom HTML/CSS/JavaScript inside Streamlit using st.markdown(..., unsafe_allow_html=True) and st.components.v1.html where needed to make it look premium.
+Do not use Java.
+Use JavaScript only for custom visual polish if needed.
+Use Plotly for charts.
+Use pandas/numpy for data.
+Use @st.fragment(run_every="1s") for live sections if supported.
+If not supported, use a safe 1-second refresh fallback while preserving st.session_state.
+
+TASK 1 — Inspect the project first:
+Before coding, inspect the current folder structure and identify available datasets.
+Search for datasets in:
+- data/
+- data/output/
+- outputs/
+- any .csv, .xlsx, .json, .parquet files
+
+Choose the best dataset for the Sales dashboard based on whether it contains or can derive:
+- timestamp/date
+- country/market
+- service/page/route
+- visit outcome
+- potential customer or lead signal
+- demo/contact/event intent
+- AI Assistant interest
+- segment
+- bot/noise flag
+- revenue or potential revenue estimate
+
+If no dataset is good enough, create a clean mock dataset inside cybernovaapp.py for now, but write the code so the dataset can be replaced later.
+
+TASK 2 — Build only the Sales dashboard shell:
+Build Sales only:
+CyberNova Pulse
+Sales Command Center • Potential Customer Intelligence
+
+Do not build Marketing or Executive yet.
+
+Use exactly these four tabs:
+Overview | Analytics | Forecasting | Data & Export
+
+Do not create separate tabs such as Markets, Pipeline, AI Insights, Reports, Settings, Signals, or Performance.
+
+VISUAL STYLE:
+Make the dashboard match the CyberNova reference images:
+- Premium dark cyber dashboard
+- Glassmorphism cards
+- Deep navy/black background
+- Neon cyan, teal, green, yellow, orange, red, purple accents
+- Rounded cards
+- Glowing borders
+- No default Streamlit-looking metric cards
+- No white Streamlit blocks
+- No clutter
+- No overlapping content
+- Must look like a custom SaaS dashboard, not a normal Streamlit report
+
+Use these exact colours:
+--bg-main: #02070A
+--bg-panel: #071820
+--bg-card: rgba(8, 22, 28, 0.78)
+--border-soft: rgba(77, 255, 225, 0.14)
+--border-active: rgba(0, 255, 209, 0.55)
+--text-main: #F8FAFC
+--text-muted: #8A98A6
+--cyan: #22D3EE
+--teal: #14B8A6
+--green: #7CFF4F
+--yellow: #FFD84A
+--orange: #F59E0B
+--red: #F87171
+--purple: #A855F7
+--gray-anchor: #8A98A6
+
+Colour meaning must stay consistent:
+cyan/teal = live intelligence, AI, strategic hubs
+green = positive growth, success, on track
+yellow/gold = emerging or monitor
+orange = caution/proposal
+red = risk/alerts
+purple = target/aim anchor
+gray = previous month/baseline
+
+APP LAYOUT:
+Use st.set_page_config(layout="wide").
+
+Hide Streamlit default UI as much as possible:
+- menu
+- footer
+- default header spacing
+- default metric look
+
+Build a custom dashboard layout with HTML/CSS where needed.
+
+LEFT SIDEBAR:
+Create a dark vertical sidebar.
+Include:
+- CyberNova logo placeholder
+- CYBERNOVA
+- BI PORTAL
+- Navigation buttons:
+  Overview
+  Analytics
+  Forecasting
+  Data & Export
+- Active tab must glow cyan/green.
+- Profile block at bottom:
+  Alex M.
+  Sales Director
+  Online
+
+TOP HEADER:
+Include:
+- Welcome back, Alex
+- Dynamic time or placeholder 16:50 with green online dot
+- Big title: CyberNova Pulse
+- Subtitle: Sales Command Center • Potential Customer Intelligence
+- Right controls:
+  Sales View dropdown
+  Date range selector
+  Filter icon button
+  Status pill: All systems operational
+
+CONTEXT CHIPS:
+Below the title/tabs include small chips:
+- Period
+- Countries
+- Services
+- Segments
+- Visit Outcome
+- Filtered Noise
+- Data Quality
+
+OVERVIEW TAB:
+Build the full Sales Overview shell.
+
+Overview layout should be:
+1. KPI card stack or row
+2. Large Potential Customer Hotzones Map in the center
+3. Right-side insight cards
+4. Bottom row of chart cards
+5. Bottom status bar
+
+KPI CARDS:
+Include 5 cards:
+1. Pipeline Target Attainment
+   Value: 87%
+   Subtext: $82.6M / $95M target
+   Status: On Watch
+   This is the anchor metric.
+
+2. Potential Customers
+   Value: 1,248
+   Change: ▲ 18%
+   Subtext: vs last 30 days
+
+3. Demo Requests
+   Value: 312
+   Change: ▲ 22%
+   Subtext: vs last 30 days
+
+4. AI to Demo Conversion
+   Value: 24.9%
+   Change: ▲ 3.6 pts
+   Subtext: vs last 30 days
+
+5. Top Sales Market
+   Value: South Africa
+   Subtext: 36% of total potential
+
+LIVE SALES PULSE:
+Create a live pulse strip that refreshes every 1 second.
+Metrics:
+- Potential Customers Now
+- Demo Requests Now
+- Potential Revenue Today
+- Top Active Market
+- Lead Velocity
+
+Use realistic small changing values.
+Do not make values jump randomly.
+Use st.session_state to preserve values.
+
+HOTZONES MAP:
+Create a premium-looking SADC/Southern Africa map card.
+Title:
+Potential Customer Hotzones
+
+Subtitle:
+Where potential customers are coming from
+
+Use either:
+A) Plotly map if it looks good, or
+B) a custom HTML/CSS/SVG map via st.components.v1.html if Plotly looks too default.
+
+The map must show nodes:
+- Luanda — Emerging
+- Windhoek — Emerging
+- Lusaka — Strategic Hub
+- Gaborone — Stable
+- Harare — High Growth
+- Maputo — Strategic Hub
+- Durban — High Growth
+- Cape Town — Core Market
+- Lilongwe — Emerging
+
+Node colours:
+Strategic Hub = cyan/teal
+High Growth = yellow/gold
+Emerging = green
+Stable = yellow/gray
+Core Market = cyan/blue
+
+Map features:
+- glowing nodes
+- curved arcs
+- subtle pulsing effect
+- status legend
+- zoom/control-style buttons if feasible
+- hover tooltips if using Plotly/PyDeck
+- if click filtering is hard, create a “Selected Market” dropdown as fallback
+
+Map tooltip should show:
+City
+Country
+Status
+Potential Customers
+Demo Requests
+Conversion Rate
+Potential Revenue
+AI Assistant Interest
+Risk Level
+Recommended Action
+
+RIGHT-SIDE CARDS:
+Create 3 cards:
+1. Regional Priority
+   South Africa
+   Largest opportunity pool
+   High impact focus
+   Button: View Rationale
+
+2. Strategic Signals
+   New Solution Interest — High
+   Digital Transformation — Accelerating
+   Budget Confidence — Positive
+   Button: View All Signals
+
+3. Sales Risk Outlook
+   Ring/gauge style
+   Low
+   Stable outlook across SADC region
+   Button: View Risk Map
+
+BOTTOM OVERVIEW CARDS:
+Create 4 cards:
+1. Sales Growth Trend
+   Use Plotly line chart.
+   Must include:
+   - Potential Customers actual line
+   - Demo Requests actual line
+   - Monthly Target dashed line
+   - Previous Month Actual dotted gray line
+   These are required anchors.
+
+2. Pipeline Funnel
+   Awareness 7,624
+   Engaged 3,210
+   Qualified 1,248
+   Proposal 512
+   Won 198
+   Overall Conversion: 2.6%
+
+3. Revenue / Service Mix
+   Donut chart:
+   AI Solutions 38%
+   Cybersecurity 25%
+   Cloud & Data 20%
+   Advisory & Training 10%
+   Other Services 7%
+   Center value: $82.6M Total Revenue
+
+4. Regional Leaderboard
+   South Africa
+   Zambia
+   Mozambique
+   Botswana
+   Angola
+   Include potential customers, potential revenue, and vs last 30 days.
+
+CHART ANCHORS:
+Every trend chart must include:
+- actual line
+- target/aim line
+- previous month actual line where relevant
+- hover tooltip with actual, target, previous month, gap, status
+
+Forecasting charts later must include:
+- actual
+- forecast
+- target/aim
+- confidence band
+
+ANALYTICS TAB SHELL:
+Do not fully build yet, but create styled placeholder cards for:
+- Funnel by Market
+- Funnel by Service
+- Repeat Visitor Conversion
+- Potential Customer Segment Quality
+- Sales Insight Assistant
+- Sales Hotzones Map
+- Top Service Demand
+- Potential Customers by Country
+- Demo Intent by Hour
+- Conversion Rate by Stage
+
+FORECASTING TAB SHELL:
+Create styled placeholder cards for:
+- Forecast Summary
+- Forecast Confidence
+- 30-Day Potential Customer Forecast
+- Demo Request Forecast
+- AI-to-Demo What-If Analysis
+- Forecast vs Target
+- Sales Readiness Recommendations
+- Market Outlook
+- Sales Risk Outlook
+- Alert Center
+
+DATA & EXPORT TAB SHELL:
+Create styled placeholder cards for:
+- Sales Action Queue
+- Potential Customers Table
+- Evidence Snapshot
+- Export Center
+- Data Quality Summary
+- Methodology & Assumptions
+- Potential Revenue by Region
+- New Potential Customers Trend
+- Top Potential Customers by Potential Revenue
+
+BOTTOM STATUS BAR:
+Across all tabs show:
+- Data Sync — dynamic or 2 min ago
+- AI Insights — 12 new insights
+- Alerts — 2 requires attention
+- View Command Center button
+
+STREAMLIT STATE:
+Use st.session_state for:
+- active_tab
+- selected_market
+- date filters
+- live values
+- data sync time
+- alert count
+
+DELIVERABLE:
+Create cybernovaapp.py as a complete working Streamlit file.
+Keep it self-contained for now.
+If helper files are necessary, create them only if it improves structure.
+The first version must run with:
+streamlit run cybernovaapp.py
+
+Do not over-explain.
+After coding, tell me:
+- which dataset was selected and why
+- whether mock fallback data was used
+- how to run the app
+- what still needs to be implemented next

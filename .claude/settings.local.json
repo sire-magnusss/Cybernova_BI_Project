@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -m py_compile app_html.py)"
+      "Bash(python -m py_compile app_html.py)",
+      "PowerShell(pip list *)",
+      "PowerShell(C:\\\\Python313\\\\python.exe -c \"import reportlab; print\\('reportlab OK'\\)\" 2>&1)",
+      "PowerShell(C:\\\\Python313\\\\python.exe -c \"import openpyxl; print\\('openpyxl OK'\\)\" 2>&1)",
+      "PowerShell(C:\\\\Python313\\\\python.exe -c \"import ast; ast.parse\\(open\\(r'C:\\\\Users\\\\bida22-078\\\\OneDrive - Botswana Accountancy College\\\\Documents\\\\Cybernova_BI_Project\\\\cybernovaapp.py', encoding='utf-8'\\).read\\(\\)\\); print\\('cybernovaapp.py OK'\\)\")"
     ]
   }
 }

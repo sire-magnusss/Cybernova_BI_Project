@@ -1,0 +1,516 @@
+You are redesigning my Streamlit CyberNova BI dashboard to match the uploaded reference image as closely as possible.
+
+Goal:
+Transform the current dashboard into a premium dark cyber-intelligence command center called “CyberNova Pulse”, with the exact visual direction of the reference: black glassmorphism, neon cyan/green accents, compact cards, glowing borders, animated map nodes, live metrics, and clean executive dashboard spacing.
+
+Important:
+This is a Streamlit app. Use Streamlit, HTML, CSS, JavaScript, Plotly, SVG, and streamlit.components.v1.html where necessary. Heavy custom CSS and JavaScript are allowed. Prioritise visual quality over default Streamlit styling. Hide Streamlit’s default UI chrome.
+
+Use this layout:
+
+1. Overall Page
+- Full width layout.
+- Background: near-black gradient.
+- Main background:
+  #03070C
+  #050B12
+  #071018
+- Add subtle radial glows:
+  cyan glow behind main map area
+  green glow near top-left and bottom-right
+- Font: Inter, Segoe UI, or system sans-serif.
+- Text must be clean, modern, and highly legible.
+
+2. Main Grid Structure
+The dashboard must look like a command center.
+
+Viewport target: 1440px+ wide.
+
+Use this structure:
+- Sidebar: fixed width around 140–160px.
+- Main content area: remaining width.
+- Top header area: 120px height.
+- Tab/navigation strip: 48px height.
+- Main dashboard grid:
+  - Left metric column: 260px wide.
+  - Center map panel: flexible, around 580–650px wide.
+  - Right insights/risk column: 360–400px wide.
+- Bottom analytics row: 3 or 4 cards, each 250–320px wide depending on available screen.
+
+Do not let cards overlap. Use CSS grid/flex carefully.
+
+3. Sidebar Styling
+Create a left vertical sidebar like the reference.
+
+Sidebar:
+- Width: 145px.
+- Background: linear-gradient(180deg, rgba(5,12,18,0.96), rgba(2,6,10,0.98)).
+- Border-right: 1px solid rgba(80, 255, 220, 0.12).
+- Border-radius: 0 18px 18px 0 if it is inside main page, otherwise keep flush.
+- Padding: 18px 14px.
+- Height: calc(100vh - 24px).
+- Position: sticky or fixed style if possible.
+
+Logo:
+- Use CyberNova logo area at top.
+- Text:
+  CYBERNOVA
+  BI PORTAL
+- CYBERNOVA in white, BI PORTAL in cyan/green.
+
+Navigation items:
+- Height: 78–88px each.
+- Active card has:
+  background: rgba(0, 255, 200, 0.08)
+  border-left: 3px solid #00FFD1
+  icon color: #00FFD1
+  text color: #00FFD1
+- Inactive text color: #A6B0B8
+- Icons should be SVG icons, not emojis.
+- Items:
+  Overview
+  Analytics
+  Forecasting
+  Data & Export
+  AI Insights
+  Reports
+  Settings
+
+Bottom user block:
+- Avatar circle.
+- Name: Alex M.
+- Role: Sales Director
+- Online status with green dot.
+
+4. Header Styling
+At the top of the main content:
+- Small welcome text: “Welcome back, Alex”
+- Time text with green dot.
+- Main title: CyberNova Pulse
+- Subtitle: “Sales Command Center • Potential Customer Intelligence”
+
+Title:
+- Font size: 42–48px.
+- Weight: 700 or 800.
+- Color: #FFFFFF.
+- Letter spacing: -1px.
+
+Subtitle:
+- Font size: 15–17px.
+- Color: #9AA7B0.
+
+Top-right controls:
+- View selector pill: “Sales View”
+- Date selector pill: “May 1 – May 28, 2025”
+- Filter icon button
+- System status pill: “All systems operational”
+- Use dark glass cards:
+  background: rgba(12, 22, 31, 0.82)
+  border: 1px solid rgba(130, 255, 220, 0.14)
+  border-radius: 10–12px
+  height: 42–48px
+  padding: 0 18px
+
+5. Tabs
+Create a horizontal tab bar below header:
+- Width: around 600px.
+- Height: 44px.
+- Background: rgba(10, 18, 25, 0.9).
+- Border: 1px solid rgba(120, 255, 220, 0.14).
+- Border-radius: 10px.
+- Tabs:
+  Overview
+  Analytics
+  Forecasting
+  Data & Export
+- Active tab:
+  color: #FFFFFF
+  border-bottom: 3px solid #7CFF2A
+  icon in #00FFD1
+- Inactive tab:
+  color: #9AA7B0
+
+6. Card Design System
+All dashboard cards must follow this style:
+
+.card {
+  background: linear-gradient(180deg, rgba(13, 25, 34, 0.92), rgba(8, 17, 24, 0.95));
+  border: 1px solid rgba(134, 255, 229, 0.13);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02) inset,
+    0 12px 35px rgba(0,0,0,0.35);
+  backdrop-filter: blur(16px);
+}
+
+Card padding:
+- Small metric cards: 14–16px.
+- Large cards: 18px.
+- Bottom cards: 16px.
+
+Card titles:
+- Font size: 13–15px.
+- Weight: 600.
+- Color: #FFFFFF.
+
+Muted labels:
+- Font size: 11–13px.
+- Color: #8E9AA4.
+
+Primary metric values:
+- Font size: 28–34px.
+- Weight: 700.
+- Color: #FFFFFF.
+
+Small positive changes:
+- Color: #7CFF2A.
+- Font size: 11–12px.
+- Weight: 700.
+
+7. Left Metric Cards
+Create stacked metric cards similar to the reference.
+
+Column width: 250–270px.
+Gap: 12px.
+
+Cards:
+1. Potential Customers
+   Value: 1,248
+   Change: ▲ 18%
+   Mini sparkline in neon green.
+
+2. Demo Requests
+   Value: 312
+   Change: ▲ 22%
+   Mini sparkline in neon green.
+
+3. AI to Demo Conversion
+   Value: 24.9%
+   Change: ▲ 3.6 pts
+   Mini sparkline.
+
+4. Top Sales Market
+   Value: South Africa
+   Include small South Africa flag or simple SVG flag badge.
+
+5. Active SADC Markets
+   Value: 9 / 16
+   Change: ▲ 2
+
+Metric card height:
+- Main cards: 110–120px.
+- Smaller market cards: 72–85px.
+
+Use SVG icons with neon outlines:
+- users
+- calendar
+- funnel
+- globe
+
+8. Main Map Panel
+This is the most important visual area.
+
+Create a large central map card with a dark Southern Africa map visual.
+
+Map card:
+- Width: 100%.
+- Min-height: 520px.
+- Border radius: 12px.
+- Background:
+  radial-gradient(circle at center, rgba(0, 255, 255, 0.10), transparent 40%),
+  linear-gradient(180deg, rgba(10, 22, 28, 0.95), rgba(5, 12, 18, 0.95))
+- Border: 1px solid rgba(0, 255, 220, 0.16)
+
+Map implementation:
+Use either:
+A) SVG map if available, or
+B) HTML/CSS pseudo-map with an image/SVG of Southern Africa as the background, or
+C) Plotly scattergeo with custom dark styling.
+
+Best visual target:
+Use an SVG/HTML map layer because it allows pulsing nodes and curved route lines.
+
+Map background:
+- Dark muted map shapes.
+- Country borders in #2C3B42.
+- Country labels in muted gray.
+- Keep the map subtle, not bright.
+
+Hotzone nodes:
+Create glowing circular nodes positioned over:
+- Luanda
+- Lilongwe
+- Lusaka
+- Harare
+- Maputo
+- Gaborone
+- Durban
+- Cape Town
+- Windhoek
+
+Node styles:
+- Strategic Hub: cyan #00E5FF
+- High Growth: yellow #FFC928
+- Emerging: green #7CFF2A
+- Stable: amber #FFB000
+- Core Market: cyan-blue #21D4FF
+
+Each node:
+- Outer glow circle.
+- Inner bright dot.
+- CSS pulse animation.
+- Label with city name and status.
+
+Example CSS:
+.map-node {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 18px currentColor, 0 0 36px currentColor;
+}
+
+.map-node::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  animation: pulse 1.8s infinite;
+  opacity: 0.7;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.7); opacity: 0.8; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+Route lines:
+- Use SVG curved paths over the map.
+- Dashed lines.
+- Cyan and yellow paths.
+- Animate dash offset slowly to imply live flow.
+
+Example:
+.route {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+  animation: dash 12s linear infinite;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+@keyframes dash {
+  to { stroke-dashoffset: -120; }
+}
+
+Map header:
+- Title: Potential Customer Hotzones
+- Subtitle: Where potential customers are coming from
+- Right small dropdown: View: Potential Customers
+
+Legend:
+Place inside bottom-left of map:
+- Strategic Hub
+- High Growth
+- Emerging
+- Stable
+- Core Market
+
+Legend card:
+- background: rgba(3, 9, 14, 0.72)
+- border: 1px solid rgba(255,255,255,0.08)
+- border-radius: 8px
+- font-size: 11px
+
+Map controls:
+Bottom-right zoom buttons:
++
+–
+fullscreen icon
+Small stacked square buttons.
+
+9. Right Column
+Create two or three vertical cards.
+
+Top card: Regional Priority
+- Title: Regional Priority
+- Main text: South Africa
+- Color: cyan #00E5FF
+- Description: Largest opportunity pool
+- Status: High impact focus
+- Button: View Rationale →
+
+Middle card: Strategic Signals
+- Three rows:
+  New Solution Interest — High
+  Digital Transformation — Accelerating
+  Budget Confidence — Positive
+- Button: View All Signals →
+
+Right risk card:
+- Sales Risk Outlook
+- Donut/gauge chart
+- Center text: Low
+- Green/yellow gradient if possible.
+- Supporting text:
+  Overall Sales Risk
+  Stable outlook across SADC region
+- Button: View Risk Map →
+
+Use Plotly donut or SVG circular progress.
+Donut should be large, around 150–170px.
+
+10. Bottom Analytics Row
+Create cards like the reference.
+
+A. Sales Growth Trend
+- Line chart with two series:
+  Potential Customers
+  Demo Requests
+- Dark transparent Plotly background.
+- Neon green and cyan lines.
+- No heavy gridlines.
+- Small tooltip-like annotation if possible.
+- Card height: 250px.
+
+B. Pipeline Funnel
+- Funnel visual with stages:
+  Awareness 7,624
+  Engaged 3,210
+  Qualified 1,248
+  Proposal 512
+  Won 198
+- Use horizontal funnel bars.
+- Colors: cyan, green, lime, amber, blue.
+- Show overall conversion 2.6% in large neon green.
+
+C. Revenue / Service Mix
+- Donut chart.
+- Center value: $82.6M Total Revenue.
+- Legend:
+  AI Solutions
+  Cybersecurity
+  Cloud & Data
+  Advisory & Training
+  Other Services
+- Use neon palette.
+
+D. Regional Leaderboard
+- Table with rank, flag/market, potential customers, change.
+- Markets:
+  South Africa, Zambia, Mozambique, Botswana, Angola
+- Use compact rows, 38–42px high.
+- Highlight positive changes in green.
+- Button: View Full Leaderboard →
+
+11. Bottom Status Bar
+At the bottom of the page:
+- Full-width status strip.
+- Height: 64–72px.
+- Background: rgba(10, 22, 31, 0.92)
+- Border: 1px solid rgba(134, 255, 229, 0.13)
+- Border-radius: 12px.
+- Items:
+  Data Sync — 2 min ago
+  AI Insights — 12 new insights
+  Alerts — 2 requires attention
+  Button: View Command Center →
+- Use SVG icons, not emojis.
+
+12. Exact Color Palette
+Use CSS variables:
+
+:root {
+  --bg-main: #03070C;
+  --bg-panel: #08111A;
+  --bg-panel-2: #0D1922;
+  --border-soft: rgba(134, 255, 229, 0.13);
+  --border-strong: rgba(0, 255, 209, 0.32);
+  --text-main: #F5F7FA;
+  --text-muted: #9AA7B0;
+  --text-dim: #66727D;
+
+  --neon-green: #7CFF2A;
+  --neon-cyan: #00E5FF;
+  --neon-teal: #00FFD1;
+  --neon-yellow: #FFC928;
+  --neon-amber: #FFB000;
+  --danger: #FF4D6D;
+}
+
+13. Font Sizes
+Use this scale:
+- Page title: 44px
+- Section/card title: 14px
+- Card subtitle: 12px
+- Main KPI value: 30px
+- Small KPI card label: 13px
+- Body text: 13–14px
+- Table text: 12px
+- Sidebar nav text: 13px
+- Buttons: 12–13px
+
+Avoid oversized text. The reference is compact and professional.
+
+14. Streamlit Implementation Requirements
+In app.py:
+- Use st.set_page_config(layout="wide", page_title="CyberNova Pulse")
+- Hide Streamlit default menu, footer, header.
+- Inject global CSS using st.markdown(..., unsafe_allow_html=True)
+- Use columns for layout, but wrap content in custom HTML divs.
+- For advanced map, use components.html(map_html, height=540)
+- For charts, use Plotly with:
+  paper_bgcolor='rgba(0,0,0,0)'
+  plot_bgcolor='rgba(0,0,0,0)'
+  font color '#AEB8C2'
+  gridcolor 'rgba(255,255,255,0.06)'
+  margin small: l=20, r=20, t=20, b=20
+- Keep charts visually embedded into cards.
+
+15. JavaScript Live Behaviour
+Add subtle live effects:
+- Pulsing map nodes.
+- Animated route dash lines.
+- Small green status dot pulse.
+- Smooth number count-up for KPI values.
+- Every 3 seconds update a timestamp or small “live” indicator.
+- Do not over-animate the whole dashboard. Keep it premium.
+
+16. Responsiveness
+For smaller screens:
+- Sidebar becomes top nav or collapses.
+- Main grid stacks:
+  left metrics
+  map
+  right insights
+  bottom cards
+- No horizontal overflow.
+- Minimum usable width: 1200px.
+
+17. Visual Quality Rules
+- No emojis. Use SVG icons only.
+- No plain white boxes.
+- No default Streamlit cards.
+- No bright white chart backgrounds.
+- No cluttered charts.
+- No overlapping labels.
+- All cards must align perfectly.
+- Use consistent border radius.
+- Use consistent spacing: 12px gap between cards, 16px inside cards.
+- Keep the dashboard dense but readable.
+- The final output must feel like a cybersecurity/sales intelligence control room.
+
+18. Files to Create or Refactor
+Create/refactor into:
+- app.py
+- styles.py or theme.py for CSS strings
+- components.py for metric cards, sidebar, status bar, buttons
+- map_component.py for the animated Southern Africa hotzone map
+- charts.py for Plotly charts
+- data_loader.py if needed
+
+19. Deliverable
+Refactor the existing Streamlit dashboard to match this design. Keep my existing data/charts where possible, but restyle them heavily. Replace any weak map with the animated Southern Africa hotzone map. The final app must look visually close to the uploaded reference image.
