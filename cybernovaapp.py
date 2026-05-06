@@ -34,6 +34,7 @@ st.set_page_config(page_title="CyberNova BI Portal", layout="wide",
 
 _BASE = pathlib.Path(__file__).parent
 ENRICH_PATH = str(_BASE / "data" / "output" / "cybernova_enriched_logs.csv")
+FAST_CACHE_PATH = _BASE / "data" / "output" / "cybernova_enriched_logs.fast.pkl"
 
 # ── LOGO ──────────────────────────────────────────────────────────────────────
 def _load_logo():
@@ -221,11 +222,24 @@ label,.stSelectbox label,.stTextInput label,.stDateInput label{color:var(--muted
 @st.cache_data(show_spinner=False)
 def load_data():
     try:
-        df = pd.read_csv(ENRICH_PATH, low_memory=False)
-        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
-        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        csv_path = pathlib.Path(ENRICH_PATH)
+        cache_needs_write = False
+        if FAST_CACHE_PATH.exists() and FAST_CACHE_PATH.stat().st_mtime >= csv_path.stat().st_mtime:
+            df = pd.read_pickle(FAST_CACHE_PATH)
+        else:
+            df = pd.read_csv(ENRICH_PATH, low_memory=False)
+            cache_needs_write = True
+        if "timestamp" in df.columns and not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
+            df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        if "date" in df.columns and not pd.api.types.is_datetime64_any_dtype(df["date"]):
+            df["date"] = pd.to_datetime(df["date"], errors="coerce")
         for c in ["is_bot","is_sadc","is_warm_lead","potential_customer_signal","has_demo_request"]:
             if c in df.columns: df[c] = df[c].astype(bool, errors="ignore")
+        if cache_needs_write:
+            try:
+                df.to_pickle(FAST_CACHE_PATH)
+            except Exception:
+                pass
         return df
     except Exception: return None
 
@@ -310,6 +324,57 @@ def _live_enriched_df(df, key="global"):
     combined = pd.concat([base, live], ignore_index=True, sort=False)
     return combined, len(live)
 
+def _date_series(df):
+    if df is None or df.empty:
+        return pd.Series(dtype="object")
+    date_col = "date" if "date" in df.columns else "timestamp" if "timestamp" in df.columns else None
+    if not date_col:
+        return pd.Series([None] * len(df), index=df.index)
+    return pd.to_datetime(df[date_col], errors="coerce").dt.date
+
+def _today_reference_date(df):
+    dates = _date_series(df)
+    today = datetime.date.today()
+    if not dates.empty and (dates == today).any():
+        return today
+    return dates.max() if not dates.empty and dates.notna().any() else today
+
+def _day_slice(df, day):
+    if df is None or df.empty:
+        return pd.DataFrame()
+    dates = _date_series(df)
+    return df[dates == day]
+
+def _today_slice(df):
+    if df is None or df.empty:
+        return pd.DataFrame()
+    work = df
+    today = datetime.date.today()
+    dates = _date_series(work)
+    day_df = work[dates == today]
+    if day_df.empty and not dates.empty and dates.notna().any():
+        day_df = work[dates == dates.max()]
+    return day_df
+
+def _live_today_df(df, key="global", rows_per_tick=4, max_rows=5000, preload_fraction=0.78):
+    """Worldometer-style live feed: show today's current tally, then increment smoothly."""
+    today_df = _today_slice(df)
+    if today_df.empty:
+        return today_df
+    today_df = today_df.sort_values("timestamp" if "timestamp" in today_df.columns else today_df.columns[0]).reset_index(drop=True)
+    cursor_key = f"_live_cursor_{key}"
+    if cursor_key not in st.session_state:
+        st.session_state[cursor_key] = min(len(today_df), max(int(len(today_df) * preload_fraction), int(rows_per_tick)))
+    cursor = int(st.session_state.get(cursor_key, 0))
+    next_cursor = min(len(today_df), cursor + max(1, int(rows_per_tick)))
+    st.session_state[cursor_key] = next_cursor
+    live_df = today_df.iloc[:next_cursor].tail(max_rows).copy()
+    now = pd.Timestamp.now().floor("s")
+    live_df["timestamp"] = pd.date_range(end=now, periods=len(live_df), freq="s")
+    live_df["date"] = _today_reference_date(df)
+    live_df["time"] = live_df["timestamp"].dt.strftime("%H:%M:%S")
+    return live_df
+
 def _kpi_stats(df):
     human = _human_df(df)
     total = len(human)
@@ -381,6 +446,57 @@ def reset_filters_to_default():
     }
     for key, value in updates.items():
         st.session_state[key] = value
+
+def _daily_stats(df):
+    if df is None or df.empty:
+        return {}, datetime.date.today()
+    dates = _date_series(df)
+    ref_day = _today_reference_date(df)
+    out = {}
+    for day in sorted(d for d in dates.dropna().unique() if d <= ref_day):
+        out[day] = _kpi_stats(df[dates == day])
+    return out, ref_day
+
+def _baseline_stats(df):
+    if df is None or df.empty:
+        return {}, "7-day avg"
+    dates = _date_series(df)
+    ref_day = _today_reference_date(df)
+    if df is not None and not df.empty:
+        cache_key = f"_baseline_stats_{id(df)}"
+        cached = st.session_state.get(cache_key)
+        meta = (len(df), ref_day)
+        if cached and cached.get("meta") == meta:
+            return cached["stats"], cached["label"]
+    yesterday = ref_day - datetime.timedelta(days=1)
+    yesterday_df = df[dates == yesterday]
+    if not yesterday_df.empty:
+        result = (_kpi_stats(yesterday_df), "yesterday")
+        st.session_state[cache_key] = {"meta": (len(df), ref_day), "stats": result[0], "label": result[1]}
+        return result
+
+    week_mask = (dates < ref_day) & (dates >= ref_day - datetime.timedelta(days=7))
+    week_df = df[week_mask]
+    if week_df.empty:
+        return {}, "7-day avg"
+    week_dates = dates[week_mask]
+    week = [_kpi_stats(week_df[week_dates == day]) for day in week_dates.dropna().unique()]
+    keys = ["rows", "human", "potential", "demos", "engaged", "engagement_rate", "ai_rate", "opportunity", "quality", "active_markets", "risk_alerts"]
+    avg = {k: float(np.mean([s.get(k, 0) for s in week])) for k in keys}
+    st.session_state[cache_key] = {"meta": (len(df), ref_day), "stats": avg, "label": "7-day avg"}
+    return avg, "7-day avg"
+
+def _metric_delta(current, baseline, key, mode="count"):
+    base = float(baseline.get(key, 0) or 0) if baseline else 0
+    cur = float(current.get(key, 0) or 0)
+    if base <= 0:
+        return "starting", "watch"
+    diff = cur - base
+    cls = "up" if diff >= 0 else "down"
+    if mode == "rate":
+        return f"{diff:+.1f} pts", cls
+    pct = diff / base * 100
+    return f"{pct:+.1f}%", cls
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LOGIN PAGE
@@ -789,7 +905,7 @@ def render_chips(df):
   <span class="chip">Revenue: modelled opportunity, not booked sales</span>
 </div>""", unsafe_allow_html=True)
 
-@st.fragment(run_every="1s")
+@st.fragment(run_every=1)
 def render_live_pulse():
     v    = st.session_state
     dash = v.get("active_dashboard","Sales")
@@ -799,14 +915,14 @@ def render_live_pulse():
         "Marketing": "_marketing_df_cache",
         "Executive": "_executive_df_cache",
     }.get(dash, "_sales_df_cache")
-    live_df, live_rows = _live_enriched_df(v.get(cache_key), f"pulse_{dash.lower()}")
-    stats = _kpi_stats(live_df)
+    live_today = _live_today_df(v.get(cache_key), f"pulse_{dash.lower()}")
+    stats = _kpi_stats(live_today)
     if dash == "Sales":
         items = [("Potential Customers", f"{stats['potential']:,}", "#22D3EE"),
                  ("Demo Requests", f"{stats['demos']:,}", "#14B8A6"),
                  ("Opportunity Value", _fmt_money(stats["opportunity"]), "#4ADE80"),
                  ("Top Market", stats["top_market"], "#FBBF24"),
-                 ("Live Rows", f"+{live_rows:,}", "#14B8A6")]
+                 ("Today Rows", f"{len(live_today):,}", "#14B8A6")]
     elif dash == "Marketing":
         items = [("Active Audience", f"{stats['human']:,}", "#22D3EE"),
                  ("Top Market", stats["top_market"], "#FBBF24"),
@@ -829,7 +945,7 @@ def render_live_pulse():
     <span class="live-dot"></span>LIVE
   </div>
   {html}
-  <div style="margin-left:auto;font-size:9px;color:#2A3A4E;white-space:nowrap;">Sync {now}<br>Simulated live stream</div>
+  <div style="margin-left:auto;font-size:9px;color:#66727D;white-space:nowrap;">Updated {now}<br>today stream</div>
 </div>""", unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -956,8 +1072,10 @@ def ph_grid(cards, n=3):
 # SALES OVERVIEW
 # ═══════════════════════════════════════════════════════════════════════════════
 def _sales_kpis(df):
-    # Derive all values from filtered df — no hardcodes
+    # Derive all values from today's live stream; filters do not apply to KPI cards.
     human_df = _human_df(df)
+    stats = _kpi_stats(df)
+    baseline, baseline_label = _baseline_stats(st.session_state.get("_sales_df_cache"))
 
     pot_cust = int(_truthy_series(human_df, "potential_customer_signal").sum()) if len(human_df) > 0 else 0
     demo_req = int(_truthy_series(human_df, "has_demo_request").sum()) if len(human_df) > 0 else 0
@@ -1201,6 +1319,50 @@ def _sales_right():
   <div style="font-size:10px;color:#6B7FA3;text-align:center;">Stable outlook across SADC region</div>
 </div>""", unsafe_allow_html=True)
 
+def _sales_kpis(df):
+    # Derive all values from today's live stream; filters do not apply to KPI cards.
+    human_df = _human_df(df)
+    stats = _kpi_stats(df)
+    baseline, baseline_label = _baseline_stats(st.session_state.get("_sales_df_cache"))
+
+    pot_cust = int(_truthy_series(human_df, "potential_customer_signal").sum()) if len(human_df) > 0 else 0
+    demo_req = int(_truthy_series(human_df, "has_demo_request").sum()) if len(human_df) > 0 else 0
+    pot_rev_m = round(_num_series(human_df, "estimated_deal_value").sum() / 1e6, 1) if len(human_df) > 0 else 0.0
+    if "country" in human_df.columns and len(human_df) > 0:
+        vc = human_df["country"].value_counts()
+        top_market = vc.index[0] if len(vc) > 0 else "South Africa"
+        top_pct = int(vc.iloc[0] / len(human_df) * 100) if len(vc) > 0 else 36
+    else:
+        top_market, top_pct = "South Africa", 36
+
+    iso_map = {"South Africa":"za","Zambia":"zm","Mozambique":"mz","Botswana":"bw",
+               "Angola":"ao","Zimbabwe":"zw","Namibia":"na","Malawi":"mw",
+               "Democratic Republic of the Congo":"cd"}
+    iso = iso_map.get(top_market, "za")
+    flag_img = f'<img src="https://flagcdn.com/20x15/{iso}.png" alt="{top_market}" style="height:16px;width:auto;border-radius:2px;margin-right:5px;vertical-align:middle;" />'
+
+    pipeline_pct = min(99, int(pot_rev_m / 95 * 100)) if pot_rev_m else 87
+    base_pipeline = min(99, int(float(baseline.get("opportunity", 0) or 0) / 1e6 / 95 * 100)) if baseline else 0
+    pipeline_delta, pipeline_cls = _metric_delta({"pipeline": pipeline_pct}, {"pipeline": base_pipeline}, "pipeline", "rate")
+    potential_delta, potential_cls = _metric_delta(stats, baseline, "potential")
+    demo_delta, demo_cls = _metric_delta(stats, baseline, "demos")
+    opp_delta, opp_cls = _metric_delta(stats, baseline, "opportunity")
+
+    kpis = [
+        ("Pipeline Target Attainment", f"{pipeline_pct}%", f"${pot_rev_m}M / $95M target", pipeline_delta, pipeline_cls, "anchor"),
+        ("Potential Customers", f"{pot_cust:,}", f"today vs {baseline_label}", potential_delta, potential_cls, ""),
+        ("Demo Requests", f"{demo_req:,}", f"today vs {baseline_label}", demo_delta, demo_cls, ""),
+        ("Potential Opportunity Value", f"${pot_rev_m}M", f"modelled; today vs {baseline_label}", opp_delta, opp_cls, ""),
+        ("Top Sales Market", f"{flag_img}{top_market}", f"{top_pct}% of today's potential", "", "", ""),
+    ]
+    cols = st.columns(5, gap="small")
+    cls_map = {"up":"delta-up","watch":"delta-watch","down":"delta-down"}
+    for col, (lbl, val, sub, chg, cls, extra) in zip(cols, kpis):
+        with col:
+            delta = f'<div class="kpi-delta {cls_map.get(cls,"")}">{chg}</div>' if chg else ""
+            anchor_style = "border-color:rgba(34,211,238,0.45);box-shadow:0 0 22px rgba(34,211,238,0.15);" if extra == "anchor" else ""
+            st.markdown(f'<div class="kpi-card" style="min-height:132px;{anchor_style}"><div class="kpi-label">{lbl}</div><div class="kpi-value live-count" style="font-size:1.75rem;">{val}</div>{delta}<div class="kpi-sub">{sub}</div></div>', unsafe_allow_html=True)
+
 def render_sales_overview(df):
     # KPI/live counters intentionally use unfiltered data; filters affect charts/tables below.
     st.session_state["_sales_df_cache"] = st.session_state.get("_live_unfiltered_df", df)
@@ -1217,12 +1379,12 @@ def render_sales_overview(df):
 
     # Try live fragment for KPI refresh
     try:
-        @st.fragment(run_every="1s")
+        @st.fragment(run_every=1)
         def _live_sales_kpis():
             _df = st.session_state.get("_sales_df_cache")
             if _df is not None:
-                _live_df, _ = _live_enriched_df(_df, "sales_kpi")
-                _sales_kpis(_live_df)
+                _live_today = _live_today_df(_df, "sales_kpi_cards")
+                _sales_kpis(_live_today)
         _live_sales_kpis()
     except Exception:
         _sales_kpis(df)
@@ -1244,10 +1406,9 @@ def render_sales_overview(df):
         render_sadc_map("sales", 420, None, 0)
     with tbl_col:
         try:
-            @st.fragment(run_every="1s")
+            @st.fragment(run_every=1)
             def _live_sales_leaderboard():
-                _live_df, _ = _live_enriched_df(st.session_state.get("_sales_df_cache"), "sales_regional_leaderboard")
-                _live_country_leaderboard(_live_df)
+                _live_country_leaderboard(_live_today_df(st.session_state.get("_sales_df_cache"), "sales_regional_leaderboard"))
             _live_sales_leaderboard()
         except Exception:
             _live_country_leaderboard(df)
@@ -1348,28 +1509,32 @@ def _mkt_right():
 </div>""", unsafe_allow_html=True)
 
 def _mkt_kpis(df=None):
-    stats = _kpi_stats(df if df is not None else st.session_state.get("_marketing_df_cache"))
+    live_today = _live_today_df(df if df is not None else st.session_state.get("_marketing_df_cache"), "marketing_kpi_cards")
+    stats = _kpi_stats(live_today)
+    baseline, baseline_label = _baseline_stats(st.session_state.get("_marketing_df_cache"))
+    engaged_delta, engaged_cls = _metric_delta(stats, baseline, "engaged")
+    engagement_delta, engagement_cls = _metric_delta(stats, baseline, "engagement_rate", "rate")
+    quality_delta, quality_cls = _metric_delta(stats, baseline, "quality", "rate")
     kpis=[
-        ("Engaged Visitors", f"{stats['engaged']:,}", "live filtered sessions", f"{stats['engagement_rate']:.1f}%", "up"),
-        ("Engagement Rate", f"{stats['engagement_rate']:.1f}%", "human traffic", "Live", "up"),
+        ("Engaged Visitors", f"{stats['engaged']:,}", f"today vs {baseline_label}", engaged_delta, engaged_cls),
+        ("Engagement Rate", f"{stats['engagement_rate']:.1f}%", f"today vs {baseline_label}", engagement_delta, engagement_cls),
         ("Best Campaign Market", stats["top_market"], "highest current volume", "", ""),
         ("Best Landing Page", stats["top_service"], "top service demand", "", ""),
-        ("Audience Quality", f"{stats['quality']}%", "bot-filtered signal quality", "Live", "watch"),
+        ("Audience Quality", f"{stats['quality']}%", f"today vs {baseline_label}", quality_delta, quality_cls),
     ]
     cols=st.columns(5,gap="small")
-    cls_map={"up":"delta-up","watch":"delta-watch"}
+    cls_map={"up":"delta-up","watch":"delta-watch","down":"delta-down"}
     for col,(lbl,val,sub,chg,cls) in zip(cols,kpis):
         with col:
             delta=f'<div class="kpi-delta {cls_map.get(cls,"")}">{chg}</div>' if chg else ""
-            st.markdown(f'<div class="kpi-card"><div class="kpi-label">{lbl}</div><div class="kpi-value-sm" style="color:#14B8A6;">{val}</div>{delta}<div class="kpi-sub">{sub}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="kpi-card"><div class="kpi-label">{lbl}</div><div class="kpi-value-sm live-count" style="color:#14B8A6;">{val}</div>{delta}<div class="kpi-sub">{sub}</div></div>', unsafe_allow_html=True)
 
 def render_marketing_overview(df):
     st.session_state["_marketing_df_cache"] = st.session_state.get("_live_unfiltered_df", df)
     try:
-        @st.fragment(run_every="1s")
+        @st.fragment(run_every=1)
         def _live_marketing_kpis():
-            _live_df, _ = _live_enriched_df(st.session_state.get("_marketing_df_cache"), "marketing_kpi")
-            _mkt_kpis(_live_df)
+            _mkt_kpis(st.session_state.get("_marketing_df_cache"))
         _live_marketing_kpis()
     except Exception:
         _mkt_kpis(df)
@@ -1476,20 +1641,28 @@ def _exec_right():
 </div>""", unsafe_allow_html=True)
 
 def _exec_kpis(df=None):
-    stats = _kpi_stats(df if df is not None else st.session_state.get("_executive_df_cache"))
+    live_today = _live_today_df(df if df is not None else st.session_state.get("_executive_df_cache"), "executive_kpi_cards")
+    stats = _kpi_stats(live_today)
+    baseline, baseline_label = _baseline_stats(st.session_state.get("_executive_df_cache"))
     growth = min(99, int(stats["potential"] / max(1, stats["human"]) * 100)) if stats["human"] else 0
+    base_growth = min(99, int(float(baseline.get("potential", 0) or 0) / max(1, float(baseline.get("human", 0) or 0)) * 100)) if baseline else 0
+    growth_delta, growth_cls = _metric_delta({"growth": growth}, {"growth": base_growth}, "growth", "rate")
+    potential_delta, potential_cls = _metric_delta(stats, baseline, "potential")
+    ai_delta, ai_cls = _metric_delta(stats, baseline, "ai_rate", "rate")
+    market_delta, market_cls = _metric_delta(stats, baseline, "active_markets")
+    risk_delta, risk_cls = _metric_delta(stats, baseline, "risk_alerts")
     kpis=[
-        ("Growth Direction", f"+{growth}%", "potential customer share", "Live", "up"),
-        ("Potential Customers", f"{stats['potential']:,}", "generated this period", "Live", "up"),
-        ("AI Assistant Traction", f"{stats['ai_rate']:.1f}%", "of sessions engage AI", "Live", "up"),
-        ("Active SADC Markets", str(stats["active_markets"]), "markets active now", "Live", "up"),
-        ("Strategic Risk Alerts", str(stats["risk_alerts"]), "requires review", "Monitor", "watch")]
+        ("Growth Direction", f"+{growth}%", f"today vs {baseline_label}", growth_delta, growth_cls),
+        ("Potential Customers", f"{stats['potential']:,}", f"today vs {baseline_label}", potential_delta, potential_cls),
+        ("AI Assistant Traction", f"{stats['ai_rate']:.1f}%", f"today vs {baseline_label}", ai_delta, ai_cls),
+        ("Active SADC Markets", str(stats["active_markets"]), f"today vs {baseline_label}", market_delta, market_cls),
+        ("Strategic Risk Alerts", str(stats["risk_alerts"]), f"today vs {baseline_label}", risk_delta, risk_cls)]
     cols=st.columns(5,gap="small")
-    cls_map={"up":"delta-up","watch":"delta-watch"}
+    cls_map={"up":"delta-up","watch":"delta-watch","down":"delta-down"}
     for col,(lbl,val,sub,chg,cls) in zip(cols,kpis):
         with col:
             delta=f'<div class="kpi-delta {cls_map.get(cls,"")}">{chg}</div>' if chg else ""
-            st.markdown(f'<div class="kpi-card"><div class="kpi-label">{lbl}</div><div class="kpi-value-sm" style="color:#A855F7;">{val}</div>{delta}<div class="kpi-sub">{sub}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="kpi-card"><div class="kpi-label">{lbl}</div><div class="kpi-value-sm live-count" style="color:#A855F7;">{val}</div>{delta}<div class="kpi-sub">{sub}</div></div>', unsafe_allow_html=True)
     st.markdown(f"""
 <div style="background:linear-gradient(90deg,rgba(168,85,247,0.07),rgba(34,211,238,0.04));
   border:1px solid rgba(168,85,247,0.18);border-radius:10px;padding:10px 16px;margin:8px 0;">
@@ -1502,10 +1675,9 @@ def _exec_kpis(df=None):
 def render_executive_overview(df):
     st.session_state["_executive_df_cache"] = st.session_state.get("_live_unfiltered_df", df)
     try:
-        @st.fragment(run_every="1s")
+        @st.fragment(run_every=1)
         def _live_executive_kpis():
-            _live_df, _ = _live_enriched_df(st.session_state.get("_executive_df_cache"), "executive_kpi")
-            _exec_kpis(_live_df)
+            _exec_kpis(st.session_state.get("_executive_df_cache"))
         _live_executive_kpis()
     except Exception:
         _exec_kpis(df)
@@ -1613,7 +1785,7 @@ def main():
                 st.toast("Using mock data — CSV not found", icon="⚠️")
                 df = mock_data()
 
-        st.session_state["_live_unfiltered_df"] = df.copy()
+        st.session_state["_live_unfiltered_df"] = df
 
         # Apply date filter
         if "date" in df.columns or "timestamp" in df.columns:
@@ -1707,3 +1879,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
