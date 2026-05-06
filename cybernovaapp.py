@@ -214,6 +214,24 @@ label,.stSelectbox label,.stTextInput label,.stDateInput label{color:var(--muted
   background:linear-gradient(135deg,rgba(20,184,166,0.35),rgba(34,211,238,0.22))!important;
   box-shadow:0 0 16px rgba(34,211,238,0.2)!important;
 }
+/* Logout button: last column inside hdr_col2 (itself the last outer column) */
+[data-testid="stHorizontalBlock"]>[data-testid="column"]:last-child
+  >[div]>[data-testid="stHorizontalBlock"]>[data-testid="column"]:last-child
+  .stButton>button,
+[data-testid="stHorizontalBlock"]>[data-testid="column"]:last-child
+  >div>[data-testid="stHorizontalBlock"]>[data-testid="column"]:last-child
+  .stButton>button{
+  background:rgba(248,113,113,0.08)!important;
+  border:1px solid rgba(248,113,113,0.35)!important;
+  color:#F87171!important;
+}
+[data-testid="stHorizontalBlock"]>[data-testid="column"]:last-child
+  >div>[data-testid="stHorizontalBlock"]>[data-testid="column"]:last-child
+  .stButton>button:hover{
+  background:rgba(248,113,113,0.2)!important;
+  border-color:#F87171!important;
+  box-shadow:0 0 16px rgba(248,113,113,0.2)!important;
+}
 </style>""", unsafe_allow_html=True)
     if extra_css:
         st.markdown(f"<style>{extra_css}</style>", unsafe_allow_html=True)
@@ -425,7 +443,24 @@ def init_state():
         if k not in st.session_state: st.session_state[k] = v
 
 def logout():
-    for k in ["authenticated","current_role","active_dashboard","active_tab"]: st.session_state.pop(k,None)
+    st.query_params.clear()
+    keys_to_clear = [k for k in st.session_state.keys()]
+    for k in keys_to_clear:
+        del st.session_state[k]
+
+def restore_from_query_params():
+    """Restore auth session from URL query params — fixes browser back-button logout."""
+    if st.session_state.get("authenticated"):
+        return
+    params = st.query_params
+    role = params.get("role", "")
+    if role in ROLE_PASSWORDS:
+        st.session_state.authenticated    = True
+        st.session_state.current_role     = role
+        if not st.session_state.get("active_dashboard"):
+            st.session_state.active_dashboard = allowed(role)[0]
+        if not st.session_state.get("active_tab"):
+            st.session_state.active_tab = "Overview"
 
 def reset_filters_to_default():
     today = datetime.date.today()
@@ -711,6 +746,7 @@ div[data-testid="stVerticalBlock"]>div{padding-top:3px!important;padding-bottom:
                     st.session_state.active_dashboard = allowed(role)[0]
                     st.session_state.active_tab       = "Overview"
                     st.session_state.login_error      = False
+                    st.query_params["role"] = role
                     st.rerun()
                 else:
                     st.session_state.login_error = True
@@ -740,7 +776,7 @@ def render_header():
     fname = uname.split()[0]
     now   = datetime.datetime.now().strftime("%H:%M")
 
-    hdr_col1, hdr_col2 = st.columns([9, 1])
+    hdr_col1, hdr_col2 = st.columns([8, 2])
     with hdr_col1:
         st.markdown(f"""
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
@@ -781,10 +817,16 @@ def render_header():
   </div>
 </div>""", unsafe_allow_html=True)
     with hdr_col2:
-        _drawer_label = "X Close" if st.session_state.get("admin_drawer_open") else "Filters"
-        if st.button(_drawer_label, key="admin_drawer_toggle", use_container_width=True):
-            st.session_state.admin_drawer_open = not st.session_state.get("admin_drawer_open", False)
-            st.rerun()
+        btn_left, btn_right = st.columns(2, gap="small", vertical_alignment="center")
+        with btn_left:
+            _drawer_label = "✕ Close" if st.session_state.get("admin_drawer_open") else "⚙ Filters"
+            if st.button(_drawer_label, key="admin_drawer_toggle", use_container_width=True):
+                st.session_state.admin_drawer_open = not st.session_state.get("admin_drawer_open", False)
+                st.rerun()
+        with btn_right:
+            if st.button("⏻ Logout", key="header_logout", use_container_width=True):
+                logout()
+                st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ADMIN DRAWER — dashboard switcher + filters
@@ -1753,6 +1795,7 @@ def render_status_bar():
 def main():
     inject_css()
     init_state()
+    restore_from_query_params()
 
     if not st.session_state.authenticated:
         render_login()
