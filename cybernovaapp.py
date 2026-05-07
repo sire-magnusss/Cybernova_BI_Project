@@ -4,7 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import datetime, pathlib, random, base64
 
-# Sales views — imported after page_config so Streamlit doesn't complain
+# Sales views - imported after page_config so Streamlit doesn't complain
 try:
     from sales_views import (inject_sales_css,
                               render_sales_analytics, render_sales_forecasting,
@@ -448,7 +448,7 @@ def logout():
         del st.session_state[k]
 
 def restore_from_query_params():
-    """Restore auth session from URL query params — fixes browser back-button logout."""
+    """Restore auth session from URL query params - fixes browser back-button logout."""
     if st.session_state.get("authenticated"):
         return
     params = st.query_params
@@ -602,7 +602,7 @@ div[data-testid="stForm"]{
   backdrop-filter:blur(24px);
   box-shadow:0 24px 80px rgba(0,0,0,0.65);
 }
-/* error bar sits between top and form — give it card sides */
+/* error bar sits between top and form - give it card sides */
 .lc-err-wrap{
   background:rgba(7,14,22,0.90);
   border-left:1px solid rgba(255,255,255,0.10);
@@ -737,7 +737,7 @@ div[data-testid="stVerticalBlock"]>div{padding-top:3px!important;padding-bottom:
         with st.form("login_form", clear_on_submit=False):
             role = st.selectbox("Select your role", list(ROLE_PASSWORDS.keys()))
             pwd  = st.text_input("Password", type="password", placeholder="Enter your password")
-            sub  = st.form_submit_button("Sign In to Dashboard  →", use_container_width=True)
+            sub  = st.form_submit_button("Sign In to Dashboard  to", use_container_width=True)
             if sub:
                 if ROLE_PASSWORDS.get(role, "") == pwd:
                     st.session_state.authenticated    = True
@@ -822,12 +822,12 @@ def render_header():
                 st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ADMIN DRAWER — dashboard switcher + filters
+# ADMIN DRAWER - dashboard switcher + filters
 # ═══════════════════════════════════════════════════════════════════════════════
 def render_admin_drawer():
     v    = st.session_state
     role = v.current_role or ""
-    uname, utitle = ROLE_META.get(role,("User","—"))
+    uname, utitle = ROLE_META.get(role,("User","-"))
 
     # ── Profile ──
     st.markdown(f"""
@@ -900,7 +900,7 @@ def render_admin_drawer():
 
     st.markdown("""
 <div style="margin-top:12px;font-size:9px;color:#1E2D3D;text-align:center;padding:0 4px;line-height:1.5;">
-  Prototype v1.0 · Review only · Not for production use
+  Prototype v1.0  -  Review only  -  Not for production use
 </div>""", unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1078,32 +1078,42 @@ def render_sadc_map(mode="sales", height=400, df=None):
 # ── CHART LAYOUT HELPER ───────────────────────────────────────────────────────
 def _cl(fig, h=250):
     fig.update_layout(
-        height=h, margin=dict(l=0, r=0, t=8, b=0),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(7,16,28,0.6)",
-        font=dict(color="#6B7FA3", size=10, family="Inter"),
+        height=max(h, 260),
+        margin=dict(l=46, r=22, t=18, b=54),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(8,17,24,0.44)",
+        font=dict(color="#CBD5E1", size=11, family="Inter"),
         hovermode="x unified",
         hoverlabel=dict(
             bgcolor="rgba(7,14,26,0.95)",
-            bordercolor="rgba(34,211,238,0.3)",
+            bordercolor="rgba(45,212,191,0.28)",
             font=dict(color="#F0F4F8", size=11, family="Inter"),
         ),
         xaxis=dict(
-            gridcolor="rgba(34,211,238,0.07)", color="#6B7FA3", showgrid=True,
+            gridcolor="rgba(148,163,184,0.10)", color="#94A3B8", showgrid=True,
             zeroline=False,
             showspikes=True, spikesnap="cursor",
-            spikecolor="rgba(34,211,238,0.2)", spikethickness=1,
+            spikecolor="rgba(45,212,191,0.22)", spikethickness=1,
+            tickfont=dict(size=10, color="#CBD5E1"),
+            title_font=dict(size=10, color="#94A3B8"),
+            automargin=True,
         ),
         yaxis=dict(
-            gridcolor="rgba(34,211,238,0.07)", color="#6B7FA3", showgrid=True,
+            gridcolor="rgba(148,163,184,0.10)", color="#94A3B8", showgrid=True,
             zeroline=False,
+            tickfont=dict(size=10, color="#CBD5E1"),
+            title_font=dict(size=10, color="#94A3B8"),
+            automargin=True,
         ),
         legend=dict(
-            bgcolor="rgba(7,16,28,0.85)",
-            bordercolor="rgba(34,211,238,0.14)", borderwidth=1,
-            font=dict(color="#6B7FA3", size=9, family="Inter"),
-            orientation="h", y=-0.22, x=0,
+            bgcolor="rgba(7,16,28,0.72)",
+            bordercolor="rgba(148,163,184,0.16)", borderwidth=1,
+            font=dict(color="#CBD5E1", size=10, family="Inter"),
+            orientation="h", y=-0.30, x=0,
         ),
     )
+    fig.update_traces(marker_line_width=0, selector=dict(type="bar"))
+    fig.update_traces(line=dict(width=2.4), selector=dict(type="scatter"))
 
 def ph(title, icon="chart", note="Coming in next build"):
     st.markdown(
@@ -1145,7 +1155,7 @@ def _sales_growth(df):
                 _pc = _human.groupby("_month")["_pc_signal"].sum().tail(6)
             else:
                 _pc = _grp.size().tail(6)
-            # Need at least 3 months of data for a meaningful trend — otherwise fall back
+            # Need at least 3 months of data for a meaningful trend - otherwise fall back
             if len(_pc) < 3:
                 raise ValueError("Insufficient monthly data")
             if "has_demo_request" in df2.columns:
@@ -1382,8 +1392,8 @@ def _live_country_leaderboard(df):
 
         iso  = _ISO.get(c, "za")
         flag = f'<img src="https://flagcdn.com/20x15/{iso}.png" alt="{c}" style="height:13px;width:auto;border-radius:1px;margin-right:6px;vertical-align:middle;" />'
-        trend     = "▲" if cust > 50 else "▼"
-        trend_col = "#76FF36" if trend == "▲" else "#F87171"
+        trend     = "+" if cust > 50 else "▼"
+        trend_col = "#76FF36" if trend == "+" else "#F87171"
         rows_data.append((flag, c, cust, rev_s, trend, trend_col))
 
     # Sort by customer count descending
@@ -1545,17 +1555,16 @@ def _promo_gap():
     fig.add_trace(go.Bar(x=svcs,y=[35,28,22,10,5],name="Visit Share %",marker_color="#3A4A5E",hovertemplate="<b>%{x}</b><br>Visit Share: %{y}%<extra></extra>"))
     fig.add_trace(go.Bar(x=svcs,y=[42,24,18,12,4],name="Conversion Share %",marker_color="#22D3EE",hovertemplate="<b>%{x}</b><br>Conversion: %{y}%<extra></extra>"))
     _cl(fig,220); fig.update_layout(barmode="group",bargap=0.28)
-    st.markdown(f'<div class="cn-card"><div class="sec-label">Service Promotion Gap</div><div style="font-size:9px;color:#FBBF24;margin-bottom:6px;display:flex;align-items:center;gap:6px;">{svg_icon("alert", 13, "#FBBF24")} Cybersecurity: high conversion, low visit share → under-promoted</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="cn-card"><div class="sec-label">Service Promotion Gap</div><div style="font-size:9px;color:#FBBF24;margin-bottom:6px;display:flex;align-items:center;gap:6px;">{svg_icon("alert", 13, "#FBBF24")} Cybersecurity: high conversion, low visit share to under-promoted</div>', unsafe_allow_html=True)
     st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
 
 def _content_funnel():
     fig=go.Figure(go.Funnel(y=["Landing Page","Service Page","AI/Contact Interest","Demo / Event Action"],x=[8500,3800,1640,520],
-        textinfo="value+percent initial",
-        marker=dict(color=["#22D3EE","#14B8A6","#A855F7","#4ADE80"],line=dict(width=0)),
-        textfont=dict(color="#F0F4F8",size=11),
+        textinfo="none",
+        marker=dict(color=["#38BDF8","#2DD4BF","#7C6EE6","#4ADE80"],line=dict(color="rgba(5,12,18,0.78)",width=1.5)),
         hovertemplate="<b>%{y}</b><br>%{x:,}<br>%{percentInitial:.1%}<extra></extra>"))
-    fig.update_layout(height=220,margin=dict(l=0,r=0,t=8,b=0),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font=dict(color="#6B7FA3",size=10))
+    fig.update_layout(height=250,margin=dict(l=100,r=18,t=10,b=12),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font=dict(color="#CBD5E1",size=11),yaxis=dict(tickfont=dict(color="#CBD5E1",size=10),automargin=True))
     st.markdown('<div class="cn-card"><div class="sec-label">Content Journey Funnel</div>', unsafe_allow_html=True)
     st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
@@ -1564,9 +1573,10 @@ def _activity_heatmap():
     np.random.seed(7)
     z=np.random.randint(10,180,(7,24)); z[1:5,8:18]+=100
     fig=go.Figure(go.Heatmap(z=z,x=[f"{h:02d}:00" for h in range(24)],y=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
-        colorscale=[[0,"rgba(7,16,28,0.9)"],[0.5,"rgba(34,211,238,0.4)"],[1,"#22D3EE"]],
+        colorscale=[[0,"rgba(15,23,42,0.85)"],[0.45,"rgba(45,212,191,0.34)"],[1,"#38BDF8"]],
+        xgap=1, ygap=1,
         hovertemplate="<b>%{y} %{x}</b><br>Activity: %{z}<extra></extra>",showscale=False))
-    fig.update_layout(height=220,margin=dict(l=0,r=0,t=8,b=0),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(7,16,28,0.6)",font=dict(color="#6B7FA3",size=9),xaxis=dict(tickangle=-45,color="#6B7FA3"),yaxis=dict(color="#6B7FA3"))
+    fig.update_layout(height=250,margin=dict(l=42,r=12,t=10,b=54),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(8,17,24,0.44)",font=dict(color="#CBD5E1",size=10),xaxis=dict(tickangle=-45,color="#CBD5E1",tickfont=dict(size=9),automargin=True),yaxis=dict(color="#CBD5E1",tickfont=dict(size=10),automargin=True))
     st.markdown('<div class="cn-card"><div class="sec-label">Human Activity Timing</div><div style="font-size:9px;color:#6B7FA3;margin-bottom:6px;">Best: Tue–Thu, 09:00–17:00</div>', unsafe_allow_html=True)
     st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
@@ -1576,13 +1586,13 @@ def _mkt_right():
 <div class="cn-card">
   <div class="sec-label">Best Campaign Market</div>
   <div style="font-size:18px;font-weight:800;color:#14B8A6;">South Africa</div>
-  <div style="font-size:10px;color:#6B7FA3;margin-top:4px;">31% engagement · Highest quality audience</div>
+  <div style="font-size:10px;color:#6B7FA3;margin-top:4px;">31% engagement  -  Highest quality audience</div>
 </div>
 <div class="cn-card">
   <div class="sec-label">Campaign Signals</div>
-  <div style="font-size:11px;margin-bottom:5px;color:#F0F4F8;"><span style="color:#4ADE80;">●</span> AI Solutions — <b>High Intent</b></div>
-  <div style="font-size:11px;margin-bottom:5px;color:#F0F4F8;"><span style="color:#FBBF24;">●</span> Cybersecurity — <b>Under-Promoted</b></div>
-  <div style="font-size:11px;color:#F0F4F8;"><span style="color:#22D3EE;">●</span> Cloud & Data — <b>Growing</b></div>
+  <div style="font-size:11px;margin-bottom:5px;color:#F0F4F8;"><span style="color:#4ADE80;">●</span> AI Solutions - <b>High Intent</b></div>
+  <div style="font-size:11px;margin-bottom:5px;color:#F0F4F8;"><span style="color:#FBBF24;">●</span> Cybersecurity - <b>Under-Promoted</b></div>
+  <div style="font-size:11px;color:#F0F4F8;"><span style="color:#22D3EE;">●</span> Cloud & Data - <b>Growing</b></div>
 </div>
 <div class="cn-card">
   <div class="sec-label">Audience Quality</div>
@@ -1685,13 +1695,13 @@ def _exec_right():
   <div class="sec-label">Regional Priority</div>
   <div style="font-size:14px;font-weight:700;color:#A855F7;">South Africa + Zambia</div>
   <div style="font-size:10px;color:#6B7FA3;margin-top:4px;">Core + Strategic Hub anchors</div>
-  <div style="font-size:11px;color:#4ADE80;margin-top:6px;font-weight:600;">✓ Invest — protect lead</div>
+  <div style="font-size:11px;color:#4ADE80;margin-top:6px;font-weight:600;">Done Invest - protect lead</div>
 </div>
 <div class="cn-card">
   <div class="sec-label">Strategic Signals</div>
-  <div style="font-size:11px;margin-bottom:5px;color:#F0F4F8;"><span style="color:#4ADE80;">●</span> AI Solutions — <b>Accelerating</b></div>
-  <div style="font-size:11px;margin-bottom:5px;color:#F0F4F8;"><span style="color:#22D3EE;">●</span> SADC Expansion — <b>On Track</b></div>
-  <div style="font-size:11px;color:#F0F4F8;"><span style="color:#F87171;">●</span> Zimbabwe — <b>Monitor</b></div>
+  <div style="font-size:11px;margin-bottom:5px;color:#F0F4F8;"><span style="color:#4ADE80;">●</span> AI Solutions - <b>Accelerating</b></div>
+  <div style="font-size:11px;margin-bottom:5px;color:#F0F4F8;"><span style="color:#22D3EE;">●</span> SADC Expansion - <b>On Track</b></div>
+  <div style="font-size:11px;color:#F0F4F8;"><span style="color:#F87171;">●</span> Zimbabwe - <b>Monitor</b></div>
 </div>
 <div class="cn-card">
   <div class="sec-label">Risk Outlook</div>
@@ -1726,7 +1736,7 @@ def _exec_kpis(df=None):
     st.markdown(f"""
 <div style="background:linear-gradient(90deg,rgba(168,85,247,0.07),rgba(34,211,238,0.04));
   border:1px solid rgba(168,85,247,0.18);border-radius:10px;padding:10px 16px;margin:8px 0;">
-  <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#A855F7;">Board Summary · </span>
+  <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#A855F7;">Board Summary  -  </span>
   <span style="font-size:12px;color:#F0F4F8;">
     Live simulation is based on the selected CyberNova dataset. Opportunity value is a modelled estimate, not audited revenue.
   </span>
@@ -1804,7 +1814,7 @@ def render_status_bar():
   <div class="si">AI Insights <span>12 new</span></div>
   <div class="si">Alerts <span class="pill-warn">{v.alert_count} active</span></div>
   <div class="si">Status <span class="pill-ok">Operational</span></div>
-  <div style="margin-left:auto;font-size:10px;color:#2A3A4E;">CyberNova BI Portal · Prototype v1.0</div>
+  <div style="margin-left:auto;font-size:10px;color:#2A3A4E;">CyberNova BI Portal  -  Prototype v1.0</div>
 </div>""", unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
