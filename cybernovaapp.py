@@ -1022,29 +1022,58 @@ def render_sadc_map(mode="sales", height=400, df=None):
 
     fig = go.Figure()
     for status, grp in df_m.groupby("status"):
+        col = COLOR_MAP[status]
         fig.add_trace(go.Scattermap(
-            lat=grp.lat,lon=grp.lon,mode="markers",name=status,
-            marker=dict(size=grp["sz"],color=COLOR_MAP[status],opacity=0.88,sizemode="area"),
-            text=[hover[df_m.index.get_loc(i)] for i in grp.index],hoverinfo="text"))
+            lat=grp.lat, lon=grp.lon, mode="markers", name=status,
+            marker=dict(
+                size=grp["sz"], color=col, opacity=0.9, sizemode="area",
+            ),
+            text=[hover[df_m.index.get_loc(i)] for i in grp.index],
+            hoverinfo="text",
+        ))
     fig.update_layout(
-        map=dict(style="carto-darkmatter",center=dict(lat=-20,lon=26),zoom=2.9),
-        height=height,margin=dict(l=0,r=0,t=0,b=0),
-        paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-        legend=dict(bgcolor="rgba(9,20,36,0.85)",bordercolor="rgba(34,211,238,0.18)",
-                    borderwidth=1,font=dict(color="#F0F4F8",size=10),orientation="v",x=0.01,y=0.98))
+        map=dict(style="carto-darkmatter", center=dict(lat=-20, lon=26), zoom=2.9),
+        height=height, margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        hoverlabel=dict(bgcolor="rgba(7,14,26,0.95)", bordercolor="rgba(34,211,238,0.3)",
+                        font=dict(color="#F0F4F8", size=11, family="Inter")),
+        legend=dict(bgcolor="rgba(9,20,36,0.9)", bordercolor="rgba(34,211,238,0.2)",
+                    borderwidth=1, font=dict(color="#F0F4F8", size=10, family="Inter"),
+                    orientation="v", x=0.01, y=0.98),
+    )
     st.markdown(f'<div class="cn-card"><div class="sec-label">{title}</div><div style="font-size:10px;color:#6B7FA3;margin-bottom:8px;">{sub} | map remains stable while regional counters update</div>', unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ── CHART LAYOUT HELPER ───────────────────────────────────────────────────────
 def _cl(fig, h=250):
-    fig.update_layout(height=h,margin=dict(l=0,r=0,t=8,b=0),
-        paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(7,16,28,0.6)",
-        font=dict(color="#6B7FA3",size=10),
-        xaxis=dict(gridcolor="rgba(34,211,238,0.05)",color="#6B7FA3",showgrid=True),
-        yaxis=dict(gridcolor="rgba(34,211,238,0.05)",color="#6B7FA3",showgrid=True),
-        legend=dict(bgcolor="rgba(0,0,0,0)",font=dict(color="#6B7FA3",size=9),
-                    orientation="h",y=-0.22,x=0))
+    fig.update_layout(
+        height=h, margin=dict(l=0, r=0, t=8, b=0),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(7,16,28,0.6)",
+        font=dict(color="#6B7FA3", size=10, family="Inter"),
+        hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor="rgba(7,14,26,0.95)",
+            bordercolor="rgba(34,211,238,0.3)",
+            font=dict(color="#F0F4F8", size=11, family="Inter"),
+        ),
+        xaxis=dict(
+            gridcolor="rgba(34,211,238,0.07)", color="#6B7FA3", showgrid=True,
+            zeroline=False,
+            showspikes=True, spikesnap="cursor",
+            spikecolor="rgba(34,211,238,0.2)", spikethickness=1,
+        ),
+        yaxis=dict(
+            gridcolor="rgba(34,211,238,0.07)", color="#6B7FA3", showgrid=True,
+            zeroline=False,
+        ),
+        legend=dict(
+            bgcolor="rgba(7,16,28,0.85)",
+            bordercolor="rgba(34,211,238,0.14)", borderwidth=1,
+            font=dict(color="#6B7FA3", size=9, family="Inter"),
+            orientation="h", y=-0.22, x=0,
+        ),
+    )
 
 def ph(title, icon="⬡", note="Coming in next build"):
     st.markdown(f'<div class="ph-card"><div style="font-size:22px;opacity:.4;">{icon}</div><div style="font-size:12px;font-weight:600;">{title}</div><div style="font-size:10px;color:#2A3A4E;">{note}</div></div>', unsafe_allow_html=True)
@@ -1059,8 +1088,16 @@ def ph_grid(cards, n=3):
 # ═══════════════════════════════════════════════════════════════════════════════
 # SALES OVERVIEW
 # ═══════════════════════════════════════════════════════════════════════════════
+_GROWTH_FALLBACK = {
+    "mo":      ["Jan","Feb","Mar","Apr","May","Jun"],
+    "pc_vals": [820, 940, 1050, 1180, 1248, None],
+    "dr_vals": [210, 245, 275,  295,  312,  None],
+    "target":  [900, 950, 1000, 1100, 1200, 1300],
+    "prev":    [760, 820, 940,  1050, 1180, 1248],
+}
+
 def _sales_growth(df):
-    # Group df by month to derive monthly trend
+    mo = pc_vals = dr_vals = target = prev = None
     if df is not None and "date" in df.columns and len(df) > 0:
         try:
             df2 = df.copy()
@@ -1072,35 +1109,61 @@ def _sales_growth(df):
                 _pc = _human.groupby("_month")["_pc_signal"].sum().tail(6)
             else:
                 _pc = _grp.size().tail(6)
+            # Need at least 3 months of data for a meaningful trend — otherwise fall back
+            if len(_pc) < 3:
+                raise ValueError("Insufficient monthly data")
             if "has_demo_request" in df2.columns:
                 _human["_demo_signal"] = _truthy_series(_human, "has_demo_request").astype(int)
                 _dr = _human.groupby("_month")["_demo_signal"].sum().reindex(_pc.index, fill_value=0).tail(6)
             else:
                 _dr = (_pc * 0.25).astype(int)
-            mo = [str(p) for p in _pc.index]
+            # Format periods as readable short month labels (e.g. "Jan 25")
+            mo      = [pd.Period(p).to_timestamp().strftime("%b %y") for p in _pc.index]
             pc_vals = [int(v) for v in _pc.tolist()]
             dr_vals = [int(v) for v in _dr.tolist()]
             target  = [max(v, 900) + 100 * i for i, v in enumerate(pc_vals)]
-            prev    = [int(v * 0.88) for v in pc_vals[1:]] + [None] if len(pc_vals) > 1 else pc_vals
+            prev    = [int(v * 0.88) for v in pc_vals[1:]] + [None] if len(pc_vals) > 1 else list(pc_vals)
         except Exception:
-            mo = ["Jan","Feb","Mar","Apr","May","Jun"]
-            pc_vals = [820,940,1050,1180,1248,None]
-            dr_vals = [210,245,275,295,312,None]
-            target  = [900,950,1000,1100,1200,1300]
-            prev    = [760,820,940,1050,1180,1248]
-    else:
-        mo = ["Jan","Feb","Mar","Apr","May","Jun"]
-        pc_vals = [820,940,1050,1180,1248,None]
-        dr_vals = [210,245,275,295,312,None]
-        target  = [900,950,1000,1100,1200,1300]
-        prev    = [760,820,940,1050,1180,1248]
+            pass
+
+    if mo is None:
+        mo      = _GROWTH_FALLBACK["mo"]
+        pc_vals = _GROWTH_FALLBACK["pc_vals"]
+        dr_vals = _GROWTH_FALLBACK["dr_vals"]
+        target  = _GROWTH_FALLBACK["target"]
+        prev    = _GROWTH_FALLBACK["prev"]
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=mo, y=pc_vals, name="Potential Customers", line=dict(color="#22D3EE",width=2), mode="lines+markers", marker=dict(size=4), hovertemplate="<b>%{x}</b><br>Customers: %{y}<extra></extra>"))
-    fig.add_trace(go.Scatter(x=mo, y=dr_vals, name="Demo Requests",       line=dict(color="#4ADE80",width=2), mode="lines+markers", marker=dict(size=4), hovertemplate="<b>%{x}</b><br>Demos: %{y}<extra></extra>"))
-    fig.add_trace(go.Scatter(x=mo, y=target,  name="Target",              line=dict(color="#A855F7",width=1.5,dash="dash"), mode="lines", hovertemplate="<b>%{x}</b><br>Target: %{y}<extra></extra>"))
-    fig.add_trace(go.Scatter(x=mo, y=prev,    name="Prev. Month",         line=dict(color="#3A4A5E",width=1.5,dash="dot"),  mode="lines", hovertemplate="<b>%{x}</b><br>Prev: %{y}<extra></extra>"))
+    fig.add_trace(go.Scatter(
+        x=mo, y=pc_vals, name="Potential Customers",
+        line=dict(color="#22D3EE", width=2.5),
+        mode="lines+markers",
+        marker=dict(size=7, symbol="circle", color="#22D3EE",
+                    line=dict(color="rgba(255,255,255,0.25)", width=1.5)),
+        fill="tozeroy", fillcolor="rgba(34,211,238,0.06)",
+        hovertemplate="Customers: <b>%{y}</b><extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=mo, y=dr_vals, name="Demo Requests",
+        line=dict(color="#4ADE80", width=2),
+        mode="lines+markers",
+        marker=dict(size=6, symbol="circle", color="#4ADE80",
+                    line=dict(color="rgba(255,255,255,0.2)", width=1)),
+        fill="tozeroy", fillcolor="rgba(74,222,128,0.04)",
+        hovertemplate="Demos: <b>%{y}</b><extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=mo, y=target, name="Target",
+        line=dict(color="#A855F7", width=1.5, dash="dash"), mode="lines",
+        hovertemplate="Target: <b>%{y}</b><extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=mo, y=prev, name="Prev. Period",
+        line=dict(color="#3A4A5E", width=1.5, dash="dot"), mode="lines",
+        hovertemplate="Prev: <b>%{y}</b><extra></extra>",
+    ))
     _cl(fig, 230)
+    fig.update_xaxes(type="category")
     st.markdown('<div class="cn-card"><div class="sec-label">Sales Growth Trend</div>', unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
@@ -1124,12 +1187,24 @@ def _pipeline_funnel(df):
     fig = go.Figure(go.Funnel(
         y=["Awareness","Engaged","Qualified","Proposal","Won"],
         x=[awareness, engaged, qualified, proposal, won],
-        textinfo="value+percent initial",
-        marker=dict(color=["#22D3EE","#14B8A6","#FBBF24","#F59E0B","#4ADE80"], line=dict(width=0)),
-        textfont=dict(color="#F0F4F8", size=11),
-        hovertemplate="<b>%{y}</b><br>%{x:,}<br>%{percentInitial:.1%}<extra></extra>"))
-    fig.update_layout(height=230, margin=dict(l=0,r=0,t=8,b=0),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#6B7FA3",size=10))
+        textinfo="value+percent previous",
+        textposition="inside",
+        marker=dict(
+            color=["rgba(34,211,238,0.85)","rgba(20,184,166,0.85)","rgba(251,191,36,0.85)",
+                   "rgba(245,158,11,0.85)","rgba(74,222,128,0.9)"],
+            line=dict(color="rgba(255,255,255,0.08)", width=1),
+        ),
+        connector=dict(line=dict(color="rgba(34,211,238,0.15)", width=2, dash="dot")),
+        textfont=dict(color="#F0F4F8", size=10, family="Inter"),
+        hovertemplate="<b>%{y}</b><br>Count: %{x:,}<br>Drop from prev: %{percentPrevious:.1%}<extra></extra>",
+    ))
+    fig.update_layout(
+        height=230, margin=dict(l=0,r=0,t=8,b=0),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#6B7FA3", size=10, family="Inter"),
+        hoverlabel=dict(bgcolor="rgba(7,14,26,0.95)", bordercolor="rgba(34,211,238,0.3)",
+                        font=dict(color="#F0F4F8", size=11, family="Inter")),
+    )
     st.markdown(f'<div class="cn-card"><div class="sec-label">Pipeline Funnel</div><div style="font-size:9px;color:#6B7FA3;margin-bottom:6px;">Overall Conversion: <b style=\'color:#4ADE80;\'>{conv}%</b></div>', unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
@@ -1153,15 +1228,32 @@ def _service_donut(df):
         values = [38, 25, 20, 10, 7]
         total_str = "$82.6M"
 
+    pull_vals = [0.06] + [0] * (len(labels) - 1)
     fig = go.Figure(go.Pie(
-        labels=labels, values=values, hole=0.62,
-        marker=dict(colors=["#22D3EE","#A855F7","#14B8A6","#FBBF24","#3A4A5E"], line=dict(color="rgba(0,0,0,0.4)",width=1)),
-        textfont=dict(color="#F0F4F8", size=10),
-        hovertemplate="<b>%{label}</b>: %{percent}<extra></extra>"))
-    fig.add_annotation(text=total_str, x=0.5, y=0.58, font=dict(size=14,color="#FFFFFF",family="Inter"), showarrow=False)
-    fig.add_annotation(text="Opportunity",  x=0.5, y=0.43, font=dict(size=9, color="#6B7FA3",family="Inter"), showarrow=False)
-    fig.update_layout(height=230, margin=dict(l=0,r=0,t=8,b=0), paper_bgcolor="rgba(0,0,0,0)",
-        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(color="#6B7FA3",size=9), orientation="v", x=1))
+        labels=labels, values=values, hole=0.64,
+        pull=pull_vals,
+        marker=dict(
+            colors=["#22D3EE","#A855F7","#14B8A6","#FBBF24","#3A4A5E"],
+            line=dict(color="rgba(7,14,26,0.6)", width=2),
+        ),
+        textinfo="percent",
+        textfont=dict(color="#F0F4F8", size=10, family="Inter"),
+        hovertemplate="<b>%{label}</b><br>%{percent} of total<extra></extra>",
+        direction="clockwise",
+        sort=True,
+    ))
+    fig.add_annotation(text=f"<b>{total_str}</b>", x=0.5, y=0.58,
+                       font=dict(size=16, color="#F0F4F8", family="Inter"), showarrow=False)
+    fig.add_annotation(text="opportunity", x=0.5, y=0.44,
+                       font=dict(size=9, color="#6B7FA3", family="Inter"), showarrow=False)
+    fig.update_layout(
+        height=230, margin=dict(l=0, r=0, t=8, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        hoverlabel=dict(bgcolor="rgba(7,14,26,0.95)", bordercolor="rgba(34,211,238,0.3)",
+                        font=dict(color="#F0F4F8", size=11, family="Inter")),
+        legend=dict(bgcolor="rgba(7,16,28,0.85)", bordercolor="rgba(34,211,238,0.1)", borderwidth=1,
+                    font=dict(color="#6B7FA3", size=9, family="Inter"), orientation="v", x=1.02),
+    )
     st.markdown('<div class="cn-card"><div class="sec-label">Modelled Opportunity / Service Mix</div><div style="font-size:9px;color:#FBBF24;margin-bottom:6px;">Estimated deal value from synthetic signals, not confirmed revenue.</div>', unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)

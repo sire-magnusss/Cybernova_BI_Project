@@ -46,23 +46,31 @@ def _cl(fig, h=240):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(7,16,28,0.6)",
         font=dict(color=_MUTED, size=10, family="Inter"),
+        hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor="rgba(7,14,26,0.95)",
+            bordercolor="rgba(168,85,247,0.35)",
+            font=dict(color="#F0F4F8", size=11, family="Inter"),
+        ),
         xaxis=dict(
-            gridcolor="rgba(34,211,238,0.05)",
+            gridcolor="rgba(34,211,238,0.07)",
             color=_MUTED,
             showgrid=True,
             zeroline=False,
+            showspikes=True, spikesnap="cursor",
+            spikecolor="rgba(168,85,247,0.2)", spikethickness=1,
         ),
         yaxis=dict(
-            gridcolor="rgba(34,211,238,0.05)",
+            gridcolor="rgba(34,211,238,0.07)",
             color=_MUTED,
             showgrid=True,
             zeroline=False,
         ),
         legend=dict(
-            bgcolor="rgba(7,16,28,0.82)",
-            bordercolor="rgba(34,211,238,0.14)",
+            bgcolor="rgba(7,16,28,0.88)",
+            bordercolor="rgba(34,211,238,0.18)",
             borderwidth=1,
-            font=dict(color=_MUTED, size=9),
+            font=dict(color=_MUTED, size=9, family="Inter"),
             orientation="h",
             y=-0.28,
             x=0,
@@ -407,18 +415,22 @@ def _risk_anomaly_trend():
     demand_spikes     = [max(0, int(2 + np.random.normal(0, 1))) for _ in days]
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=days, y=risk_events,   name="Risk Events",
-        line=dict(color=_RED,    width=2), mode="lines",
-        hovertemplate="Day %{x}<br>Risk Events: %{y}<extra></extra>"))
-    fig.add_trace(go.Scatter(x=days, y=visit_issues,  name="Visit Issues",
+    fig.add_trace(go.Scatter(x=days, y=risk_events, name="Risk Events",
+        line=dict(color=_RED, width=2), mode="lines",
+        fill="tozeroy", fillcolor="rgba(248,113,113,0.06)",
+        hovertemplate="Risk Events: <b>%{y}</b><extra></extra>"))
+    fig.add_trace(go.Scatter(x=days, y=visit_issues, name="Visit Issues",
         line=dict(color=_ORANGE, width=2), mode="lines",
-        hovertemplate="Day %{x}<br>Visit Issues: %{y}<extra></extra>"))
+        fill="tozeroy", fillcolor="rgba(245,158,11,0.05)",
+        hovertemplate="Visit Issues: <b>%{y}</b><extra></extra>"))
     fig.add_trace(go.Scatter(x=days, y=data_warnings, name="Data Quality Warnings",
         line=dict(color=_YELLOW, width=2), mode="lines",
-        hovertemplate="Day %{x}<br>Data Warnings: %{y}<extra></extra>"))
+        fill="tozeroy", fillcolor="rgba(251,191,36,0.05)",
+        hovertemplate="Data Warnings: <b>%{y}</b><extra></extra>"))
     fig.add_trace(go.Scatter(x=days, y=demand_spikes, name="Unusual Demand Spikes",
-        line=dict(color=_CYAN,   width=2), mode="lines",
-        hovertemplate="Day %{x}<br>Demand Spikes: %{y}<extra></extra>"))
+        line=dict(color=_CYAN, width=2), mode="lines",
+        fill="tozeroy", fillcolor="rgba(34,211,238,0.05)",
+        hovertemplate="Demand Spikes: <b>%{y}</b><extra></extra>"))
 
     _cl(fig, 240)
     fig.update_layout(yaxis_title="Count", xaxis_title="Days Ago")

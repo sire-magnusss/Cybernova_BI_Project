@@ -327,13 +327,23 @@ def _chart_layout(fig, h=260):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(7,16,28,0.6)",
         font=dict(color="#8A98A6", size=10, family="Inter"),
-        xaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#8A98A6", showgrid=True, zeroline=False),
-        yaxis=dict(gridcolor="rgba(77,255,225,0.05)", color="#8A98A6", showgrid=True, zeroline=False),
+        hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor="rgba(7,14,26,0.95)",
+            bordercolor="rgba(34,211,238,0.3)",
+            font=dict(color="#F0F4F8", size=11, family="Inter"),
+        ),
+        xaxis=dict(
+            gridcolor="rgba(77,255,225,0.07)", color="#8A98A6", showgrid=True, zeroline=False,
+            showspikes=True, spikesnap="cursor",
+            spikecolor="rgba(34,211,238,0.2)", spikethickness=1,
+        ),
+        yaxis=dict(gridcolor="rgba(77,255,225,0.07)", color="#8A98A6", showgrid=True, zeroline=False),
         legend=dict(
-            bgcolor="rgba(7,16,28,0.82)",
-            bordercolor="rgba(77,255,225,0.14)",
+            bgcolor="rgba(7,16,28,0.88)",
+            bordercolor="rgba(77,255,225,0.18)",
             borderwidth=1,
-            font=dict(color="#8A98A6", size=9),
+            font=dict(color="#8A98A6", size=9, family="Inter"),
             orientation="h",
             y=-0.25,
             x=0,
@@ -577,18 +587,20 @@ def _repeat_visitor_conv():
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=months, y=new_vis, name="New Visitors",
         line=dict(color=_GRAY, width=2), mode="lines+markers",
-        marker=dict(size=5, color=_GRAY),
-        hovertemplate="<b>%{x}</b><br>New: %{y:.1f}%<extra></extra>"))
+        marker=dict(size=6, color=_GRAY, line=dict(color="rgba(255,255,255,0.2)", width=1)),
+        fill="tozeroy", fillcolor="rgba(138,152,166,0.04)",
+        hovertemplate="New: <b>%{y:.1f}%</b><extra></extra>"))
     fig.add_trace(go.Scatter(x=months, y=repeat_vis, name="Repeat Visitors",
         line=dict(color=_CYAN, width=2.5), mode="lines+markers",
-        marker=dict(size=6, color=_CYAN),
-        hovertemplate="<b>%{x}</b><br>Repeat: %{y:.1f}%<extra></extra>"))
+        marker=dict(size=7, color=_CYAN, line=dict(color="rgba(255,255,255,0.25)", width=1.5)),
+        fill="tozeroy", fillcolor="rgba(34,211,238,0.06)",
+        hovertemplate="Repeat: <b>%{y:.1f}%</b><extra></extra>"))
     fig.add_trace(go.Scatter(x=months, y=target, name="Target",
         line=dict(color=_PURPLE, width=1.5, dash="dash"), mode="lines",
-        hovertemplate="<b>%{x}</b><br>Target: %{y:.1f}%<extra></extra>"))
+        hovertemplate="Target: <b>%{y:.1f}%</b><extra></extra>"))
     fig.add_trace(go.Scatter(x=months, y=prev_month, name="Prev Month",
         line=dict(color="#3A4A5E", width=1.5, dash="dot"), mode="lines",
-        hovertemplate="<b>%{x}</b><br>Prev: %{y:.1f}%<extra></extra>"))
+        hovertemplate="Prev: <b>%{y:.1f}%</b><extra></extra>"))
 
     _chart_layout(fig, h=230)
     fig.update_layout(yaxis_title="Conv Rate %")
@@ -614,21 +626,28 @@ def _segment_quality_bubble():
     fill_c    = ["rgba(20,184,166,0.7)", "rgba(255,216,74,0.7)",
                  "rgba(124,255,79,0.7)", "rgba(34,211,238,0.7)", "rgba(138,152,166,0.7)"]
 
+    border_colors = ["rgba(34,211,238,0.5)", "rgba(255,216,74,0.5)",
+                     "rgba(124,255,79,0.5)", "rgba(20,184,166,0.5)", "rgba(138,152,166,0.4)"]
     fig = go.Figure()
-    for i, (seg, vol, cr, qs, fc) in enumerate(zip(segments, volumes, conv_r, quality, fill_c)):
+    for i, (seg, vol, cr, qs, fc, bc) in enumerate(zip(segments, volumes, conv_r, quality, fill_c, border_colors)):
         fig.add_trace(go.Scatter(
             x=[vol], y=[cr],
             mode="markers+text",
             name=seg,
             text=[seg],
             textposition="top center",
-            textfont=dict(color="#F8FAFC", size=8),
-            marker=dict(size=qs / 2.2, color=fc, line=dict(color="rgba(0,0,0,0.3)", width=1)),
+            textfont=dict(color="#F8FAFC", size=9, family="Inter"),
+            marker=dict(
+                size=qs / 2.0,
+                color=fc,
+                line=dict(color=bc, width=2),
+                opacity=0.88,
+            ),
             hovertemplate=(
                 f"<b>{seg}</b><br>"
-                f"Volume: {vol}<br>"
+                f"Volume: {vol:,}<br>"
                 f"Conv Rate: {cr}%<br>"
-                f"Quality Score: {qs}<extra></extra>"
+                f"Quality Score: {qs}/100<extra></extra>"
             ),
         ))
 

@@ -128,13 +128,23 @@ def _cl(fig, h=240):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(7,16,28,0.6)",
         font=dict(color=_MUTED, size=10, family="Inter"),
-        xaxis=dict(gridcolor="rgba(34,211,238,0.05)", color=_MUTED, showgrid=True, zeroline=False),
-        yaxis=dict(gridcolor="rgba(34,211,238,0.05)", color=_MUTED, showgrid=True, zeroline=False),
+        hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor="rgba(7,14,26,0.95)",
+            bordercolor="rgba(20,184,166,0.35)",
+            font=dict(color="#F0F4F8", size=11, family="Inter"),
+        ),
+        xaxis=dict(
+            gridcolor="rgba(34,211,238,0.07)", color=_MUTED, showgrid=True, zeroline=False,
+            showspikes=True, spikesnap="cursor",
+            spikecolor="rgba(20,184,166,0.2)", spikethickness=1,
+        ),
+        yaxis=dict(gridcolor="rgba(34,211,238,0.07)", color=_MUTED, showgrid=True, zeroline=False),
         legend=dict(
-            bgcolor="rgba(7,16,28,0.82)",
-            bordercolor="rgba(34,211,238,0.14)",
+            bgcolor="rgba(7,16,28,0.88)",
+            bordercolor="rgba(34,211,238,0.18)",
             borderwidth=1,
-            font=dict(color=_MUTED, size=9),
+            font=dict(color=_MUTED, size=9, family="Inter"),
             orientation="h",
             y=-0.28,
             x=0,
@@ -244,21 +254,23 @@ def _audience_segments_over_time(df):
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=dates_str, y=li, name="Low-Intent",
-        fill="tozeroy", fillcolor="rgba(107,127,163,0.15)",
+        fill="tozeroy", fillcolor="rgba(107,127,163,0.12)",
         line=dict(color=_GRAY, width=1.5),
-        hovertemplate="<b>%{x}</b><br>Low-Intent: %{y}<extra></extra>"))
+        hovertemplate="Low-Intent: <b>%{y}</b><extra></extra>"))
     fig.add_trace(go.Scatter(x=dates_str, y=gb, name="General Browsers",
-        fill="tonexty", fillcolor="rgba(251,191,36,0.12)",
+        fill="tonexty", fillcolor="rgba(251,191,36,0.10)",
         line=dict(color=_YELLOW, width=1.5),
-        hovertemplate="<b>%{x}</b><br>General: %{y}<extra></extra>"))
+        hovertemplate="General: <b>%{y}</b><extra></extra>"))
     fig.add_trace(go.Scatter(x=dates_str, y=pc, name="Product-Curious",
-        fill="tonexty", fillcolor="rgba(20,184,166,0.14)",
+        fill="tonexty", fillcolor="rgba(20,184,166,0.12)",
         line=dict(color=_TEAL, width=2),
-        hovertemplate="<b>%{x}</b><br>Product-Curious: %{y}<extra></extra>"))
+        hovertemplate="Product-Curious: <b>%{y}</b><extra></extra>"))
     fig.add_trace(go.Scatter(x=dates_str, y=hi, name="High-Intent",
-        fill="tonexty", fillcolor="rgba(34,211,238,0.16)",
+        fill="tonexty", fillcolor="rgba(34,211,238,0.14)",
         line=dict(color=_CYAN, width=2.5),
-        hovertemplate="<b>%{x}</b><br>High-Intent: %{y}<extra></extra>"))
+        mode="lines+markers",
+        marker=dict(size=5, color=_CYAN, line=dict(color="rgba(255,255,255,0.2)", width=1)),
+        hovertemplate="High-Intent: <b>%{y}</b><extra></extra>"))
 
     _cl(fig, 240)
     fig.update_layout(xaxis=dict(tickangle=-45, tickfont=dict(size=8), gridcolor="rgba(34,211,238,0.05)", color=_MUTED))
