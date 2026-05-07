@@ -12,11 +12,11 @@
   --neon-teal: #00FFD1;
   --neon-yellow: #FFC928;
   --neon-amber: #FFB000;
-  --violet: #9B5CFF;
-  --blueprint: rgba(87, 140, 255, 0.13);
+  --violet: #7C6EE6;
+  --blueprint: rgba(87, 140, 255, 0.08);
   --danger: #FF4D6D;
-  --shadow-deep: 0 18px 52px rgba(0, 0, 0, 0.38);
-  --shadow-soft: 0 10px 26px rgba(0, 0, 0, 0.28);
+  --shadow-deep: 0 18px 38px rgba(0, 0, 0, 0.30);
+  --shadow-soft: 0 8px 22px rgba(0, 0, 0, 0.22);
 }
 
 html,
@@ -24,13 +24,9 @@ body,
 [data-testid="stAppViewContainer"],
 [data-testid="stApp"] {
   background:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-    linear-gradient(120deg, rgba(0, 229, 255, 0.10), transparent 34%),
-    linear-gradient(250deg, rgba(155, 92, 255, 0.12), transparent 38%),
-    linear-gradient(18deg, rgba(124, 255, 42, 0.06), transparent 36%),
-    linear-gradient(135deg, #03070C 0%, #050B12 48%, #071018 100%) !important;
-  background-size: 42px 42px, 42px 42px, auto, auto, auto, auto !important;
+    linear-gradient(180deg, rgba(18, 29, 43, 0.72), transparent 280px),
+    linear-gradient(135deg, #050A10 0%, #071018 52%, #081119 100%) !important;
+  background-size: auto !important;
   color: var(--text-main) !important;
 }
 
@@ -66,10 +62,9 @@ th {
 .pulse-wrap,
 .status-bar {
   background:
-    linear-gradient(180deg, rgba(17, 31, 43, 0.92), rgba(7, 15, 23, 0.96)),
-    linear-gradient(135deg, rgba(0, 229, 255, 0.08), transparent 40%) !important;
+    linear-gradient(180deg, rgba(15, 27, 38, 0.94), rgba(8, 17, 24, 0.96)) !important;
   border: 1px solid var(--border-soft) !important;
-  border-radius: 14px !important;
+  border-radius: 10px !important;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.02) inset,
     var(--shadow-soft) !important;
@@ -90,9 +85,8 @@ th {
   border-radius: inherit;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(0, 255, 209, 0.18), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 22%);
-  opacity: 0.42;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 28%);
+  opacity: 0.55;
 }
 
 .cn-card > *,
@@ -107,12 +101,12 @@ th {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.025) inset,
     var(--shadow-deep),
-    0 0 28px rgba(0, 229, 255, 0.10) !important;
+    0 0 0 rgba(0, 0, 0, 0) !important;
 }
 
 .sec-label {
-  color: rgba(245, 247, 250, 0.82) !important;
-  border-bottom: 1px solid rgba(0, 255, 209, 0.16) !important;
+  color: rgba(245, 247, 250, 0.76) !important;
+  border-bottom: 1px solid rgba(154, 167, 176, 0.13) !important;
   min-height: 34px;
   display: flex !important;
   align-items: center !important;
@@ -128,11 +122,11 @@ th {
 
 .sec-label::before {
   content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--neon-teal);
-  box-shadow: 0 0 12px rgba(0, 255, 209, 0.45);
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: #2DD4BF;
+  box-shadow: none;
   flex: 0 0 auto;
 }
 
@@ -153,9 +147,9 @@ th {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-teal), var(--neon-green));
-  opacity: 0.68;
+  height: 2px;
+  background: #2DD4BF;
+  opacity: 0.72;
 }
 
 .kpi-label {
@@ -167,11 +161,11 @@ th {
 
 .kpi-label::before {
   content: "";
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   border-radius: 999px;
-  background: rgba(0, 255, 209, 0.9);
-  box-shadow: 0 0 9px rgba(0, 255, 209, 0.5);
+  background: rgba(154, 167, 176, 0.76);
+  box-shadow: none;
   flex: 0 0 auto;
 }
 
@@ -197,7 +191,7 @@ th {
   height: 7px;
   border-radius: 999px;
   background: var(--neon-green);
-  box-shadow: 0 0 8px rgba(124, 255, 42, 0.45);
+  box-shadow: none;
   margin-right: 7px;
   animation: none !important;
 }
@@ -234,8 +228,8 @@ th {
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: var(--neon-cyan);
-  opacity: 0.85;
+  background: rgba(154, 167, 176, 0.8);
+  opacity: 1;
 }
 
 .regional-live-card {
@@ -326,10 +320,10 @@ th {
 
 .stTabs [aria-selected="true"] {
   background:
-    linear-gradient(135deg, rgba(0, 255, 209, 0.16), rgba(155, 92, 255, 0.10)) !important;
+    rgba(45, 212, 191, 0.10) !important;
   border-bottom: 0 !important;
   color: #FFFFFF !important;
-  box-shadow: 0 0 0 1px rgba(0, 255, 209, 0.24) inset !important;
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.18) inset !important;
 }
 
 div[data-testid="stDownloadButton"] > button,
@@ -374,10 +368,9 @@ div[data-testid="stDownloadButton"] > button:active,
   gap: 14px;
   position: relative;
   background:
-    linear-gradient(135deg, rgba(12, 25, 40, 0.96), rgba(5, 12, 20, 0.96)),
-    linear-gradient(90deg, rgba(0, 229, 255, 0.12), transparent 50%) !important;
-  border: 1px solid rgba(0, 255, 209, 0.18) !important;
-  border-radius: 16px !important;
+    linear-gradient(135deg, rgba(13, 26, 38, 0.97), rgba(6, 14, 22, 0.97)) !important;
+  border: 1px solid rgba(154, 167, 176, 0.16) !important;
+  border-radius: 12px !important;
   padding: 16px 22px !important;
   margin-bottom: 14px !important;
   box-shadow:
@@ -391,9 +384,8 @@ div[data-testid="stDownloadButton"] > button:active,
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(0, 255, 209, 0.22), transparent 24%),
-    linear-gradient(270deg, rgba(155, 92, 255, 0.16), transparent 34%);
-  opacity: 0.36;
+    linear-gradient(90deg, rgba(45, 212, 191, 0.10), transparent 30%);
+  opacity: 0.52;
   pointer-events: none;
 }
 
@@ -404,8 +396,8 @@ div[data-testid="stDownloadButton"] > button:active,
 
 .header-chip {
   background: rgba(4, 10, 16, 0.72) !important;
-  border: 1px solid rgba(134, 255, 229, 0.18) !important;
-  border-radius: 9px !important;
+  border: 1px solid rgba(154, 167, 176, 0.16) !important;
+  border-radius: 8px !important;
   padding: 6px 12px !important;
   font-size: 11px !important;
   color: rgba(245, 247, 250, 0.62) !important;
@@ -414,11 +406,10 @@ div[data-testid="stDownloadButton"] > button:active,
 
 .headline-strip {
   padding: 16px 20px !important;
-  border-radius: 18px !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(154, 167, 176, 0.14) !important;
   background:
-    linear-gradient(135deg, rgba(10, 22, 34, 0.88), rgba(6, 13, 20, 0.78)),
-    linear-gradient(90deg, rgba(0, 245, 212, 0.08), transparent 45%) !important;
+    linear-gradient(135deg, rgba(10, 22, 34, 0.90), rgba(6, 13, 20, 0.82)) !important;
   box-shadow: var(--shadow-soft);
 }
 

@@ -49,6 +49,42 @@ LOGO_SRC, LOGO_MIME = _load_logo()
 def logo_img(h=36, extra=""):
     return f'<img src="{LOGO_SRC}" style="height:{h}px;width:auto;display:inline-block;{extra}" />' if LOGO_SRC else '<span style="font-size:22px;color:#22D3EE;font-weight:900;">CN</span>'
 
+_SVG_PATHS = {
+    "alert": '<path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+    "archive": '<path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>',
+    "bell": '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+    "book": '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/>',
+    "bot": '<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 2v6"/><path d="M8 13h.01"/><path d="M16 13h.01"/><path d="M9 17h6"/>',
+    "briefcase": '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/>',
+    "chart": '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-7"/>',
+    "check": '<path d="m20 6-11 11-5-5"/>',
+    "chevron": '<path d="m6 9 6 6 6-6"/>',
+    "clock": '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    "diamond": '<path d="M6 3h12l4 6-10 12L2 9l4-6Z"/><path d="M2 9h20"/>',
+    "download": '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
+    "file": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+    "filter": '<path d="M22 3H2l8 9v7l4 2v-9l8-9Z"/>',
+    "flag": '<path d="M4 22V4"/><path d="M4 4h13l-1 5 1 5H4"/>',
+    "folder": '<path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>',
+    "globe": '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>',
+    "lightbulb": '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M8.2 14A6 6 0 1 1 15.8 14c-.8.7-1.3 1.6-1.5 2.6H9.7A4.8 4.8 0 0 0 8.2 14Z"/>',
+    "logout": '<path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-7"/>',
+    "map": '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15"/><path d="M15 6v15"/>',
+    "money": '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+    "search": '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    "shield": '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
+    "sync": '<path d="M21 12a9 9 0 0 0-15-6.7L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 15 6.7L21 16"/><path d="M21 21v-5h-5"/>',
+    "target": '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+}
+
+def svg_icon(name: str, size: int = 15, color: str = "currentColor") -> str:
+    path = _SVG_PATHS.get(name, _SVG_PATHS["chart"])
+    return (
+        f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" '
+        f'stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+        f'aria-hidden="true" style="display:inline-block;vertical-align:-3px;flex:0 0 auto;">{path}</svg>'
+    )
+
 # ── CONSTANTS ─────────────────────────────────────────────────────────────────
 ROLE_PASSWORDS = {"Sales Team Lead":"sales123","Marketing Lead":"marketing123",
                   "Executive Management":"executive123","Admin / Lecturer View":"admin123"}
@@ -59,9 +95,9 @@ ROLE_META = {"Sales Team Lead":("Alex M.","Sales Director"),
              "Executive Management":("C. Mokoena","Executive"),
              "Admin / Lecturer View":("Admin","All Access")}
 DASH_CFG = {
-    "Sales":     {"title":"CyberNova Pulse",   "sub":"Sales Command Center • Potential Customer Intelligence",       "accent":"#22D3EE","icon":"⚡"},
-    "Marketing": {"title":"CyberNova Reach",   "sub":"Marketing Intelligence Hub • Campaign Opportunity Intelligence","accent":"#14B8A6","icon":"📡"},
-    "Executive": {"title":"CyberNova Horizon", "sub":"Executive Insights Dashboard • SADC Expansion Intelligence",   "accent":"#A855F7","icon":"🌐"},
+    "Sales":     {"title":"CyberNova Pulse",   "sub":"Sales Command Center • Potential Customer Intelligence",       "accent":"#22D3EE","icon":"Pulse"},
+    "Marketing": {"title":"CyberNova Reach",   "sub":"Marketing Intelligence Hub • Campaign Opportunity Intelligence","accent":"#14B8A6","icon":"Reach"},
+    "Executive": {"title":"CyberNova Horizon", "sub":"Executive Insights Dashboard • SADC Expansion Intelligence",   "accent":"#A855F7","icon":"Horizon"},
 }
 COLOR_MAP = {"Core Market":"#22D3EE","Strategic Hub":"#14B8A6","High Growth":"#FFD84A","Emerging":"#7CFF4F","Stable":"#8A98A6"}
 
@@ -748,9 +784,9 @@ def render_header():
     {logo_img(h=34)}
     <div>
       <div style="font-size:10px;color:#6B7FA3;margin-bottom:2px;">
-        Welcome back, {fname} &nbsp;·&nbsp;
+        Welcome back, {fname} &nbsp;/&nbsp;
         <span style="color:#22D3EE;">{now}</span>
-        &nbsp;<span style="color:#4ADE80;">●</span>
+        &nbsp;<span style="color:#4ADE80;">Live</span>
       </div>
       <div style="font-size:22px;font-weight:800;color:{cfg['accent']};letter-spacing:.01em;line-height:1.1;">
         {cfg['title']}
@@ -761,27 +797,27 @@ def render_header():
 
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
     <div class="header-chip">
-      {dash} View &nbsp;▾
+      {dash} View &nbsp;{svg_icon("chevron", 12, "#6B7FA3")}
     </div>
     <div class="header-chip">
-      Live Data Active
+      Live data active
     </div>
     <span style="background:rgba(74,222,128,0.1);color:#4ADE80;
       border:1px solid rgba(74,222,128,0.25);border-radius:20px;
       padding:4px 12px;font-size:11px;font-weight:600;">
-      ● All systems operational
+      Operational
     </span>
   </div>
 </div>""", unsafe_allow_html=True)
     with hdr_col2:
         btn_left, btn_right = st.columns(2, gap="small", vertical_alignment="center")
         with btn_left:
-            _drawer_label = "✕ Close" if st.session_state.get("admin_drawer_open") else "⚙ Filters"
+            _drawer_label = "Close" if st.session_state.get("admin_drawer_open") else "Filters"
             if st.button(_drawer_label, key="admin_drawer_toggle", use_container_width=True):
                 st.session_state.admin_drawer_open = not st.session_state.get("admin_drawer_open", False)
                 st.rerun()
         with btn_right:
-            if st.button("⏻ Logout", key="header_logout", use_container_width=True):
+            if st.button("Logout", key="header_logout", use_container_width=True):
                 logout()
                 st.rerun()
 
@@ -805,7 +841,7 @@ def render_admin_drawer():
   <div>
     <div style="font-size:12px;font-weight:600;color:#F0F4F8;">{uname}</div>
     <div style="font-size:10px;color:#6B7FA3;">{utitle}</div>
-    <div style="font-size:9px;color:#4ADE80;margin-top:1px;">● Online</div>
+    <div style="font-size:9px;color:#4ADE80;margin-top:1px;">{svg_icon("check", 10, "#4ADE80")} Online</div>
   </div>
 </div>""", unsafe_allow_html=True)
 
@@ -854,12 +890,12 @@ def render_admin_drawer():
 <div style="background:rgba(9,20,36,0.6);border:1px solid rgba(34,211,238,0.08);
   border-radius:10px;padding:10px 12px;">
   <div style="font-size:9px;color:#3A4A5E;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">Data Intelligence</div>
-  <div style="font-size:11px;color:#6B7FA3;margin-bottom:4px;">🔄 Live data active</div>
-  <div style="font-size:11px;color:#6B7FA3;margin-bottom:4px;">🛡️ 96.4% data quality</div>
-  <div style="font-size:11px;color:#F87171;">⚠ {v.alert_count} alert(s) active</div>
+  <div style="font-size:11px;color:#6B7FA3;margin-bottom:5px;display:flex;align-items:center;gap:7px;">{svg_icon("sync", 13, "#6B7FA3")} Live data active</div>
+  <div style="font-size:11px;color:#6B7FA3;margin-bottom:5px;display:flex;align-items:center;gap:7px;">{svg_icon("shield", 13, "#6B7FA3")} 96.4% data quality</div>
+  <div style="font-size:11px;color:#F87171;display:flex;align-items:center;gap:7px;">{svg_icon("alert", 13, "#F87171")} {v.alert_count} alert(s) active</div>
 </div>""", unsafe_allow_html=True)
 
-    if st.button("⇦ Logout", use_container_width=True, key="rp_logout"):
+    if st.button("Logout", use_container_width=True, key="rp_logout"):
         logout(); st.rerun()
 
     st.markdown("""
@@ -1069,8 +1105,14 @@ def _cl(fig, h=250):
         ),
     )
 
-def ph(title, icon="⬡", note="Coming in next build"):
-    st.markdown(f'<div class="ph-card"><div style="font-size:22px;opacity:.4;">{icon}</div><div style="font-size:12px;font-weight:600;">{title}</div><div style="font-size:10px;color:#2A3A4E;">{note}</div></div>', unsafe_allow_html=True)
+def ph(title, icon="chart", note="Coming in next build"):
+    st.markdown(
+        f'<div class="ph-card">'
+        f'<div style="font-size:22px;opacity:.55;color:#8A98A6;">{svg_icon(icon, 22, "currentColor")}</div>'
+        f'<div style="font-size:12px;font-weight:600;">{title}</div>'
+        f'<div style="font-size:10px;color:#2A3A4E;">{note}</div></div>',
+        unsafe_allow_html=True,
+    )
 
 def ph_grid(cards, n=3):
     for i in range(0,len(cards),n):
@@ -1178,28 +1220,62 @@ def _pipeline_funnel(df):
     else:
         awareness, engaged, qualified, proposal, won, conv = 7624, 3210, 1248, 512, 198, 2.6
 
-    fig = go.Figure(go.Funnel(
-        y=["Awareness","Engaged","Qualified","Proposal","Won"],
-        x=[awareness, engaged, qualified, proposal, won],
-        textinfo="value+percent previous",
+    stages = ["Awareness", "Engaged", "Qualified", "Proposal", "Won"]
+    counts = [int(awareness), int(engaged), int(qualified), int(proposal), int(won)]
+    colors = ["#38BDF8", "#2DD4BF", "#FBBF24", "#F59E0B", "#4ADE80"]
+    max_count = max(counts) if counts else 1
+    pct_prev = [100] + [
+        round((counts[i] / counts[i - 1] * 100), 1) if counts[i - 1] else 0
+        for i in range(1, len(counts))
+    ]
+    text = [
+        f"{count:,}  ·  {pct:.1f}% retained" if idx else f"{count:,}  ·  entry volume"
+        for idx, (count, pct) in enumerate(zip(counts, pct_prev))
+    ]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        y=stages,
+        x=[max_count] * len(stages),
+        orientation="h",
+        marker=dict(color="rgba(154,167,176,0.10)", line=dict(width=0)),
+        hoverinfo="skip",
+        showlegend=False,
+    ))
+    fig.add_trace(go.Bar(
+        y=stages,
+        x=counts,
+        orientation="h",
+        marker=dict(color=colors, line=dict(color="rgba(255,255,255,0.10)", width=1)),
+        text=text,
         textposition="inside",
-        marker=dict(
-            color=["rgba(34,211,238,0.85)","rgba(20,184,166,0.85)","rgba(251,191,36,0.85)",
-                   "rgba(245,158,11,0.85)","rgba(74,222,128,0.9)"],
-            line=dict(color="rgba(255,255,255,0.08)", width=1),
-        ),
-        connector=dict(line=dict(color="rgba(34,211,238,0.15)", width=2, dash="dot")),
-        textfont=dict(color="#F0F4F8", size=10, family="Inter"),
-        hovertemplate="<b>%{y}</b><br>Count: %{x:,}<br>Drop from prev: %{percentPrevious:.1%}<extra></extra>",
+        insidetextanchor="start",
+        textfont=dict(color="#061018", size=10, family="Inter"),
+        cliponaxis=False,
+        hovertemplate="<b>%{y}</b><br>Volume: %{x:,}<extra></extra>",
+        showlegend=False,
     ))
     fig.update_layout(
-        height=230, margin=dict(l=0,r=0,t=8,b=0),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        barmode="overlay",
+        height=250,
+        margin=dict(l=86, r=16, t=10, b=18),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#6B7FA3", size=10, family="Inter"),
         hoverlabel=dict(bgcolor="rgba(7,14,26,0.95)", bordercolor="rgba(34,211,238,0.3)",
                         font=dict(color="#F0F4F8", size=11, family="Inter")),
+        xaxis=dict(visible=False, range=[0, max_count * 1.08]),
+        yaxis=dict(autorange="reversed", color="#CBD5E1", tickfont=dict(size=10)),
     )
-    st.markdown(f'<div class="cn-card"><div class="sec-label">Pipeline Funnel</div><div style="font-size:9px;color:#6B7FA3;margin-bottom:6px;">Overall Conversion: <b style=\'color:#4ADE80;\'>{conv}%</b></div>', unsafe_allow_html=True)
+    st.markdown(f"""
+<div class="cn-card">
+  <div class="sec-label">Pipeline Funnel</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+    <span class="chip">Overall conversion: <b style="color:#4ADE80;">{conv}%</b></span>
+    <span class="chip">Qualified: <b style="color:#FBBF24;">{qualified:,}</b></span>
+    <span class="chip">Won: <b style="color:#4ADE80;">{won:,}</b></span>
+  </div>
+""", unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1208,47 +1284,59 @@ def _service_donut(df):
         try:
             human = _human_df(df)
             human["_deal_value_num"] = _num_series(human, "estimated_deal_value")
-            rev = human.groupby("service_name")["_deal_value_num"].sum()
+            rev = human.groupby("service_name")["_deal_value_num"].sum().sort_values(ascending=False).head(6)
             total = rev.sum()
             labels = rev.index.tolist()
-            values = [round(v / total * 100, 1) for v in rev.values]
+            values = (rev / 1e6).round(2).values.tolist()
             total_str = f"${total/1e6:.1f}M"
         except Exception:
             labels = ["AI Solutions","Cybersecurity","Cloud & Data","Advisory & Training","Other"]
-            values = [38, 25, 20, 10, 7]
+            values = [31.4, 20.7, 16.5, 8.3, 5.7]
             total_str = "$82.6M"
     else:
         labels = ["AI Solutions","Cybersecurity","Cloud & Data","Advisory & Training","Other"]
-        values = [38, 25, 20, 10, 7]
+        values = [31.4, 20.7, 16.5, 8.3, 5.7]
         total_str = "$82.6M"
 
-    pull_vals = [0.06] + [0] * (len(labels) - 1)
+    total_value = float(sum(values) or 1)
+    top_label = labels[0] if labels else "Top service"
+    top_share = round(values[0] / total_value * 100, 1) if values else 0
+    palette = ["#38BDF8", "#2DD4BF", "#FBBF24", "#F59E0B", "#7C6EE6", "#64748B"]
+    pull_vals = [0.035] + [0] * (len(labels) - 1)
     fig = go.Figure(go.Pie(
         labels=labels, values=values, hole=0.64,
         pull=pull_vals,
         marker=dict(
-            colors=["#22D3EE","#A855F7","#14B8A6","#FBBF24","#3A4A5E"],
-            line=dict(color="rgba(7,14,26,0.6)", width=2),
+            colors=palette[:len(labels)],
+            line=dict(color="rgba(7,14,26,0.92)", width=2),
         ),
-        textinfo="percent",
-        textfont=dict(color="#F0F4F8", size=10, family="Inter"),
-        hovertemplate="<b>%{label}</b><br>%{percent} of total<extra></extra>",
+        textinfo="none",
+        hovertemplate="<b>%{label}</b><br>Value: $%{value:.1f}M<br>Share: %{percent}<extra></extra>",
         direction="clockwise",
         sort=True,
     ))
     fig.add_annotation(text=f"<b>{total_str}</b>", x=0.5, y=0.58,
-                       font=dict(size=16, color="#F0F4F8", family="Inter"), showarrow=False)
-    fig.add_annotation(text="opportunity", x=0.5, y=0.44,
+                       font=dict(size=18, color="#F8FAFC", family="Inter"), showarrow=False)
+    fig.add_annotation(text="modelled value", x=0.5, y=0.43,
                        font=dict(size=9, color="#6B7FA3", family="Inter"), showarrow=False)
     fig.update_layout(
-        height=230, margin=dict(l=0, r=0, t=8, b=0),
+        height=250,
+        margin=dict(l=0, r=0, t=8, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
         hoverlabel=dict(bgcolor="rgba(7,14,26,0.95)", bordercolor="rgba(34,211,238,0.3)",
                         font=dict(color="#F0F4F8", size=11, family="Inter")),
         legend=dict(bgcolor="rgba(7,16,28,0.85)", bordercolor="rgba(34,211,238,0.1)", borderwidth=1,
-                    font=dict(color="#6B7FA3", size=9, family="Inter"), orientation="v", x=1.02),
+                    font=dict(color="#CBD5E1", size=9, family="Inter"), orientation="h", y=-0.10, x=0),
     )
-    st.markdown('<div class="cn-card"><div class="sec-label">Modelled Opportunity / Service Mix</div><div style="font-size:9px;color:#FBBF24;margin-bottom:6px;">Estimated deal value from synthetic signals, not confirmed revenue.</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+<div class="cn-card">
+  <div class="sec-label">Modelled Opportunity / Service Mix</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+    <span class="chip">Top service: <b style="color:#38BDF8;">{top_label}</b></span>
+    <span class="chip">Share: <b style="color:#2DD4BF;">{top_share}%</b></span>
+    <span class="chip">Modelled, not booked revenue</span>
+  </div>
+""", unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1378,7 +1466,7 @@ def render_sales_overview(df):
   <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
     color:#00F5D4;margin-bottom:4px;">What is currently going on</div>
   <div style="font-size:12px;color:rgba(245,247,250,0.55);margin-bottom:14px;">
-    Live Sales indicators for the selected period and market.</div>
+    Sales indicators for the selected period and market.</div>
 """, unsafe_allow_html=True)
 
     # Try live fragment for KPI refresh
@@ -1454,7 +1542,7 @@ def _promo_gap():
     fig.add_trace(go.Bar(x=svcs,y=[35,28,22,10,5],name="Visit Share %",marker_color="#3A4A5E",hovertemplate="<b>%{x}</b><br>Visit Share: %{y}%<extra></extra>"))
     fig.add_trace(go.Bar(x=svcs,y=[42,24,18,12,4],name="Conversion Share %",marker_color="#22D3EE",hovertemplate="<b>%{x}</b><br>Conversion: %{y}%<extra></extra>"))
     _cl(fig,220); fig.update_layout(barmode="group",bargap=0.28)
-    st.markdown('<div class="cn-card"><div class="sec-label">Service Promotion Gap</div><div style="font-size:9px;color:#FBBF24;margin-bottom:6px;">⚠ Cybersecurity: high conversion, low visit share → under-promoted</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="cn-card"><div class="sec-label">Service Promotion Gap</div><div style="font-size:9px;color:#FBBF24;margin-bottom:6px;display:flex;align-items:center;gap:6px;">{svg_icon("alert", 13, "#FBBF24")} Cybersecurity: high conversion, low visit share → under-promoted</div>', unsafe_allow_html=True)
     st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1584,7 +1672,7 @@ def _forecast_90():
     fig.add_trace(go.Scatter(x=fwd+fwd[::-1],y=fu+fl[::-1],fill="toself",fillcolor="rgba(34,211,238,0.06)",line=dict(width=0),name="Confidence"))
     fig.add_trace(go.Scatter(x=fwd,y=tg,name="Target Aim",line=dict(color="#A855F7",width=1.5,dash="dash"),mode="lines"))
     _cl(fig,230)
-    st.markdown('<div class="cn-card"><div class="sec-label">90-Day Forecast</div><div style="font-size:9px;color:#FBBF24;margin-bottom:6px;">⚠ Rule-based linear forecast, not predictive AI.</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="cn-card"><div class="sec-label">90-Day Forecast</div><div style="font-size:9px;color:#FBBF24;margin-bottom:6px;display:flex;align-items:center;gap:6px;">{svg_icon("alert", 13, "#FBBF24")} Rule-based linear forecast, not predictive AI.</div>', unsafe_allow_html=True)
     st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1669,38 +1757,38 @@ def render_executive_overview(df):
 # ANALYTICS / FORECASTING / DATA TABS
 # ═══════════════════════════════════════════════════════════════════════════════
 def render_analytics_tab(dash):
-    CARDS={"Sales":[("Funnel by Market","📊"),("Funnel by Service","📊"),("Repeat Visitor Conversion","🔄"),
-                    ("Potential Customer Segment Quality","💎"),("Sales Insight Assistant","🤖"),("Sales Hotzones Map","🗺️"),
-                    ("Top Service Demand","📈"),("Potential Customers by Country","🌍"),("Demo Intent by Hour","⏰"),("Conversion Rate by Stage","🎯")],
-           "Marketing":[("Audience Segments Over Time","📈"),("Country Engagement Breakdown","🌍"),
-                        ("Landing Page Performance","📄"),("SADC Reach Map + Ranking","🗺️"),("Service Promotion Gap Detail","📊"),("Marketing Insight Assistant","🤖")],
-           "Executive":[("Regional Target Table","📋"),("Market Contribution Analysis","📊"),
-                        ("AI Assistant by Market","🤖"),("Risk / Anomaly Trend","⚠️"),("Executive Insight Assistant","🌐")]}
+    CARDS={"Sales":[("Funnel by Market","chart"),("Funnel by Service","chart"),("Repeat Visitor Conversion","sync"),
+                    ("Potential Customer Segment Quality","diamond"),("Sales Insight Assistant","bot"),("Sales Hotzones Map","map"),
+                    ("Top Service Demand","chart"),("Potential Customers by Country","globe"),("Demo Intent by Hour","clock"),("Conversion Rate by Stage","target")],
+           "Marketing":[("Audience Segments Over Time","chart"),("Country Engagement Breakdown","globe"),
+                        ("Landing Page Performance","file"),("SADC Reach Map + Ranking","map"),("Service Promotion Gap Detail","chart"),("Marketing Insight Assistant","bot")],
+           "Executive":[("Regional Target Table","file"),("Market Contribution Analysis","chart"),
+                        ("AI Assistant by Market","bot"),("Risk / Anomaly Trend","alert"),("Executive Insight Assistant","globe")]}
     ph_grid(CARDS.get(dash,[]))
 
 def render_forecasting_tab(dash):
-    CARDS={"Sales":[("Forecast Summary","📋"),("Forecast Confidence","🎯"),("30-Day Potential Customer Forecast","📈"),
-                    ("Demo Request Forecast","📊"),("AI-to-Demo What-If Analysis","🤖"),("Forecast vs Target","🏁"),
-                    ("Sales Readiness Recommendations","💡"),("Market Outlook","🗺️"),("Risk Outlook","⚠️"),("Alert Center","🔔")],
-           "Marketing":[("Audience Growth Forecast","📈"),("Engaged Sessions Forecast","📊"),
-                        ("Campaign What-If Scenario","🤖"),("Campaign Target Tracker","🏁"),("Campaign Recommendation","💡")],
-           "Executive":[("90-Day Potential Customer Forecast","📈"),("Regional Expansion Forecast","🗺️"),
-                        ("AI Traction Forecast","🤖"),("Risk / Anomaly Outlook","⚠️"),("Investment Recommendation","💡"),("Forecast vs Target","🏁")]}
+    CARDS={"Sales":[("Forecast Summary","file"),("Forecast Confidence","target"),("30-Day Potential Customer Forecast","chart"),
+                    ("Demo Request Forecast","chart"),("AI-to-Demo What-If Analysis","bot"),("Forecast vs Target","flag"),
+                    ("Sales Readiness Recommendations","lightbulb"),("Market Outlook","map"),("Risk Outlook","alert"),("Alert Center","bell")],
+           "Marketing":[("Audience Growth Forecast","chart"),("Engaged Sessions Forecast","chart"),
+                        ("Campaign What-If Scenario","bot"),("Campaign Target Tracker","flag"),("Campaign Recommendation","lightbulb")],
+           "Executive":[("90-Day Potential Customer Forecast","chart"),("Regional Expansion Forecast","map"),
+                        ("AI Traction Forecast","bot"),("Risk / Anomaly Outlook","alert"),("Investment Recommendation","lightbulb"),("Forecast vs Target","flag")]}
     ph_grid(CARDS.get(dash,[]))
 
 def render_data_tab(dash,df):
-    CARDS={"Sales":[("Sales Action Queue","✅"),("Potential Customers Table","📋"),("Evidence Snapshot","📂"),
-                    ("Export Center","💾"),("Data Quality Summary","🔍"),("Methodology & Assumptions","📖"),
-                    ("Potential Revenue by Region","💰"),("New Potential Customers Trend","📈"),("Top Customers by Revenue","🏆")],
-           "Marketing":[("Campaign Opportunity Table","📋"),("Filtered Audience Data","📂"),("Evidence Pack CSV","💾"),
-                        ("Weekly PDF Report","📄"),("Monthly PDF Report","📄"),("Methodology Note","📖"),("Landing Page Export","📑"),("Campaign Performance Export","📊")],
-           "Executive":[("Executive Decision Brief","📋"),("Regional Priority Table","🗺️"),("Risk Evidence Table","⚠️"),
-                        ("Executive Summary CSV","💾"),("Filtered Data CSV","📂"),("Weekly PDF Report","📄"),("Monthly PDF Report","📄"),("Methodology Note","📖")]}
+    CARDS={"Sales":[("Sales Action Queue","check"),("Potential Customers Table","file"),("Evidence Snapshot","folder"),
+                    ("Export Center","download"),("Data Quality Summary","search"),("Methodology & Assumptions","book"),
+                    ("Potential Revenue by Region","money"),("New Potential Customers Trend","chart"),("Top Customers by Revenue","briefcase")],
+           "Marketing":[("Campaign Opportunity Table","file"),("Filtered Audience Data","folder"),("Evidence Pack CSV","download"),
+                        ("Weekly PDF Report","file"),("Monthly PDF Report","file"),("Methodology Note","book"),("Landing Page Export","file"),("Campaign Performance Export","chart")],
+           "Executive":[("Executive Decision Brief","file"),("Regional Priority Table","map"),("Risk Evidence Table","alert"),
+                        ("Executive Summary CSV","download"),("Filtered Data CSV","folder"),("Weekly PDF Report","file"),("Monthly PDF Report","file"),("Methodology Note","book")]}
     ph_grid(CARDS.get(dash,[]))
     if df is not None:
         st.markdown('<div class="cn-card"><div class="sec-label">Quick Export</div>', unsafe_allow_html=True)
         h=_human_df(df)
-        st.download_button("⬇ Download Filtered Data (CSV)",h.head(5000).to_csv(index=False).encode(),f"cybernova_{dash.lower()}.csv","text/csv",use_container_width=True)
+        st.download_button("Download Filtered Data (CSV)",h.head(5000).to_csv(index=False).encode(),f"cybernova_{dash.lower()}.csv","text/csv",use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ── STATUS BAR ────────────────────────────────────────────────────────────────
@@ -1752,7 +1840,7 @@ def main():
         with st.spinner(""):
             df = load_data()
             if df is None:
-                st.toast("Using mock data — CSV not found", icon="⚠️")
+                st.toast("Using mock data - CSV not found")
                 df = mock_data()
 
         st.session_state["_live_unfiltered_df"] = df

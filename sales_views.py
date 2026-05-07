@@ -351,8 +351,48 @@ def _chart_layout(fig, h=260):
     )
 
 
+_ICON_SVG = {
+    "📊": '<path d="M3 3v18h18"/><path d="M8 17V9"/><path d="M13 17V5"/><path d="M18 17v-6"/>',
+    "📈": '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-7"/>',
+    "🔄": '<path d="M21 12a9 9 0 0 0-15-6.7L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 15 6.7L21 16"/><path d="M21 21v-5h-5"/>',
+    "💎": '<path d="M6 3h12l4 6-10 12L2 9l4-6Z"/><path d="M2 9h20"/>',
+    "🤖": '<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 2v6"/><path d="M8 13h.01"/><path d="M16 13h.01"/><path d="M9 17h6"/>',
+    "🗺️": '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15"/><path d="M15 6v15"/>',
+    "🌍": '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>',
+    "⏰": '<circle cx="12" cy="13" r="8"/><path d="M12 9v5l3 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/>',
+    "🎯": '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    "🏁": '<path d="M4 22V4"/><path d="M4 4h13l-1 5 1 5H4"/>',
+    "💡": '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M8.2 14A6 6 0 1 1 15.8 14c-.8.7-1.3 1.6-1.5 2.6H9.7A4.8 4.8 0 0 0 8.2 14Z"/>',
+    "📡": '<path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/><path d="M12 4v4"/>',
+    "🔔": '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+    "✅": '<path d="m20 6-11 11-5-5"/>',
+    "📋": '<path d="M9 3h6v4H9z"/><path d="M9 5H5v16h14V5h-4"/><path d="M8 12h8"/><path d="M8 16h8"/>',
+    "📂": '<path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>',
+    "💾": '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>',
+    "🔍": '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    "📖": '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/>',
+    "💰": '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+    "🏆": '<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0V4Z"/><path d="M5 5H3v3a3 3 0 0 0 4 2.8"/><path d="M19 5h2v3a3 3 0 0 1-4 2.8"/>',
+    "⚠️": '<path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+    "📄": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+    "📞": '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.6 1.9Z"/>',
+    "⚡": '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/>',
+}
+
+
+def _svg_for_icon(icon):
+    path = _ICON_SVG.get(icon)
+    if not path:
+        return f"{icon} " if icon else ""
+    return (
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" '
+        'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+        f'style="vertical-align:-2px;margin-right:7px;">{path}</svg>'
+    )
+
+
 def _card_start(title, icon=""):
-    prefix = f"{icon} " if icon else ""
+    prefix = _svg_for_icon(icon)
     st.markdown(
         f'<div class="cyber-card"><div class="sv-title">{prefix}{title}</div>',
         unsafe_allow_html=True,
@@ -678,26 +718,28 @@ def _segment_quality_bubble():
 # ── E. Sales Insight Assistant ────────────────────────────────────────────────
 def _sales_insight_assistant():
     insights = [
-        ("🟢", "South Africa is the largest opportunity pool — 450 potential customers, $18.2M pipeline.", _GREEN),
-        ("🟡", "Zambia shows strong growth momentum (+31% MoM) — high-priority emerging hub.", _YELLOW),
-        ("🔴", "Biggest funnel drop-off: Qualified → Proposal stage (−59% fallthrough rate).", _RED),
-        ("🟢", "Repeat visitors convert 2.4× higher than new visitors — prioritise returning traffic.", _GREEN),
+        ("dot", "South Africa is the largest opportunity pool — 450 potential customers, $18.2M pipeline.", _GREEN),
+        ("dot", "Zambia shows strong growth momentum (+31% MoM) — high-priority emerging hub.", _YELLOW),
+        ("dot", "Biggest funnel drop-off: Qualified → Proposal stage (−59% fallthrough rate).", _RED),
+        ("dot", "Repeat visitors convert 2.4× higher than new visitors — prioritise returning traffic.", _GREEN),
         ("💡", "Recommended: Prioritise high-intent repeat visitors and accelerate proposal-stage follow-ups.", _CYAN),
     ]
     rows_html = "".join(
         f'<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;'
         f'border-bottom:1px solid rgba(77,255,225,0.06);">'
-        f'<span style="font-size:14px;flex-shrink:0;">{icon}</span>'
+        f'<span style="flex-shrink:0;color:{col};">'
+        f'{f"<span style=\'display:inline-block;width:7px;height:7px;border-radius:50%;background:{col};margin-top:6px;\'></span>" if icon == "dot" else _svg_for_icon(icon)}'
+        f'</span>'
         f'<span style="font-size:12px;color:#F8FAFC;line-height:1.5;">{text}</span>'
         f'</div>'
-        for icon, text, _ in insights
+        for icon, text, col in insights
     )
 
     st.markdown(
         f"""
 <div class="insight-card">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-    <div style="font-size:16px;">🤖</div>
+    <div style="color:#22D3EE;">{_svg_for_icon("🤖")}</div>
     <div>
       <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#22D3EE;">
         CyberNova Intelligence · Sales Insights
@@ -1264,17 +1306,17 @@ def _forecast_signals():
 
 def _alert_center_risk():
     alerts = [
-        ("⚠️", "Zambia demo conversion below forecast",     "High priority",   "high"),
-        ("⚠️", "Large opportunity aging (>21 days unactioned)", "Medium priority", "warn"),
+        ("Zambia demo conversion below forecast",     "High priority",   "high"),
+        ("Large opportunity aging (>21 days unactioned)", "Medium priority", "warn"),
     ]
 
     _card_start("Alert Center + Risk Gauge", "🔔")
-    for icon, msg, priority, cls in alerts:
+    for msg, priority, cls in alerts:
         p_color = _RED if cls == "high" else _YELLOW
         st.markdown(
             f'<div class="alert-item {"" if cls=="high" else "warn"}">'
             f'<div style="display:flex;align-items:center;gap:8px;">'
-            f'<span>{icon}</span>'
+            f'<span style="color:{p_color};">{_svg_for_icon("⚠️")}</span>'
             f'<span style="flex:1;font-size:12px;">{msg}</span>'
             f'<span style="font-size:9px;font-weight:700;color:{p_color};'
             f'padding:2px 7px;border-radius:20px;background:rgba(0,0,0,0.2);">{priority}</span>'
@@ -1371,7 +1413,7 @@ def _action_queue():
     rows_html = "".join(
         f'<div style="display:flex;align-items:center;padding:8px 4px;'
         f'border-bottom:1px solid rgba(77,255,225,0.05);">'
-        f'<span style="flex:0.4;font-size:14px;">{icon}</span>'
+        f'<span style="flex:0.4;color:#8A98A6;">{_svg_for_icon(icon)}</span>'
         f'<span style="flex:1.2;font-size:11px;color:#F8FAFC;font-weight:500;">{action}</span>'
         f'<span style="flex:1.4;font-size:11px;color:#8A98A6;">{market}</span>'
         f'<span style="flex:0.7;">{priority_html.get(prio, prio)}</span>'
@@ -1498,7 +1540,7 @@ def _export_center(df):
     with c1:
         st.markdown(
             f'<div class="export-btn-card">'
-            f'<div style="font-size:14px;margin-bottom:6px;">📄</div>'
+            f'<div style="font-size:14px;margin-bottom:6px;color:#8A98A6;">{_svg_for_icon("📋")}</div>'
             f'<div style="font-size:11px;font-weight:600;color:#F8FAFC;margin-bottom:4px;">Weekly PDF Report</div>'
             f'<div style="font-size:10px;color:#8A98A6;margin-bottom:8px;">Sales summary · Current week</div>'
             f'<button style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);'
@@ -1508,7 +1550,7 @@ def _export_center(df):
         )
         st.markdown(
             f'<div class="export-btn-card">'
-            f'<div style="font-size:14px;margin-bottom:6px;">📅</div>'
+            f'<div style="font-size:14px;margin-bottom:6px;color:#8A98A6;">{_svg_for_icon("📋")}</div>'
             f'<div style="font-size:11px;font-weight:600;color:#F8FAFC;margin-bottom:4px;">Monthly PDF Report</div>'
             f'<div style="font-size:10px;color:#8A98A6;margin-bottom:8px;">Full monthly intelligence briefing</div>'
             f'<button style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);'
@@ -1518,7 +1560,7 @@ def _export_center(df):
         )
         st.markdown(
             f'<div class="export-btn-card">'
-            f'<div style="font-size:14px;margin-bottom:6px;">📑</div>'
+            f'<div style="font-size:14px;margin-bottom:6px;color:#8A98A6;">{_svg_for_icon("📋")}</div>'
             f'<div style="font-size:11px;font-weight:600;color:#F8FAFC;margin-bottom:4px;">Pipeline Snapshot PDF</div>'
             f'<div style="font-size:10px;color:#8A98A6;margin-bottom:8px;">Current pipeline status</div>'
             f'<button style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);'
@@ -1532,7 +1574,7 @@ def _export_center(df):
         if df is not None:
             pc_df = df[~df["is_bot"]] if "is_bot" in df.columns else df
             st.download_button(
-                label="⬇ Potential Customers CSV",
+                label="Potential Customers CSV",
                 data=pc_df.head(5000).to_csv(index=False).encode(),
                 file_name="cybernova_potential_customers.csv",
                 mime="text/csv",
@@ -1544,7 +1586,7 @@ def _export_center(df):
             if filtered.empty:
                 filtered = pc_df
             st.download_button(
-                label="⬇ Filtered Data CSV",
+                label="Filtered Data CSV",
                 data=filtered.head(5000).to_csv(index=False).encode(),
                 file_name="cybernova_filtered.csv",
                 mime="text/csv",
