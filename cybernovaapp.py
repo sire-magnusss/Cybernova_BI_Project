@@ -1223,49 +1223,44 @@ def _pipeline_funnel(df):
     stages = ["Awareness", "Engaged", "Qualified", "Proposal", "Won"]
     counts = [int(awareness), int(engaged), int(qualified), int(proposal), int(won)]
     colors = ["#38BDF8", "#2DD4BF", "#FBBF24", "#F59E0B", "#4ADE80"]
-    max_count = max(counts) if counts else 1
-    pct_prev = [100] + [
+    retained = [100] + [
         round((counts[i] / counts[i - 1] * 100), 1) if counts[i - 1] else 0
         for i in range(1, len(counts))
     ]
-    text = [
-        f"{count:,}  ·  {pct:.1f}% retained" if idx else f"{count:,}  ·  entry volume"
-        for idx, (count, pct) in enumerate(zip(counts, pct_prev))
-    ]
 
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        y=stages,
-        x=[max_count] * len(stages),
-        orientation="h",
-        marker=dict(color="rgba(154,167,176,0.10)", line=dict(width=0)),
-        hoverinfo="skip",
-        showlegend=False,
-    ))
-    fig.add_trace(go.Bar(
+    fig = go.Figure(go.Funnel(
         y=stages,
         x=counts,
-        orientation="h",
-        marker=dict(color=colors, line=dict(color="rgba(255,255,255,0.10)", width=1)),
-        text=text,
-        textposition="inside",
-        insidetextanchor="start",
-        textfont=dict(color="#061018", size=10, family="Inter"),
-        cliponaxis=False,
-        hovertemplate="<b>%{y}</b><br>Volume: %{x:,}<extra></extra>",
-        showlegend=False,
+        textinfo="none",
+        marker=dict(
+            color=colors,
+            line=dict(color="rgba(5,12,18,0.80)", width=1.5),
+        ),
+        connector=dict(line=dict(color="rgba(148,163,184,0.18)", width=1.2)),
+        opacity=0.94,
+        hovertemplate="<b>%{label}</b><br>Volume: %{value:,}<br>Retained from previous: %{percentPrevious:.1%}<extra></extra>",
     ))
     fig.update_layout(
-        barmode="overlay",
-        height=250,
-        margin=dict(l=86, r=16, t=10, b=18),
+        height=214,
+        margin=dict(l=82, r=14, t=8, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#6B7FA3", size=10, family="Inter"),
         hoverlabel=dict(bgcolor="rgba(7,14,26,0.95)", bordercolor="rgba(34,211,238,0.3)",
                         font=dict(color="#F0F4F8", size=11, family="Inter")),
-        xaxis=dict(visible=False, range=[0, max_count * 1.08]),
-        yaxis=dict(autorange="reversed", color="#CBD5E1", tickfont=dict(size=10)),
+        funnelmode="stack",
+        showlegend=False,
+        yaxis=dict(tickfont=dict(color="#CBD5E1", size=11, family="Inter")),
+    )
+    stage_rows = "".join(
+        f'<div style="display:grid;grid-template-columns:10px 1fr auto auto;gap:8px;align-items:center;'
+        f'padding:5px 0;border-top:1px solid rgba(148,163,184,0.08);">'
+        f'<span style="width:8px;height:8px;border-radius:2px;background:{color};display:inline-block;"></span>'
+        f'<span style="font-size:10px;color:#CBD5E1;font-weight:700;">{stage}</span>'
+        f'<span style="font-size:10px;color:#F8FAFC;font-variant-numeric:tabular-nums;">{count:,}</span>'
+        f'<span style="font-size:10px;color:#94A3B8;font-variant-numeric:tabular-nums;">{pct:.1f}%</span>'
+        f'</div>'
+        for stage, count, pct, color in zip(stages, counts, retained, colors)
     )
     st.markdown(f"""
 <div class="cn-card">
@@ -1277,6 +1272,14 @@ def _pipeline_funnel(df):
   </div>
 """, unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
+    st.markdown(
+        f'<div style="margin-top:2px;">'
+        f'<div style="display:grid;grid-template-columns:10px 1fr auto auto;gap:8px;'
+        f'font-size:8px;color:#64748B;text-transform:uppercase;letter-spacing:.12em;font-weight:800;padding-bottom:4px;">'
+        f'<span></span><span>Stage</span><span>Volume</span><span>Retained</span></div>'
+        f'{stage_rows}</div>',
+        unsafe_allow_html=True,
+    )
     st.markdown('</div>', unsafe_allow_html=True)
 
 def _service_donut(df):
