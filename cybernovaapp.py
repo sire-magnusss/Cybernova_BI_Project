@@ -4,6 +4,10 @@ import numpy as np
 import plotly.graph_objects as go
 import datetime, pathlib, random, base64
 
+_BASE = pathlib.Path(__file__).parent
+_LOGO_PNG = _BASE / "logo.png"
+_PAGE_ICON = _LOGO_PNG.read_bytes() if _LOGO_PNG.exists() else "⬡"
+
 # Sales views - imported after page_config so Streamlit doesn't complain
 try:
     from sales_views import (inject_sales_css,
@@ -30,15 +34,14 @@ except Exception as _ev_err:
     _EXECUTIVE_VIEWS_OK = False
 
 st.set_page_config(page_title="CyberNova BI Portal", layout="wide",
-                   initial_sidebar_state="collapsed", page_icon="⬡")
+                   initial_sidebar_state="collapsed", page_icon=_PAGE_ICON)
 
-_BASE = pathlib.Path(__file__).parent
 ENRICH_PATH = str(_BASE / "data" / "output" / "cybernova_enriched_logs.csv")
 FAST_CACHE_PATH = _BASE / "data" / "output" / "cybernova_enriched_logs.fast.pkl"
 
 # ── LOGO ──────────────────────────────────────────────────────────────────────
 def _load_logo():
-    for name, mime in [("cybernova_logo_transparent.svg","image/svg+xml"),("logo.png","image/png")]:
+    for name, mime in [("logo.png","image/png"),("cybernova_logo_transparent.svg","image/svg+xml")]:
         p = _BASE / name
         if p.exists():
             b64 = base64.b64encode(p.read_bytes()).decode()
@@ -46,7 +49,7 @@ def _load_logo():
     return "", ""
 
 LOGO_SRC, LOGO_MIME = _load_logo()
-def logo_img(h=36, extra=""):
+def logo_img(h=58, extra=""):
     return f'<img src="{LOGO_SRC}" style="height:{h}px;width:auto;display:inline-block;{extra}" />' if LOGO_SRC else '<span style="font-size:22px;color:#22D3EE;font-weight:900;">CN</span>'
 
 _SVG_PATHS = {
@@ -581,7 +584,8 @@ div[data-testid="stHorizontalBlock"]{gap:0!important;}
   box-shadow:18px 18px 42px rgba(0,0,0,.24);
 }
 .login-logo-pill{
-  display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:8px;
+  display:inline-flex;align-items:center;justify-content:center;padding:8px 18px;border-radius:8px;
+  min-width:118px;min-height:72px;
   background:rgba(245,247,250,.055);color:#F5F7FA;font-size:14px;font-weight:800;margin-bottom:70px;
   border:1px solid rgba(34,211,238,.18);
 }
@@ -681,10 +685,10 @@ div[data-testid="stFormSubmitButton"]>button:hover{
 </div>
 """, unsafe_allow_html=True)
         with right_col:
-            _logo = logo_img(h=26) if LOGO_SRC else _ico_mark
+            _logo = logo_img(h=68) if LOGO_SRC else _ico_mark
             st.markdown(f"""
 <div class="login-form-head">
-  <div class="login-logo-pill">{_logo}<span>CyberNova</span></div>
+  <div class="login-logo-pill">{_logo}</div>
   <div class="login-title">Login to Your Account</div>
   <div class="login-subtitle">Select your portal role and enter your access password.</div>
   {f'<div class="login-error">{_ico_lock_sm}<span>Invalid password for selected role.</span></div>' if st.session_state.get("login_error") else ''}
@@ -726,7 +730,7 @@ def render_header():
 <div class="app-shell-header">
 
   <div style="display:flex;align-items:center;gap:14px;">
-    {logo_img(h=34)}
+    {logo_img(h=58)}
     <div>
       <div style="font-size:10px;color:#6B7FA3;margin-bottom:2px;">
         Welcome back, {fname} &nbsp;/&nbsp;
