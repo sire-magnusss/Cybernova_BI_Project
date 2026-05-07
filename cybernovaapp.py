@@ -584,10 +584,10 @@ div[data-testid="stHorizontalBlock"]{gap:0!important;}
   box-shadow:18px 18px 42px rgba(0,0,0,.24);
 }
 .login-logo-pill{
-  display:inline-flex;align-items:center;justify-content:center;padding:8px 18px;border-radius:8px;
-  min-width:118px;min-height:72px;
-  background:rgba(245,247,250,.055);color:#F5F7FA;font-size:14px;font-weight:800;margin-bottom:70px;
-  border:1px solid rgba(34,211,238,.18);
+  display:flex;align-items:center;justify-content:center;padding:0;border-radius:0;
+  width:max-content;min-width:0;min-height:0;margin:0 auto 34px;
+  background:transparent;color:#F5F7FA;font-size:14px;font-weight:800;
+  border:0;
 }
 .login-title{font-size:30px;font-weight:800;color:#F5F7FA;letter-spacing:0;margin-bottom:10px;}
 .login-subtitle{font-size:14px;color:#9AA7B0;line-height:1.45;}
@@ -685,7 +685,7 @@ div[data-testid="stFormSubmitButton"]>button:hover{
 </div>
 """, unsafe_allow_html=True)
         with right_col:
-            _logo = logo_img(h=68) if LOGO_SRC else _ico_mark
+            _logo = logo_img(h=124) if LOGO_SRC else _ico_mark
             st.markdown(f"""
 <div class="login-form-head">
   <div class="login-logo-pill">{_logo}</div>
